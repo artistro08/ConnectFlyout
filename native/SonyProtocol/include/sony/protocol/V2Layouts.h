@@ -40,22 +40,38 @@ inline bool parseNcAsmSeamless(std::span<const uint8_t> payload, NoiseControlSta
     return true;
 }
 
-// Equalizer reply or notify: <op> 00 <preset> <band count> <bands...>
+// Equalizer inquired types. Most V2 devices use PresetEq (0x00); the ULT series only answers
+// PresetEqAndUltMode (0x03), which inserts an ULT-mode byte between the preset and the bands
+// (mos9527/SonyHeadphonesClient, EqEbbInquiredType). Confirmed from a ULT WEAR HCI capture.
+inline constexpr uint8_t kEqInquiredPreset = 0x00;
+inline constexpr uint8_t kEqInquiredPresetAndUltMode = 0x03;
+
+// Equalizer reply or notify:
+//   type 0x00: <op> 00 <preset> <band count> <bands...>
+//   type 0x03: <op> 03 <preset> <ult mode> <band count> <bands...>
 // Six bands are Clear Bass then 400 Hz-16 kHz, each dB + 10. Other counts (a ten-band
 // WF-1000XM6 sends 10, each step + 6) keep only the preset; the five-band curve stays empty.
 // Returns false when the payload isn't an equalizer message.
 inline bool parseEqualizer(std::span<const uint8_t> payload, EqualizerState& state) noexcept {
-    if (payload.size() < 4 || payload[1] != 0x00) {
+    if (payload.size() < 4 ||
+        (payload[1] != kEqInquiredPreset && payload[1] != kEqInquiredPresetAndUltMode)) {
+        return false;
+    }
+    const size_t countAt = payload[1] == kEqInquiredPresetAndUltMode ? 4 : 3;
+    if (payload.size() <= countAt) {
         return false;
     }
     state.preset = normalizeEqualizerPreset(static_cast<int>(payload[2]));
+    if (payload[1] == kEqInquiredPresetAndUltMode) {
+        state.ultMode = payload[3];
+    }
     state.clearBass = 0;
     state.bands = {0, 0, 0, 0, 0};
 
-    if (payload[3] == 6 && payload.size() >= 10) {
-        state.clearBass = static_cast<int>(payload[4]) - 10;
+    if (payload[countAt] == 6 && payload.size() >= countAt + 7) {
+        state.clearBass = static_cast<int>(payload[countAt + 1]) - 10;
         for (size_t i = 0; i < state.bands.size(); ++i) {
-            state.bands[i] = static_cast<int>(payload[5 + i]) - 10;
+            state.bands[i] = static_cast<int>(payload[countAt + 2 + i]) - 10;
         }
     }
     return true;

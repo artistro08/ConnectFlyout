@@ -26,8 +26,8 @@ int apoIndexFromCode(uint8_t c0, uint8_t c1) {
 
 } // namespace
 
-ProtocolV2::ProtocolV2(SonyProtocolSession& session, bool earbuds)
-    : _session(session), _earbuds(earbuds) {}
+ProtocolV2::ProtocolV2(SonyProtocolSession& session, bool earbuds, bool ultEqualizer)
+    : _session(session), _earbuds(earbuds), _ultEqualizer(ultEqualizer) {}
 
 void ProtocolV2::initDevice() {
     // V2 handshake init: 0x00 0x00 -> RET 0x01
@@ -194,10 +194,15 @@ void ProtocolV2::setNoiseControl(const NoiseControlState& state) {
     _session.send(SonyFrame{ .type = DataType::DataMdr, .payload = std::move(payload) });
 }
 
+uint8_t ProtocolV2::eqInquiredType() const noexcept {
+    return _ultEqualizer ? kEqInquiredPresetAndUltMode : kEqInquiredPreset;
+}
+
 EqualizerState ProtocolV2::getEqualizer() {
     // GET: 56 00 -> RET: 57 00 <preset> 06 <bass+10> <b1..b5 +10>
+    // ULT:  56 03 -> RET: 57 03 <preset> <ult> 06 <bass+10> <b1..b5 +10>
     auto resp = _session.sendAndAwaitResponse(
-        SonyFrame{ .type = DataType::DataMdr, .payload = {0x56, 0x00} },
+        SonyFrame{ .type = DataType::DataMdr, .payload = {0x56, eqInquiredType()} },
         0x57,
         -1,
         std::chrono::milliseconds(1000)
@@ -210,26 +215,26 @@ EqualizerState ProtocolV2::getEqualizer() {
     return state;
 }
 
-void ProtocolV2::setEqualizerPreset(int preset) {
+void ProtocolV2::setEqualizerPreset(int preset, uint8_t ultMode) {
     // SET preset: 58 00 <preset> 00
-    std::vector<uint8_t> payload = {
-        0x58,
-        0x00,
-        static_cast<uint8_t>(preset),
-        0x00
-    };
+    // ULT:        58 03 <preset> <ult> 00
+    std::vector<uint8_t> payload = { 0x58, eqInquiredType(), static_cast<uint8_t>(preset) };
+    if (_ultEqualizer) {
+        payload.push_back(ultMode);
+    }
+    payload.push_back(0x00);
     _session.send(SonyFrame{ .type = DataType::DataMdr, .payload = std::move(payload) });
 }
 
-void ProtocolV2::setEqualizerCustom(int clearBass, const std::array<int, 5>& bands) {
+void ProtocolV2::setEqualizerCustom(int clearBass, const std::array<int, 5>& bands, uint8_t ultMode) {
     // SET custom: 58 00 A0 06 <clearBass+10> <b1..b5 +10>
-    std::vector<uint8_t> payload = {
-        0x58,
-        0x00,
-        0xa0,
-        0x06,
-        clampEqValue(clearBass)
-    };
+    // ULT:        58 03 A0 <ult> 06 <clearBass+10> <b1..b5 +10>
+    std::vector<uint8_t> payload = { 0x58, eqInquiredType(), 0xa0 };
+    if (_ultEqualizer) {
+        payload.push_back(ultMode);
+    }
+    payload.push_back(0x06);
+    payload.push_back(clampEqValue(clearBass));
     for (int b : bands) {
         payload.push_back(clampEqValue(b));
     }

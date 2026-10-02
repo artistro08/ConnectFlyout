@@ -88,6 +88,7 @@ private:
     void detectGeneration();
     void readInitialState();
     void handleNotification(const SonyFrame& frame);
+    [[nodiscard]] uint8_t currentUltMode() const;
     // Call with _stateMutex held.
     bool applyV2Notification(const std::vector<uint8_t>& payload);
     // Call with _stateMutex held. Second command table (DataMdrNo2): the multipoint list.

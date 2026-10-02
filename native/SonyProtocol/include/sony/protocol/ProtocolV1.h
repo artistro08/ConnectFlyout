@@ -28,8 +28,8 @@ public:
     void setNoiseControl(const NoiseControlState& state) override;
 
     EqualizerState getEqualizer() override;
-    void setEqualizerPreset(int preset) override;
-    void setEqualizerCustom(int clearBass, const std::array<int, 5>& bands) override;
+    void setEqualizerPreset(int preset, uint8_t ultMode) override;
+    void setEqualizerCustom(int clearBass, const std::array<int, 5>& bands, uint8_t ultMode) override;
 
     bool getDsee() override;
     void setDsee(bool enabled) override;

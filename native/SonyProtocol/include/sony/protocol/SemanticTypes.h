@@ -36,10 +36,16 @@ struct PlaybackDevice {
     bool operator==(const PlaybackDevice&) const = default;
 };
 
+// ULT-series equalizers carry a mode byte after the preset (inquired type 0x03). Every frame in
+// a ULT WEAR capture has 01 here; what it selects (ULT_1/ULT_2) is unverified, so writes echo
+// back whatever the headset last reported.
+inline constexpr uint8_t kEqUltModeDefault = 0x01;
+
 struct EqualizerState {
     int preset{0};
     int clearBass{0};
     std::array<int, 5> bands{0, 0, 0, 0, 0};
+    uint8_t ultMode{kEqUltModeDefault};  // type 0x03 devices only
 };
 
 } // namespace sony::protocol

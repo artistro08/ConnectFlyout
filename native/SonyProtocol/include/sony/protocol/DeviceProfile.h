@@ -45,6 +45,7 @@ struct DeviceCapabilities
 
     bool dsee = false;
     bool dseeExtreme = false;
+    bool ultEqualizer = false;   // equalizer uses inquired type 0x03 (ULT series)
 
     bool speakToChat = false;
     bool adaptiveVolume = false;

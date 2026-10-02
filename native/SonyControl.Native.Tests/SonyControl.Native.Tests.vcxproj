@@ -48,6 +48,7 @@
   <ItemGroup>
     <ClCompile Include="BluetoothAddressTests.cpp" />
     <ClCompile Include="DeviceProfileTests.cpp" />
+    <ClCompile Include="EqualizerV2Tests.cpp" />
     <ClCompile Include="FrameCodecTests.cpp" />
     <ClCompile Include="SessionLifecycleTests.cpp" />
     <ClCompile Include="Xm4Tests.cpp" />

@@ -214,7 +214,7 @@ EqualizerState ProtocolV1::getEqualizer() {
     return state;
 }
 
-void ProtocolV1::setEqualizerPreset(int preset) {
+void ProtocolV1::setEqualizerPreset(int preset, uint8_t /*ultMode*/) {
     // SET preset: 58 01 <preset> 00
     std::vector<uint8_t> payload = {
         0x58,
@@ -225,7 +225,7 @@ void ProtocolV1::setEqualizerPreset(int preset) {
     _session.send(SonyFrame{ .type = DataType::DataMdr, .payload = std::move(payload) });
 }
 
-void ProtocolV1::setEqualizerCustom(int clearBass, const std::array<int, 5>& bands) {
+void ProtocolV1::setEqualizerCustom(int clearBass, const std::array<int, 5>& bands, uint8_t /*ultMode*/) {
     // WH-XB900N write uses FF; its returned Manual preset is A0.
     // Other V1 models retain the existing A0 write format.
     std::vector<uint8_t> payload = {

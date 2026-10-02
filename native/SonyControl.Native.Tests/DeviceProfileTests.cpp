@@ -58,3 +58,8 @@ TEST(ErrorMapping, MapsEveryCodeToItsHresult) {
     EXPECT_EQ(toHresult(SonyErrorCode::ProtocolViolation), static_cast<int32_t>(0x8007000D));
     EXPECT_EQ(toHresult(SonyErrorCode::TransportFailure), static_cast<int32_t>(0x800704C9));
 }
+
+TEST(DeviceProfile, UltWearUsesUltEqualizerLayout) {
+    EXPECT_TRUE(DeviceProfileRegistry::getProfileForDevice("ULT WEAR").capabilities.ultEqualizer);
+    EXPECT_FALSE(DeviceProfileRegistry::getProfileForDevice("WH-CH720N").capabilities.ultEqualizer);
+}

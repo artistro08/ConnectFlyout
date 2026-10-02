@@ -27,8 +27,9 @@ public:
     virtual void setNoiseControl(const NoiseControlState& state) = 0;
 
     virtual EqualizerState getEqualizer() = 0;
-    virtual void setEqualizerPreset(int preset) = 0;
-    virtual void setEqualizerCustom(int clearBass, const std::array<int, 5>& bands) = 0;
+    // ultMode is the ULT-series mode byte the headset last reported; protocols without one ignore it.
+    virtual void setEqualizerPreset(int preset, uint8_t ultMode) = 0;
+    virtual void setEqualizerCustom(int clearBass, const std::array<int, 5>& bands, uint8_t ultMode) = 0;
 
     virtual bool getDsee() = 0;
     virtual void setDsee(bool enabled) = 0;

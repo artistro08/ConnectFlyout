@@ -133,13 +133,18 @@ void HeadsetController::setNoiseControl(const NoiseControlState& value) {
     });
 }
 
+uint8_t HeadsetController::currentUltMode() const {
+    std::lock_guard lock(_stateMutex);
+    return _state.equalizer.ultMode;
+}
+
 void HeadsetController::setEqualizerPreset(int preset) {
-    command([&] { _protocol->setEqualizerPreset(preset); });
+    command([&] { _protocol->setEqualizerPreset(preset, currentUltMode()); });
     updateState([&](DeviceState& state) { state.equalizer.preset = preset; });
 }
 
 void HeadsetController::setEqualizerCustom(int clearBass, const std::array<int, 5>& bands) {
-    command([&] { _protocol->setEqualizerCustom(clearBass, bands); });
+    command([&] { _protocol->setEqualizerCustom(clearBass, bands, currentUltMode()); });
     updateState([&](DeviceState& state) {
         state.equalizer.preset = static_cast<int>(EqualizerPreset::Manual);
         state.equalizer.clearBass = clearBass;
@@ -318,7 +323,8 @@ void HeadsetController::initializeProtocolForConnection(uint64_t disconnectGener
 
 void HeadsetController::createProtocol(ProtocolGeneration generation) {
     if (generation == ProtocolGeneration::V2) {
-        _protocol = std::make_unique<ProtocolV2>(*_session, _profile.capabilities.dualBattery);
+        _protocol = std::make_unique<ProtocolV2>(*_session, _profile.capabilities.dualBattery,
+                                                _profile.capabilities.ultEqualizer);
     } else {
         _protocol = std::make_unique<ProtocolV1>(*_session, _profile.model == SonyModel::WHXB900N);
     }

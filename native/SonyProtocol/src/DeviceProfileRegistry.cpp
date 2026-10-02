@@ -263,6 +263,7 @@ const std::vector<DeviceProfile>& getStaticProfiles() {
                 .clearBass = true,
                 .dsee = true,
                 .dseeExtreme = true,
+                .ultEqualizer = true,
                 .speakToChat = false,
                 .adaptiveVolume = false,
                 .autoPowerOff = true,
