@@ -2,9 +2,19 @@
     <img src="docs/images/icon.png" width="96" alt="ConnectFlyout icon">
 </p>
 
-# ConnectFlyout
+<h1 align="center">
+    ConnectFlyout
+</h1>
 
-A Windows 11 tray app that controls Sony headphones from a native WinUI flyout.
+<p align="center">
+    A Windows 11 tray app that controls Sony headphones from a native WinUI flyout.
+</p>
+
+<p align="center">
+    <a href="https://apps.microsoft.com/detail/9NK3C5R2HK5Z">
+        <img src="https://get.microsoft.com/images/en-us%20dark.svg" width="200" alt="Get it from Microsoft">
+    </a>
+</p>
 
 | Headphones | WF-1000XM6 | WH-1000XM4 |
 | :---: | :---: | :---: |
