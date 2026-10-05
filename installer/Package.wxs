@@ -7,7 +7,7 @@
 
     <Package
         Name="ConnectFlyout"
-        Manufacturer="Devin Green"
+        Manufacturer="artistro08"
         Version="$(var.Version)"
         UpgradeCode="{5C1E9A47-2B8D-4F63-A0E4-7D3B9C6F1E82}"
         Scope="perUserOrMachine">

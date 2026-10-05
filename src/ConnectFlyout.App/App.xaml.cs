@@ -42,6 +42,7 @@ public partial class App : Application, IDisposable
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
         AppIdentity.ClaimClassicAppId();
+        AppIdentity.MigrateFromSonyControl();
 
         // Logging
         var logFolder = Path.Combine(AppIdentity.DataFolder, "Logs");

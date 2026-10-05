@@ -1,5 +1,7 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
+using ConnectFlyout.Presentation.Settings;
+using Microsoft.Win32;
 using Windows.ApplicationModel;
 using Windows.Storage;
 
@@ -61,6 +63,44 @@ public static class AppIdentity
         if (!IsPackaged)
         {
             _ = SetCurrentProcessExplicitAppUserModelID(ClassicAppUserModelId);
+        }
+    }
+
+    /// <summary>
+    /// Classic install only: carries settings and launch-at-sign-in over from the app's old
+    /// "Sony Control" name, once, so an MSI upgrade from 1.1.0.6 or older keeps them.
+    /// </summary>
+    /// <remarks>
+    /// The old build kept its data in %LOCALAPPDATA%\SonyControl and its sign-in entry under the
+    /// "SonyControl" Run value, pointing at an exe the upgrade has since removed.
+    /// </remarks>
+    public static void MigrateFromSonyControl()
+    {
+        if (IsPackaged)
+        {
+            return;
+        }
+
+        // Settings And Logs
+        var oldFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "SonyControl");
+        if (Directory.Exists(oldFolder) && !Directory.Exists(DataFolder))
+        {
+            try
+            {
+                Directory.Move(oldFolder, DataFolder);
+            }
+            catch (IOException)
+            {
+                // Something holds a file open; start with fresh settings rather than not at all
+            }
+        }
+
+        // Launch At Sign-In
+        using var runKey = Registry.CurrentUser.OpenSubKey(RegistryStartupService.RunKey, writable: true);
+        if (runKey?.GetValue("SonyControl") is string)
+        {
+            runKey.DeleteValue("SonyControl");
+            runKey.SetValue(RegistryStartupService.ValueName, $"\"{Environment.ProcessPath}\"");
         }
     }
 

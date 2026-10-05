@@ -11,11 +11,11 @@
   <Identity
     Name="Artistro08.ConnectFlyout"
     Publisher="CN=Devin Green"
-    Version="1.1.0.6" />
+    Version="1.1.0.7" />
 
   <Properties>
     <DisplayName>ConnectFlyout</DisplayName>
-    <PublisherDisplayName>Devin Green</PublisherDisplayName>
+    <PublisherDisplayName>artistro08</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
 
