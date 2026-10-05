@@ -21,7 +21,9 @@ In theory, since we're using [sony-device-center](https://github.com/marconvcm/s
 
 ## Installing
 
-Grab the latest release from the [Releases](https://github.com/artistro08/ConnectFlyout/releases) page.
+Install it from the [Microsoft Store](https://apps.microsoft.com/detail/9NK3C5R2HK5Z). That's the preferred way: the Store keeps it up to date for you.
+
+> Rather not use the Store? The MSI installer is still supported. Grab it from the [Releases](https://github.com/artistro08/ConnectFlyout/releases) page. It installs just for you with no admin prompt.
 
 ## Building From Source
 
