@@ -92,4 +92,8 @@ $env:SONY_TEST_XM6_ADDRESS = "AC:80:0A:12:34:56"
 
 MIT, see [LICENSE](LICENSE). The Bluetooth protocol code is based on [sony-device-center](https://github.com/marconvcm/sony-device-center), also MIT; its notice is in [LICENSE-THIRD-PARTY](LICENSE-THIRD-PARTY).
 
-> Sony and the product names are trademarks of Sony Group Corporation. This is an unofficial app, not made or endorsed by Sony.
+## Disclaimer
+
+ConnectFlyout is an independent, unofficial app. It's in no way affiliated with, associated with, authorized by, or endorsed by Sony Group Corporation or any of its subsidiaries.
+
+Sony, the Sony logo, and all Sony product names (including WF-1000XM, WH-1000XM and WH-XB900N) are trademarks or registered trademarks of Sony Group Corporation. They're used here only to say which headphones the app works with, and all rights to them belong to Sony.
