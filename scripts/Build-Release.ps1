@@ -13,7 +13,8 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)]
-    [ValidatePattern('^\d+\.\d+\.\d+\.\d+$')]
+    # The Store rejects any revision (4th number) other than 0
+    [ValidatePattern('^\d+\.\d+\.\d+\.0$')]
     [string] $Version
 )
 

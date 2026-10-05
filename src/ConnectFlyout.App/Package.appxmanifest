@@ -11,7 +11,7 @@
   <Identity
     Name="Artistro08.ConnectFlyout"
     Publisher="CN=Devin Green"
-    Version="1.1.0.7" />
+    Version="1.2.0.0" />
 
   <Properties>
     <DisplayName>ConnectFlyout</DisplayName>
