@@ -1,5 +1,5 @@
 <#
-    Outputs into src/SonyControl.App/Assets: the MSIX logos at every scale and target size
+    Outputs into src/ConnectFlyout.App/Assets: the MSIX logos at every scale and target size
     Windows asks for, and the two tray icons (TrayLight.ico for light taskbars, TrayDark.ico
     for dark ones).
 
@@ -11,7 +11,7 @@
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Drawing
 
-$assets = Join-Path $PSScriptRoot '..\src\SonyControl.App\Assets'
+$assets = Join-Path $PSScriptRoot '..\src\ConnectFlyout.App\Assets'
 New-Item -ItemType Directory -Force -Path $assets | Out-Null
 
 $appIcon = (Resolve-Path (Join-Path $assets 'AppIcon.ico')).Path

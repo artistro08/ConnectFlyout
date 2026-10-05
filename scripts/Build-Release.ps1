@@ -1,8 +1,8 @@
 <#
-    Builds every Sony Control release file for one version into artifacts\release\v<Version>:
+    Builds every ConnectFlyout release file for one version into artifacts\release\v<Version>:
 
-    - SonyControl_<Version>_x64.msix and _arm64.msix, signed, plus SonyControl.cer to trust them
-    - SonyControl_<Version>_x64.msi and _arm64.msi, the classic installer (no certificate
+    - ConnectFlyout_<Version>_x64.msix and _arm64.msix, signed, plus ConnectFlyout.cer to trust them
+    - ConnectFlyout_<Version>_x64.msi and _arm64.msi, the classic installer (no certificate
       needed; installs just for you, or for everyone from the wizard's Advanced step)
 
     Used to produce a GitHub release. Run scripts/New-DevCertificate.ps1 once first.
@@ -38,7 +38,7 @@ $certificate = Get-SigningCertificate
 $signtool = Get-SignTool
 
 # Stamp The Version Into The MSIX Manifest
-$manifest = Join-Path $root 'src\SonyControl.App\Package.appxmanifest'
+$manifest = Join-Path $root 'src\ConnectFlyout.App\Package.appxmanifest'
 $manifestText = Get-Content $manifest -Raw
 $manifestText = $manifestText -replace '(<Identity[^>]*\sVersion=")[^"]+(")', "`${1}$Version`${2}"
 Set-Content $manifest $manifestText -NoNewline
@@ -46,11 +46,11 @@ Set-Content $manifest $manifestText -NoNewline
 # MSIX Packages
 & (Join-Path $PSScriptRoot 'Build-Package.ps1')
 foreach ($platform in 'x64', 'ARM64') {
-    $package = Get-ChildItem (Join-Path $root 'src\SonyControl.App\AppPackages') -Recurse -Filter "SonyControl.App_${Version}_$platform.msix" | Select-Object -First 1
-    Copy-Item $package.FullName (Join-Path $release "SonyControl_${Version}_$($platform.ToLower()).msix")
+    $package = Get-ChildItem (Join-Path $root 'src\ConnectFlyout.App\AppPackages') -Recurse -Filter "ConnectFlyout.App_${Version}_$platform.msix" | Select-Object -First 1
+    Copy-Item $package.FullName (Join-Path $release "ConnectFlyout_${Version}_$($platform.ToLower()).msix")
 }
-$publicCertificate = Get-ChildItem (Join-Path $root 'src\SonyControl.App\AppPackages') -Recurse -Filter "SonyControl.App_${Version}_x64.cer" | Select-Object -First 1
-Copy-Item $publicCertificate.FullName (Join-Path $release 'SonyControl.cer')
+$publicCertificate = Get-ChildItem (Join-Path $root 'src\ConnectFlyout.App\AppPackages') -Recurse -Filter "ConnectFlyout.App_${Version}_x64.cer" | Select-Object -First 1
+Copy-Item $publicCertificate.FullName (Join-Path $release 'ConnectFlyout.cer')
 
 # License Page For The Installer (plain text to RTF)
 $licenseText = (Get-ChildItem $root -Filter 'LICENSE*' | Sort-Object Name | ForEach-Object { Get-Content $_.FullName -Raw }) -join "`n`n"
@@ -65,7 +65,7 @@ foreach ($platform in 'x64', 'ARM64') {
         Remove-Item $publish -Recurse -Force
     }
 
-    & $msbuild (Join-Path $root 'src\SonyControl.App\SonyControl.App.csproj') -restore -t:Publish `
+    & $msbuild (Join-Path $root 'src\ConnectFlyout.App\ConnectFlyout.App.csproj') -restore -t:Publish `
         -p:Configuration=Release `
         -p:Platform=$platform `
         -p:WindowsPackageType=None `
@@ -76,10 +76,10 @@ foreach ($platform in 'x64', 'ARM64') {
         throw "Publishing the classic build failed for $platform ($LASTEXITCODE)."
     }
 
-    Invoke-Sign (Join-Path $publish 'SonyControl.exe') $certificate $signtool
+    Invoke-Sign (Join-Path $publish 'ConnectFlyout.exe') $certificate $signtool
 
     $msiOut = Join-Path $artifacts "msi\$platform"
-    dotnet build (Join-Path $root 'installer\SonyControl.Installer.wixproj') -c Release `
+    dotnet build (Join-Path $root 'installer\ConnectFlyout.Installer.wixproj') -c Release `
         -p:Platform=$platform `
         -p:ProductVersion=$Version `
         -p:PublishDir="$publish\\" `
@@ -88,8 +88,8 @@ foreach ($platform in 'x64', 'ARM64') {
     if ($LASTEXITCODE -ne 0) {
         throw "Building the MSI failed for $platform ($LASTEXITCODE)."
     }
-    Invoke-Sign (Join-Path $msiOut 'SonyControl.msi') $certificate $signtool
-    Copy-Item (Join-Path $msiOut 'SonyControl.msi') (Join-Path $release "SonyControl_${Version}_$($platform.ToLower()).msi")
+    Invoke-Sign (Join-Path $msiOut 'ConnectFlyout.msi') $certificate $signtool
+    Copy-Item (Join-Path $msiOut 'ConnectFlyout.msi') (Join-Path $release "ConnectFlyout_${Version}_$($platform.ToLower()).msi")
 }
 
 Get-ChildItem $release | ForEach-Object { Write-Output $_.FullName }

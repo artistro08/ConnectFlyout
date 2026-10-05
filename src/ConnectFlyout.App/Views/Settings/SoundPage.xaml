@@ -1,0 +1,131 @@
+<local:SettingsPageBase
+    x:Class="ConnectFlyout.App.Views.Settings.SoundPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:ConnectFlyout.App.Views.Settings"
+    xmlns:vm="using:ConnectFlyout.Presentation.ViewModels">
+
+    <ScrollViewer>
+        <StackPanel MaxWidth="900" HorizontalAlignment="Stretch" Spacing="8">
+            <TextBlock Style="{StaticResource SettingsPageTitleStyle}" Text="Sound" />
+            <local:HeadsetSelector ViewModel="{x:Bind ViewModel}" />
+
+            <!-- Settings (disabled while the headphones are disconnected) -->
+            <ContentControl
+                IsEnabled="{x:Bind ViewModel.SelectedHeadset.IsConnected, Mode=OneWay, FallbackValue=False}"
+                Style="{StaticResource SectionStyle}"
+                Visibility="{x:Bind ViewModel.HasHeadset, Mode=OneWay}">
+                <StackPanel Spacing="8">
+
+                    <!-- Equalizer Preset -->
+                    <Border Style="{StaticResource SettingsCardStyle}" Visibility="{x:Bind ViewModel.SelectedHeadset.Features.Equalizer, Mode=OneWay}">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="Equalizer preset" />
+                                <TextBlock Style="{StaticResource SecondaryTextStyle}" Text="Choose a preset for your headphones." />
+                            </StackPanel>
+                            <ComboBox
+                                Grid.Column="1"
+                                MinWidth="180"
+                                VerticalAlignment="Center"
+                                AutomationProperties.Name="Equalizer preset"
+                                IsEnabled="{x:Bind ViewModel.SelectedHeadset.CanEditHeadsetSound, Mode=OneWay}"
+                                DisplayMemberPath="Name"
+                                ItemsSource="{x:Bind ViewModel.SelectedHeadset.EqualizerPresets, Mode=OneWay}"
+                                SelectedIndex="{x:Bind ViewModel.SelectedHeadset.SelectedEqualizerIndex, Mode=TwoWay}" />
+                        </Grid>
+                    </Border>
+
+                    <!-- Custom Equalizer (five-band models, which all have Clear Bass) -->
+                    <Border Style="{StaticResource SettingsCardStyle}" Visibility="{x:Bind ViewModel.SelectedHeadset.Features.ClearBass, Mode=OneWay}">
+                        <StackPanel Spacing="12">
+                            <TextBlock Text="Custom equalizer" />
+                            <TextBlock Style="{StaticResource SecondaryTextStyle}" Text="Each band goes from -10 to +10. Apply sends the curve and switches the preset to Manual." />
+                            <!-- Bands: one vertical slider per column, frequency underneath -->
+                            <Grid ColumnDefinitions="*,*,*,*,*,*" RowDefinitions="Auto,Auto" RowSpacing="8">
+                                <Slider Grid.Column="0" AutomationProperties.Name="Clear Bass" IsEnabled="{x:Bind ViewModel.SelectedHeadset.CanEditHeadsetSound, Mode=OneWay}" Style="{StaticResource EqualizerBandSliderStyle}" Value="{x:Bind ViewModel.SelectedHeadset.ClearBass, Mode=TwoWay}" />
+                                <Slider Grid.Column="1" AutomationProperties.Name="400 hertz" IsEnabled="{x:Bind ViewModel.SelectedHeadset.CanEditHeadsetSound, Mode=OneWay}" Style="{StaticResource EqualizerBandSliderStyle}" Value="{x:Bind ViewModel.SelectedHeadset.Band1, Mode=TwoWay}" />
+                                <Slider Grid.Column="2" AutomationProperties.Name="1 kilohertz" IsEnabled="{x:Bind ViewModel.SelectedHeadset.CanEditHeadsetSound, Mode=OneWay}" Style="{StaticResource EqualizerBandSliderStyle}" Value="{x:Bind ViewModel.SelectedHeadset.Band2, Mode=TwoWay}" />
+                                <Slider Grid.Column="3" AutomationProperties.Name="2.5 kilohertz" IsEnabled="{x:Bind ViewModel.SelectedHeadset.CanEditHeadsetSound, Mode=OneWay}" Style="{StaticResource EqualizerBandSliderStyle}" Value="{x:Bind ViewModel.SelectedHeadset.Band3, Mode=TwoWay}" />
+                                <Slider Grid.Column="4" AutomationProperties.Name="6.3 kilohertz" IsEnabled="{x:Bind ViewModel.SelectedHeadset.CanEditHeadsetSound, Mode=OneWay}" Style="{StaticResource EqualizerBandSliderStyle}" Value="{x:Bind ViewModel.SelectedHeadset.Band4, Mode=TwoWay}" />
+                                <Slider Grid.Column="5" AutomationProperties.Name="16 kilohertz" IsEnabled="{x:Bind ViewModel.SelectedHeadset.CanEditHeadsetSound, Mode=OneWay}" Style="{StaticResource EqualizerBandSliderStyle}" Value="{x:Bind ViewModel.SelectedHeadset.Band5, Mode=TwoWay}" />
+                                <TextBlock Grid.Row="1" Grid.Column="0" Style="{StaticResource EqualizerBandLabelStyle}" Text="Clear Bass" />
+                                <TextBlock Grid.Row="1" Grid.Column="1" Style="{StaticResource EqualizerBandLabelStyle}" Text="400 Hz" />
+                                <TextBlock Grid.Row="1" Grid.Column="2" Style="{StaticResource EqualizerBandLabelStyle}" Text="1 kHz" />
+                                <TextBlock Grid.Row="1" Grid.Column="3" Style="{StaticResource EqualizerBandLabelStyle}" Text="2.5 kHz" />
+                                <TextBlock Grid.Row="1" Grid.Column="4" Style="{StaticResource EqualizerBandLabelStyle}" Text="6.3 kHz" />
+                                <TextBlock Grid.Row="1" Grid.Column="5" Style="{StaticResource EqualizerBandLabelStyle}" Text="16 kHz" />
+                            </Grid>
+                            <!-- /Bands -->
+                            <Button
+                                HorizontalAlignment="Right"
+                                IsEnabled="{x:Bind ViewModel.SelectedHeadset.CanEditHeadsetSound, Mode=OneWay}"
+                                Command="{x:Bind ViewModel.SelectedHeadset.ApplyCustomEqualizerCommand, Mode=OneWay}"
+                                Content="Apply"
+                                Style="{StaticResource AccentButtonStyle}" />
+                        </StackPanel>
+                    </Border>
+                    <!-- /Custom Equalizer -->
+
+                    <!-- DSEE -->
+                    <Border Style="{StaticResource SettingsCardStyle}" Visibility="{x:Bind ViewModel.SelectedHeadset.Features.Dsee, Mode=OneWay}">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="{x:Bind ViewModel.SelectedHeadset.DseeName, Mode=OneWay}" />
+                                <TextBlock Style="{StaticResource SecondaryTextStyle}" Text="Upscales compressed music. Uses a little more battery." />
+                            </StackPanel>
+                            <ComboBox
+                                Grid.Column="1"
+                                MinWidth="180"
+                                VerticalAlignment="Center"
+                                AutomationProperties.Name="{x:Bind ViewModel.SelectedHeadset.DseeName, Mode=OneWay}"
+                                IsEnabled="{x:Bind ViewModel.SelectedHeadset.CanEditHeadsetSound, Mode=OneWay}"
+                                ItemsSource="{x:Bind vm:HeadsetViewModel.DseeOptions}"
+                                SelectedIndex="{x:Bind ViewModel.SelectedHeadset.DseeIndex, Mode=TwoWay}" />
+                        </Grid>
+                    </Border>
+
+                    <!-- Legacy Spatial Controls -->
+                    <Border
+                        Style="{StaticResource SettingsCardStyle}"
+                        Visibility="{x:Bind ViewModel.SelectedHeadset.Features.Vpt, Mode=OneWay}">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="Surround (VPT)" />
+                                <TextBlock Style="{StaticResource SecondaryTextStyle}" Text="Adds a virtual surround effect to your audio." />
+                            </StackPanel>
+                            <ComboBox
+                                Grid.Column="1"
+                                MinWidth="180"
+                                VerticalAlignment="Center"
+                                AutomationProperties.Name="Surround (VPT)"
+                                IsEnabled="{x:Bind ViewModel.SelectedHeadset.CanChangeSpatialEffect, Mode=OneWay}"
+                                ItemsSource="{x:Bind vm:HeadsetViewModel.VptPresetOptions}"
+                                SelectedIndex="{x:Bind ViewModel.SelectedHeadset.VptPresetIndex, Mode=TwoWay}" />
+                        </Grid>
+                    </Border>
+
+                    <Border
+                        Style="{StaticResource SettingsCardStyle}"
+                        Visibility="{x:Bind ViewModel.SelectedHeadset.Features.SoundPosition, Mode=OneWay}">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="Sound position" />
+                                <TextBlock Style="{StaticResource SecondaryTextStyle}" Text="Moves the apparent direction of the sound." />
+                            </StackPanel>
+                            <ComboBox
+                                Grid.Column="1"
+                                MinWidth="180"
+                                VerticalAlignment="Center"
+                                AutomationProperties.Name="Sound position"
+                                IsEnabled="{x:Bind ViewModel.SelectedHeadset.CanChangeSpatialEffect, Mode=OneWay}"
+                                ItemsSource="{x:Bind vm:HeadsetViewModel.SoundPositionOptions}"
+                                SelectedIndex="{x:Bind ViewModel.SelectedHeadset.SoundPositionIndex, Mode=TwoWay}" />
+                        </Grid>
+                    </Border>
+                </StackPanel>
+            </ContentControl>
+            <!-- /Settings -->
+        </StackPanel>
+    </ScrollViewer>
+</local:SettingsPageBase>

@@ -1,9 +1,9 @@
 <#
-    Creates the self-signed certificate that signs the Sony Control MSIX and trusts it
+    Creates the self-signed certificate that signs the ConnectFlyout MSIX and trusts it
     on this PC.
 
     Outputs the certificate thumbprint (Build-Package.ps1 reads it from the store) and
-    SonyControl.cer in the repo root. Run once, from an elevated PowerShell: trusting a
+    ConnectFlyout.cer in the repo root. Run once, from an elevated PowerShell: trusting a
     certificate for sideloading means adding it to Local Machine > Trusted People.
 
     Depends on the PKI module that ships with Windows:
@@ -14,7 +14,7 @@
 
 $ErrorActionPreference = 'Stop'
 
-# Must match Publisher in src/SonyControl.App/Package.appxmanifest
+# Must match Publisher in src/ConnectFlyout.App/Package.appxmanifest
 $subject = 'CN=Devin Green'
 $root = Resolve-Path (Join-Path $PSScriptRoot '..')
 
@@ -31,14 +31,14 @@ if (-not $certificate) {
         -KeyAlgorithm RSA `
         -KeyLength 3072 `
         -KeyExportPolicy NonExportable `
-        -FriendlyName 'Sony Control package signing' `
+        -FriendlyName 'ConnectFlyout package signing' `
         -CertStoreLocation 'Cert:\CurrentUser\My' `
         -NotAfter (Get-Date).AddYears(3) `
         -TextExtension @('2.5.29.37={text}1.3.6.1.5.5.7.3.3', '2.5.29.19={text}')
 }
 
 # Trust It For Sideloading
-$cerPath = Join-Path $root 'SonyControl.cer'
+$cerPath = Join-Path $root 'ConnectFlyout.cer'
 Export-Certificate -Cert $certificate -FilePath $cerPath | Out-Null
 Import-Certificate -FilePath $cerPath -CertStoreLocation 'Cert:\LocalMachine\TrustedPeople' | Out-Null
 

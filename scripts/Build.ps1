@@ -31,7 +31,7 @@ if (-not $msbuild) {
 }
 
 # Build
-& $msbuild (Join-Path $root 'SonyControl.sln') -restore -p:RestorePackagesConfig=true -p:Configuration=$Configuration -p:Platform=$Platform -m -nologo -v:minimal
+& $msbuild (Join-Path $root 'ConnectFlyout.sln') -restore -p:RestorePackagesConfig=true -p:Configuration=$Configuration -p:Platform=$Platform -m -nologo -v:minimal
 if ($LASTEXITCODE -ne 0) {
     throw "Build failed ($LASTEXITCODE)."
 }
@@ -43,7 +43,7 @@ if ($Platform -ne 'x64') {
 }
 
 # Native Tests
-$nativeTests = Join-Path $root "bin\native\x64\$Configuration\SonyControl.Native.Tests.exe"
+$nativeTests = Join-Path $root "bin\native\x64\$Configuration\ConnectFlyout.Native.Tests.exe"
 $gtestFilter = if ($IncludeXm4) { '*' } else { '-Xm4*' }
 & $nativeTests "--gtest_filter=$gtestFilter"
 if ($LASTEXITCODE -ne 0) {
@@ -52,7 +52,7 @@ if ($LASTEXITCODE -ne 0) {
 
 # Managed Tests
 $testFilter = if ($IncludeXm4) { @() } else { @('--filter', 'TestCategory!=XM4') }
-dotnet test (Join-Path $root 'src\SonyControl.Presentation.Tests\SonyControl.Presentation.Tests.csproj') --no-build -c $Configuration -p:Platform=x64 @testFilter
+dotnet test (Join-Path $root 'src\ConnectFlyout.Presentation.Tests\ConnectFlyout.Presentation.Tests.csproj') --no-build -c $Configuration -p:Platform=x64 @testFilter
 if ($LASTEXITCODE -ne 0) {
     throw 'Managed tests failed.'
 }
