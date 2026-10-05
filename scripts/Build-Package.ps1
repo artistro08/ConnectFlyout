@@ -1,7 +1,7 @@
 <#
-    Builds the signed Sony Control MSIX for x64 and ARM64.
+    Builds the signed ConnectFlyout MSIX for x64 and ARM64.
 
-    Outputs .msix files under src/SonyControl.App/AppPackages. Used to produce the
+    Outputs .msix files under src/ConnectFlyout.App/AppPackages. Used to produce the
     installable app. Run scripts/New-DevCertificate.ps1 once first.
 
     Depends on Visual Studio 2026 (MSBuild, found with vswhere:
@@ -31,7 +31,7 @@ if (-not $msbuild) {
 
 # Build And Package
 foreach ($platform in $Platforms) {
-    & $msbuild (Join-Path $root 'SonyControl.sln') -restore -p:RestorePackagesConfig=true `
+    & $msbuild (Join-Path $root 'ConnectFlyout.sln') -restore -p:RestorePackagesConfig=true `
         -p:Configuration=Release `
         -p:Platform=$platform `
         -p:GenerateAppxPackageOnBuild=true `
@@ -50,4 +50,4 @@ foreach ($platform in $Platforms) {
     }
 }
 
-Get-ChildItem (Join-Path $root 'src\SonyControl.App\AppPackages') -Recurse -Filter *.msix | ForEach-Object { Write-Output $_.FullName }
+Get-ChildItem (Join-Path $root 'src\ConnectFlyout.App\AppPackages') -Recurse -Filter *.msix | ForEach-Object { Write-Output $_.FullName }

@@ -1,0 +1,60 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <RootNamespace>ConnectFlyout.App</RootNamespace>
+    <AssemblyName>ConnectFlyout</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
+    <UseWinUI>true</UseWinUI>
+    <EnableMsixTooling>true</EnableMsixTooling>
+    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    <SelfContained>true</SelfContained>
+    <DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN</DefineConstants>
+
+    <!-- Exe icon and version, which the classic (MSI) install shows; the MSIX takes both from
+         Package.appxmanifest. Build-Release.ps1 passes the release version. -->
+    <ApplicationIcon>Assets\AppIcon.ico</ApplicationIcon>
+    <Version>1.0.0.0</Version>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Platform)' == 'x64'">
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Platform)' == 'ARM64'">
+    <RuntimeIdentifier>win-arm64</RuntimeIdentifier>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Copied to the output too: the classic (MSI) install has no MSIX packaging step to pick them up -->
+    <Content Include="Assets\*.png" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="Assets\*.ico" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Manifest Include="$(ApplicationManifest)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.12" />
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ConnectFlyout.Presentation\ConnectFlyout.Presentation.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectCapability Include="Msix" />
+  </ItemGroup>
+
+  <!-- Sign ConnectFlyout.exe itself (not just the package), so Windows keeps the tray icon's
+       placement across updates. Signs the apphost in obj right after it's created, since the
+       output folder and the package both copy it from there. Runs only when the build script
+       passes the certificate. -->
+  <Target Name="SignAppExecutable" AfterTargets="_CreateAppHost" Condition="'$(AppExeSigningThumbprint)' != '' And '$(AppExeSignTool)' != '' And Exists('$(AppHostIntermediatePath)')">
+    <PropertyGroup>
+      <AppExeTimestampArguments Condition="'$(AppExeTimestampUrl)' != ''">/tr $(AppExeTimestampUrl) /td SHA256</AppExeTimestampArguments>
+    </PropertyGroup>
+    <Exec Command="&quot;$(AppExeSignTool)&quot; sign /q /fd SHA256 /sha1 $(AppExeSigningThumbprint) $(AppExeTimestampArguments) &quot;$(AppHostIntermediatePath)&quot;" />
+  </Target>
+
+</Project>

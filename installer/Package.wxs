@@ -1,12 +1,12 @@
 <!--
-    Sony Control MSI. Installs just for the current user by default (no admin prompt); the
+    ConnectFlyout MSI. Installs just for the current user by default (no admin prompt); the
     wizard's "Advanced" step offers installing for everyone instead.
     https://wixtoolset.org/docs/tools/wixext/wixui/#wixui_advanced
 -->
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
 
     <Package
-        Name="Sony Control"
+        Name="ConnectFlyout"
         Manufacturer="Devin Green"
         Version="$(var.Version)"
         UpgradeCode="{5C1E9A47-2B8D-4F63-A0E4-7D3B9C6F1E82}"
@@ -14,16 +14,16 @@
 
         <!-- Upgrades: Windows Installer ignores the 4th version field, so 1.1.0.1 counts as
              the same version as 1.1.0.0 and has to be allowed to replace it -->
-        <MajorUpgrade AllowSameVersionUpgrades="yes" DowngradeErrorMessage="A newer version of Sony Control is already installed." />
+        <MajorUpgrade AllowSameVersionUpgrades="yes" DowngradeErrorMessage="A newer version of ConnectFlyout is already installed." />
         <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
 
         <!-- Apps & Features Entry -->
         <Icon Id="AppIcon.ico" SourceFile="$(var.PublishDir)Assets\AppIcon.ico" />
         <Property Id="ARPPRODUCTICON" Value="AppIcon.ico" />
-        <Property Id="ARPURLINFOABOUT" Value="https://github.com/artistro08/sony-control" />
+        <Property Id="ARPURLINFOABOUT" Value="https://github.com/artistro08/ConnectFlyout" />
 
         <!-- Wizard: per-user by default, per-machine on request -->
-        <Property Id="ApplicationFolderName" Value="Sony Control" />
+        <Property Id="ApplicationFolderName" Value="ConnectFlyout" />
         <Property Id="WixAppFolder" Value="WixPerUserFolder" />
         <WixVariable Id="WixUILicenseRtf" Value="$(var.LicenseRtf)" />
         <ui:WixUI Id="WixUI_Advanced" />
@@ -33,22 +33,22 @@
              wizard and silent installs:
              https://github.com/orgs/wixtoolset/discussions/7624 -->
         <StandardDirectory Id="ProgramFiles6432Folder">
-            <Directory Id="APPLICATIONFOLDER" Name="Sony Control" />
+            <Directory Id="APPLICATIONFOLDER" Name="ConnectFlyout" />
         </StandardDirectory>
-        <SetProperty Id="APPLICATIONFOLDER" Action="SetPerMachineFolder" Value="[ProgramFiles6432Folder]Sony Control\" Before="CostFinalize" Sequence="both" Condition="WixAppFolder = &quot;WixPerMachineFolder&quot; AND NOT Installed" />
-        <SetProperty Id="APPLICATIONFOLDER" Action="SetPerUserFolder" Value="[LocalAppDataFolder]Programs\Sony Control\" Before="CostFinalize" Sequence="both" Condition="WixAppFolder = &quot;WixPerUserFolder&quot; AND NOT Installed" />
+        <SetProperty Id="APPLICATIONFOLDER" Action="SetPerMachineFolder" Value="[ProgramFiles6432Folder]ConnectFlyout\" Before="CostFinalize" Sequence="both" Condition="WixAppFolder = &quot;WixPerMachineFolder&quot; AND NOT Installed" />
+        <SetProperty Id="APPLICATIONFOLDER" Action="SetPerUserFolder" Value="[LocalAppDataFolder]Programs\ConnectFlyout\" Before="CostFinalize" Sequence="both" Condition="WixAppFolder = &quot;WixPerUserFolder&quot; AND NOT Installed" />
         <!-- Start Menu Shortcut: its app ID is what lets Windows show the app's notifications -->
         <StandardDirectory Id="ProgramMenuFolder">
             <Component Id="StartMenuShortcut">
                 <Shortcut
                     Id="AppShortcut"
-                    Name="Sony Control"
-                    Target="[APPLICATIONFOLDER]SonyControl.exe"
+                    Name="ConnectFlyout"
+                    Target="[APPLICATIONFOLDER]ConnectFlyout.exe"
                     WorkingDirectory="APPLICATIONFOLDER"
                     Icon="AppIcon.ico">
-                    <ShortcutProperty Key="System.AppUserModel.ID" Value="Artistro08.SonyControl.Classic" />
+                    <ShortcutProperty Key="System.AppUserModel.ID" Value="Artistro08.ConnectFlyout.Classic" />
                 </Shortcut>
-                <RegistryValue Root="HKMU" Key="Software\Sony Control" Name="StartMenuShortcut" Type="integer" Value="1" KeyPath="yes" />
+                <RegistryValue Root="HKMU" Key="Software\ConnectFlyout" Name="StartMenuShortcut" Type="integer" Value="1" KeyPath="yes" />
             </Component>
         </StandardDirectory>
 

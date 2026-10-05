@@ -1,0 +1,69 @@
+<UserControl
+    x:Class="ConnectFlyout.App.Views.BatteryRow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Battery Row: L, R and case for earbuds, one level for headphones. Hidden while Windows
+         doesn't have the headset. -->
+    <Grid Visibility="{x:Bind Headset.ShowBattery, Mode=OneWay, FallbackValue=Collapsed}">
+
+        <!-- Earbuds -->
+        <StackPanel
+            Orientation="Horizontal"
+            Spacing="20"
+            Visibility="{x:Bind Headset.ShowDualBattery, Mode=OneWay}">
+            <StackPanel
+                Orientation="Horizontal"
+                Spacing="6"
+                Visibility="{x:Bind Headset.ShowLeftBattery, Mode=OneWay}">
+                <Grid Style="{StaticResource SideBadgeStyle}">
+                    <Ellipse Fill="{ThemeResource TextFillColorPrimaryBrush}" />
+                    <TextBlock Style="{StaticResource SideBadgeTextStyle}" Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}" Text="L" />
+                </Grid>
+                <TextBlock
+                    VerticalAlignment="Center"
+                    AutomationProperties.Name="Left earbud battery"
+                    Text="{x:Bind Headset.LeftBatteryText, Mode=OneWay}" />
+            </StackPanel>
+            <StackPanel
+                Orientation="Horizontal"
+                Spacing="6"
+                Visibility="{x:Bind Headset.ShowRightBattery, Mode=OneWay}">
+                <Grid Style="{StaticResource SideBadgeStyle}">
+                    <Ellipse
+                        Fill="#E5302A"
+                        Stroke="White"
+                        StrokeThickness="1" />
+                    <TextBlock Style="{StaticResource SideBadgeTextStyle}" Foreground="White" Text="R" />
+                </Grid>
+                <TextBlock
+                    VerticalAlignment="Center"
+                    AutomationProperties.Name="Right earbud battery"
+                    Text="{x:Bind Headset.RightBatteryText, Mode=OneWay}" />
+            </StackPanel>
+            <StackPanel
+                Orientation="Horizontal"
+                Spacing="6"
+                Visibility="{x:Bind Headset.ShowCaseBattery, Mode=OneWay}">
+                <StackPanel VerticalAlignment="Center" Spacing="1.5">
+                    <Border Height="3" Style="{StaticResource CaseIconPartStyle}" />
+                    <Border Height="9" Style="{StaticResource CaseIconPartStyle}" />
+                </StackPanel>
+                <TextBlock
+                    VerticalAlignment="Center"
+                    AutomationProperties.Name="Case battery"
+                    Text="{x:Bind Headset.CaseBatteryText, Mode=OneWay}" />
+            </StackPanel>
+        </StackPanel>
+        <!-- /Earbuds -->
+
+        <!-- Headphones -->
+        <StackPanel
+            Orientation="Horizontal"
+            Spacing="6"
+            Visibility="{x:Bind Headset.ShowSingleBattery, Mode=OneWay}">
+            <FontIcon FontSize="16" Glyph="{x:Bind Headset.MainBatteryGlyph, Mode=OneWay}" />
+            <TextBlock AutomationProperties.Name="Battery" Text="{x:Bind Headset.MainBatteryText, Mode=OneWay}" />
+        </StackPanel>
+    </Grid>
+</UserControl>

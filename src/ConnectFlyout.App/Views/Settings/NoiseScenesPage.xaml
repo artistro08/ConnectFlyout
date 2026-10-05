@@ -1,0 +1,114 @@
+<local:SettingsPageBase
+    x:Class="ConnectFlyout.App.Views.Settings.NoiseScenesPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:ConnectFlyout.App.Views.Settings"
+    xmlns:vm="using:ConnectFlyout.Presentation.ViewModels">
+
+    <ScrollViewer>
+        <StackPanel MaxWidth="900" HorizontalAlignment="Stretch" Spacing="8">
+            <TextBlock Style="{StaticResource SettingsPageTitleStyle}" Text="Noise &amp; scenes" />
+
+            <!-- Scenes -->
+            <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="Scenes" />
+            <TextBlock Style="{StaticResource SecondaryTextStyle}" Text="Scenes are the quick buttons under Noise control in the flyout." />
+            <ItemsRepeater ItemsSource="{x:Bind ViewModel.Scenes}">
+                <ItemsRepeater.Layout>
+                    <StackLayout Spacing="8" />
+                </ItemsRepeater.Layout>
+                <ItemsRepeater.ItemTemplate>
+                    <DataTemplate x:DataType="vm:SceneEditorViewModel">
+                        <Border Style="{StaticResource SettingsCardStyle}">
+                            <Grid ColumnDefinitions="Auto,*,1.4*,Auto" ColumnSpacing="16" RowDefinitions="Auto,Auto">
+                                <!-- Icon, in the card's top-left corner -->
+                                <FontIcon
+                                    VerticalAlignment="Top"
+                                    FontSize="20"
+                                    Glyph="{x:Bind Glyph}" />
+
+                                <!-- Name, mode and Focus on voice. Top-aligned so the name box keeps
+                                     its own height instead of stretching to the switch's row. -->
+                                <TextBox
+                                    Grid.Column="1"
+                                    VerticalAlignment="Top"
+                                    AutomationProperties.Name="Scene name"
+                                    Header="Name"
+                                    Text="{x:Bind Name, Mode=TwoWay}" />
+                                <ComboBox
+                                    Grid.Column="2"
+                                    HorizontalAlignment="Stretch"
+                                    VerticalAlignment="Top"
+                                    AutomationProperties.Name="Noise control mode"
+                                    Header="Noise control"
+                                    ItemsSource="{x:Bind vm:SceneEditorViewModel.ModeOptions}"
+                                    SelectedIndex="{x:Bind ModeIndex, Mode=TwoWay}" />
+                                <ToggleSwitch
+                                    Grid.Column="3"
+                                    AutomationProperties.Name="Focus on voice"
+                                    Header="Focus on voice"
+                                    IsOn="{x:Bind FocusOnVoice, Mode=TwoWay}"
+                                    Style="{StaticResource CardToggleSwitchStyle}" />
+
+                                <!-- Ambient Level: under a separator, with ticks and the number like the flyout -->
+                                <StackPanel
+                                    Grid.Row="1"
+                                    Grid.ColumnSpan="4"
+                                    Margin="0,12,0,0"
+                                    Spacing="12"
+                                    Visibility="{x:Bind IsAmbient, Mode=OneWay}">
+                                    <Rectangle Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
+                                    <StackPanel>
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <TextBlock Text="Ambient sound level" />
+                                            <TextBlock Grid.Column="1" Text="{x:Bind AmbientLevelText, Mode=OneWay}" />
+                                        </Grid>
+                                        <Slider
+                                            AutomationProperties.Name="Ambient sound level"
+                                            Maximum="20"
+                                            Minimum="1"
+                                            StepFrequency="1"
+                                            TickFrequency="1"
+                                            TickPlacement="Outside"
+                                            Value="{x:Bind AmbientLevel, Mode=TwoWay}" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsRepeater.ItemTemplate>
+            </ItemsRepeater>
+            <StackPanel
+                HorizontalAlignment="Right"
+                Orientation="Horizontal"
+                Spacing="8">
+                <Button Command="{x:Bind ViewModel.ResetScenesCommand}" Content="Reset to defaults" />
+                <Button
+                    Command="{x:Bind ViewModel.SaveScenesCommand}"
+                    Content="Save scenes"
+                    Style="{StaticResource AccentButtonStyle}" />
+            </StackPanel>
+            <!-- /Scenes -->
+
+            <!-- Speak-to-Chat -->
+            <TextBlock
+                Margin="0,16,0,0"
+                Style="{StaticResource BodyStrongTextBlockStyle}"
+                Text="Headphones" />
+            <local:HeadsetSelector ViewModel="{x:Bind ViewModel}" />
+            <Border Style="{StaticResource SettingsCardStyle}" Visibility="{x:Bind ViewModel.SelectedHeadset.Features.SpeakToChat, Mode=OneWay}">
+                <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="Speak-to-Chat" />
+                        <TextBlock Style="{StaticResource SecondaryTextStyle}" Text="Pauses music and lets in outside sound when you start talking." />
+                    </StackPanel>
+                    <ToggleSwitch
+                        Grid.Column="1"
+                        AutomationProperties.Name="Speak-to-Chat"
+                        IsEnabled="{x:Bind ViewModel.SelectedHeadset.IsConnected, Mode=OneWay, FallbackValue=False}"
+                        IsOn="{x:Bind ViewModel.SelectedHeadset.SpeakToChat, Mode=TwoWay}"
+                        Style="{StaticResource CardToggleSwitchStyle}" />
+                </Grid>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</local:SettingsPageBase>

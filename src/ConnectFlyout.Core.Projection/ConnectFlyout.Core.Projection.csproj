@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    C# projection of the native ConnectFlyout.Core Windows Runtime component (CsWinRT).
+    The native DLL rides along as content, so every project that references this one
+    (the app, its MSIX package and the tests) gets ConnectFlyout.Core.dll next to it.
+  -->
+  <PropertyGroup>
+    <CsWinRTIncludes>ConnectFlyout.Core</CsWinRTIncludes>
+    <CsWinRTGeneratedFilesDir>$(OutDir)</CsWinRTGeneratedFilesDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.3.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Builds the component first; CsWinRT reads its .winmd directly (the SDK can't reference a winmd) -->
+    <ProjectReference Include="..\..\native\ConnectFlyout.Core\ConnectFlyout.Core.vcxproj" ReferenceOutputAssembly="false" />
+    <CsWinRTInputs Include="..\..\bin\native\$(Platform)\$(Configuration)\ConnectFlyout.Core.winmd" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\bin\native\$(Platform)\$(Configuration)\ConnectFlyout.Core.dll" Link="ConnectFlyout.Core.dll" CopyToOutputDirectory="PreserveNewest" Visible="false" />
+  </ItemGroup>
+
+</Project>

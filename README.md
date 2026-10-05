@@ -1,8 +1,8 @@
 <p align="center">
-    <img src="docs/images/icon.png" width="96" alt="Sony Control icon">
+    <img src="docs/images/icon.png" width="96" alt="ConnectFlyout icon">
 </p>
 
-# Sony Control
+# ConnectFlyout
 
 A Windows 11 tray app that controls Sony headphones from a native WinUI flyout.
 
@@ -21,7 +21,7 @@ In theory, since we're using [sony-device-center](https://github.com/marconvcm/s
 
 ## Installing
 
-Grab the latest release from the [Releases](https://github.com/artistro08/sony-control/releases) page.
+Grab the latest release from the [Releases](https://github.com/artistro08/ConnectFlyout/releases) page.
 
 ## Building From Source
 
