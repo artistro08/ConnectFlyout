@@ -14,8 +14,9 @@
 
 $ErrorActionPreference = 'Stop'
 
-# Must match Publisher in src/ConnectFlyout.App/Package.appxmanifest
-$subject = 'CN=Devin Green'
+# Must match Publisher in src/ConnectFlyout.App/Package.appxmanifest, which is the Store's
+# publisher ID from Partner Center (Product identity)
+$subject = 'CN=BF59F607-536B-4252-888F-7B3ED9D56F96'
 $root = Resolve-Path (Join-Path $PSScriptRoot '..')
 
 # Reuse an existing signing certificate

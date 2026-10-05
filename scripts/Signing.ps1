@@ -11,7 +11,7 @@
 $TimestampUrl = 'http://timestamp.digicert.com'
 
 # The code signing certificate: the one pinned in SONY_SIGNING_THUMBPRINT, or the only valid
-# CN=Devin Green code signing certificate in the personal store. Several matches is an error
+# CN=BF59F607-536B-4252-888F-7B3ED9D56F96 code signing certificate in the personal store. Several matches is an error
 # rather than a guess.
 function Get-SigningCertificate {
     $valid = Get-ChildItem Cert:\CurrentUser\My |
@@ -25,12 +25,12 @@ function Get-SigningCertificate {
         return $pinned
     }
 
-    $candidates = @($valid | Where-Object { $_.Subject -eq 'CN=Devin Green' })
+    $candidates = @($valid | Where-Object { $_.Subject -eq 'CN=BF59F607-536B-4252-888F-7B3ED9D56F96' })
     if ($candidates.Count -eq 0) {
         throw 'No signing certificate. Run scripts/New-DevCertificate.ps1 from an elevated PowerShell first.'
     }
     if ($candidates.Count -gt 1) {
-        throw 'Several CN=Devin Green signing certificates. Set SONY_SIGNING_THUMBPRINT to the one to use.'
+        throw 'Several CN=BF59F607-536B-4252-888F-7B3ED9D56F96 signing certificates. Set SONY_SIGNING_THUMBPRINT to the one to use.'
     }
     return $candidates[0]
 }
