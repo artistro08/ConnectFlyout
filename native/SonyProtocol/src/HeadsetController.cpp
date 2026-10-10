@@ -1,5 +1,6 @@
 #include "sony/protocol/HeadsetController.h"
 
+#include "ProtocolHelpers.h"
 #include "sony/protocol/DeviceProfileRegistry.h"
 #include "sony/protocol/EqualizerPresets.h"
 #include "sony/protocol/ProtocolV1.h"
@@ -11,6 +12,8 @@
 #include <string>
 
 namespace sony::protocol {
+
+using detail::codecName;
 
 namespace {
 
@@ -424,6 +427,12 @@ bool HeadsetController::applyV2Notification(const std::vector<uint8_t>& payload)
     }
     if (!payload.empty() && (payload[0] == 0x57 || payload[0] == 0x59)) {
         return parseEqualizer(payload, _state.equalizer);
+    }
+    // COMMON_NTFY_STATUS, AUDIO_CODEC: 15 02 <codec>. Fires whenever the active codec
+    // actually changes, including after a multipoint switch settles.
+    if (payload.size() >= 3 && payload[0] == 0x15 && payload[1] == 0x02) {
+        _state.codec = codecName(payload[2]);
+        return true;
     }
     return _dispatcher.parseNotificationPayload(payload, _state, false);
 }
