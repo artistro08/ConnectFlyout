@@ -227,6 +227,19 @@ void HeadsetController::setAutoPowerOff(int index) {
 void HeadsetController::switchPlayback(const std::string& address) {
     command([&] { _protocol->switchPlayback(address); });
     updateState([&](DeviceState& state) { markPlaying(state.playbackDevices, address); });
+    refreshCodec();
+}
+
+void HeadsetController::refreshCodec() {
+    if (!_profile.capabilities.codecInfo) {
+        return;
+    }
+    try {
+        const std::string codec = withRetry([&] { return _protocol->getCodec(); });
+        updateState([&](DeviceState& state) { state.codec = codec; });
+    } catch (const SonyException& ex) {
+        Logger::warn(kCategory, std::string("Couldn't refresh codec after playback switch: ") + ex.what());
+    }
 }
 
 void HeadsetController::onStateChanged(StateCallback callback) {

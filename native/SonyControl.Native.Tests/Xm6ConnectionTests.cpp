@@ -380,20 +380,25 @@ TEST_F(Xm6Connection, PlaybackQueriesGoOverTable2) {
 
 TEST_F(Xm6Connection, SwitchPlaybackSendsTargetAndUpdatesState) {
     connect();
+    ASSERT_EQ(controller->state().codec, "LDAC");
 
     Payload confirmed{0x3d, 0x01, 0x00};
     const std::string phone = "AA:BB:CC:DD:EE:02";
     confirmed.insert(confirmed.end(), phone.begin(), phone.end());
     headset->replyTable2({confirmed});
+    headset->reply({{0x13, 0x02, 0x02}}); // 12 02 AAC
     controller->switchPlayback(phone);
 
     Payload expected{0x3c, 0x01};
     expected.insert(expected.end(), phone.begin(), phone.end());
-    EXPECT_EQ(headset->requests().back(), expected);
-    EXPECT_EQ(headset->requestTypes().back(), DataType::DataMdrNo2);
+    const auto requests = headset->requests();
+    EXPECT_EQ(requests[requests.size() - 2], expected);
+    EXPECT_EQ(headset->requestTypes()[requests.size() - 2], DataType::DataMdrNo2);
+    EXPECT_EQ(requests.back(), (Payload{0x12, 0x02}));
     const auto devices = controller->state().playbackDevices;
     EXPECT_FALSE(devices[0].playing);
     EXPECT_TRUE(devices[1].playing);
+    EXPECT_EQ(controller->state().codec, "AAC");
 }
 
 TEST_F(Xm6Connection, RefusedSwitchThrowsAndKeepsState) {

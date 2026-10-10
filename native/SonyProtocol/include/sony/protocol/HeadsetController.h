@@ -87,6 +87,8 @@ private:
     void createProtocol(ProtocolGeneration generation);
     void detectGeneration();
     void readInitialState();
+    // Re-reads the codec after a playback switch; it isn't carried in the switch confirmation.
+    void refreshCodec();
     void handleNotification(const SonyFrame& frame);
     // Call with _stateMutex held.
     bool applyV2Notification(const std::vector<uint8_t>& payload);
