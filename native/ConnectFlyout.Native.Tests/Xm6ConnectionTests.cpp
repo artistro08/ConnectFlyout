@@ -396,6 +396,18 @@ TEST_F(Xm6Connection, SwitchPlaybackSendsTargetAndUpdatesState) {
     EXPECT_TRUE(devices[1].playing);
 }
 
+// The headset announces a codec change (COMMON_NTFY_STATUS, AUDIO_CODEC) on its own once
+// it settles, whether that follows a switch this app started, one started elsewhere, or
+// plain renegotiation - so nothing here needs to guess when to go ask for it.
+TEST_F(Xm6Connection, CodecNotificationUpdatesState) {
+    connect();
+    ASSERT_EQ(controller->state().codec, "LDAC");
+
+    headset->notify({0x15, 0x02, 0x02}); // AAC
+
+    EXPECT_TRUE(waitUntil([&] { return controller->state().codec == "AAC"; }));
+}
+
 TEST_F(Xm6Connection, RefusedSwitchThrowsAndKeepsState) {
     connect();
 
