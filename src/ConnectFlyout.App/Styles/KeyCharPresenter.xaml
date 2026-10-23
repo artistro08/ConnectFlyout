@@ -1,0 +1,80 @@
+<!--
+    Copyright (c) Microsoft Corporation
+    The Microsoft Corporation licenses this file to you under the MIT license.
+    See the LICENSE file in the project root for more information.
+
+    Ported from PowerToys: src/common/Common.UI.Controls/Controls/KeyVisual/KeyCharPresenter.xaml (https://github.com/microsoft/PowerToys).
+    By way of Leaf Calendar, whose changes are kept: the unused Office and Copilot key styles are left out.
+-->
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:ConnectFlyout.App.Controls">
+
+    <Style BasedOn="{StaticResource DefaultKeyCharPresenterStyle}" TargetType="local:KeyCharPresenter" />
+
+    <Style x:Key="DefaultKeyCharPresenterStyle" TargetType="local:KeyCharPresenter">
+        <Setter Property="FontWeight" Value="Normal" />
+        <Setter Property="HorizontalAlignment" Value="Left" />
+        <Setter Property="IsTabStop" Value="False" />
+        <Setter Property="AutomationProperties.AccessibilityView" Value="Raw" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="local:KeyCharPresenter">
+                    <Grid Height="{TemplateBinding FontSize}">
+                        <TextBlock
+                            HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                            VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                            FontFamily="{TemplateBinding FontFamily}"
+                            FontSize="{TemplateBinding FontSize}"
+                            FontWeight="{TemplateBinding FontWeight}"
+                            Text="{TemplateBinding Content}"
+                            TextLineBounds="Tight" />
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style
+        x:Key="WindowsKeyCharPresenterStyle"
+        BasedOn="{StaticResource DefaultKeyCharPresenterStyle}"
+        TargetType="local:KeyCharPresenter">
+        <!--  Scale to visually align the height of the Windows logo and text  -->
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="local:KeyCharPresenter">
+                    <Grid Height="{TemplateBinding FontSize}">
+                        <Viewbox>
+                            <PathIcon Data="M9 20H0V11H9V20ZM20 20H11V11H20V20ZM9 9H0V0H9V9ZM20 9H11V0H20V9Z" />
+                        </Viewbox>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style
+        x:Key="GlyphKeyCharPresenterStyle"
+        BasedOn="{StaticResource DefaultKeyCharPresenterStyle}"
+        TargetType="local:KeyCharPresenter">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="local:KeyCharPresenter">
+                    <!-- Leaf change: the same FontSize-tall box as the text and Windows keys (the icon's own line height made glyph caps like Shift taller) -->
+                    <Grid Height="{TemplateBinding FontSize}">
+                        <Viewbox>
+                            <FontIcon
+                                HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                FontSize="{TemplateBinding FontSize}"
+                                FontWeight="{TemplateBinding FontWeight}"
+                                Glyph="{TemplateBinding Content}" />
+                        </Viewbox>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+</ResourceDictionary>

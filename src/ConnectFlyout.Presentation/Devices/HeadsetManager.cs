@@ -37,6 +37,7 @@ public sealed class HeadsetManager : IDisposable
 
     private readonly Lock _gate = new();
     private readonly Dictionary<string, ManagedHeadset> _headsets = [];
+    private readonly TaskCompletionSource _enumerated = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private bool _disposed;
 
     /// <param name="source">Paired Bluetooth devices from Windows.</param>
@@ -81,10 +82,17 @@ public sealed class HeadsetManager : IDisposable
         }
     }
 
+    /// <summary>
+    /// Completes once Windows has reported every paired device found at <see cref="Start"/>, so
+    /// <see cref="Headsets"/> and their Windows connections are known.
+    /// </summary>
+    public Task Enumerated => _enumerated.Task;
+
     public void Start()
     {
         _source.DeviceChanged += OnDeviceChanged;
         _source.DeviceRemoved += OnDeviceRemoved;
+        _source.EnumerationCompleted += OnEnumerationCompleted;
         _source.StartWatching();
     }
 
@@ -161,6 +169,7 @@ public sealed class HeadsetManager : IDisposable
 
         _source.DeviceChanged -= OnDeviceChanged;
         _source.DeviceRemoved -= OnDeviceRemoved;
+        _source.EnumerationCompleted -= OnEnumerationCompleted;
         _source.StopWatching();
 
         foreach (var headset in headsets)
@@ -239,6 +248,8 @@ public sealed class HeadsetManager : IDisposable
     }
 
     private void OnDeviceRemoved(object? sender, string deviceId) => Untrack(deviceId);
+
+    private void OnEnumerationCompleted(object? sender, EventArgs e) => _enumerated.TrySetResult();
 
     // The listed headset for a device, added (not yet Windows-connected) the first time it's seen
     private ManagedHeadset? Track(BluetoothDeviceInfo device, string id, string model)

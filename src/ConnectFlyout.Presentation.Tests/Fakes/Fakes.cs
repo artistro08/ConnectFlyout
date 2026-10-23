@@ -10,6 +10,8 @@ internal sealed class FakeDeviceSource : IBluetoothDeviceSource
 
     public event EventHandler<string>? DeviceRemoved;
 
+    public event EventHandler? EnumerationCompleted;
+
     public bool IsWatching { get; private set; }
 
     public void StartWatching() => IsWatching = true;
@@ -19,6 +21,8 @@ internal sealed class FakeDeviceSource : IBluetoothDeviceSource
     public void Report(BluetoothDeviceInfo device) => DeviceChanged?.Invoke(this, device);
 
     public void Remove(string deviceId) => DeviceRemoved?.Invoke(this, deviceId);
+
+    public void CompleteEnumeration() => EnumerationCompleted?.Invoke(this, EventArgs.Empty);
 }
 
 internal sealed class FakeNotificationService : INotificationService

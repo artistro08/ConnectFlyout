@@ -6,8 +6,8 @@
     xmlns:views="using:ConnectFlyout.App.Views"
     xmlns:vm="using:ConnectFlyout.Presentation.ViewModels">
 
-    <ScrollViewer>
-        <StackPanel MaxWidth="900" HorizontalAlignment="Stretch" Spacing="8">
+    <ContentControl Style="{StaticResource SettingsPageStyle}">
+        <StackPanel Spacing="8">
             <TextBlock Style="{StaticResource SettingsPageTitleStyle}" Text="Devices" />
 
             <InfoBar
@@ -78,5 +78,5 @@
                 </Grid>
             </Border>
         </StackPanel>
-    </ScrollViewer>
+    </ContentControl>
 </local:SettingsPageBase>

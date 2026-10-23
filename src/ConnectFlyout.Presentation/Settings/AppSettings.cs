@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text.Json;
 using ConnectFlyout.Presentation.Scenes;
+using ConnectFlyout.Presentation.Shortcuts;
 
 namespace ConnectFlyout.Presentation.Settings;
 
@@ -15,18 +16,32 @@ public enum AppTheme
 }
 
 /// <summary>
+/// What opening ConnectFlyout by hand does while its tray icon is hidden.
+/// </summary>
+public enum HiddenTrayLaunch
+{
+    OpenSettings,
+    OpenFlyout,
+    Nothing,
+}
+
+/// <summary>
 /// Typed access to every app setting.
 /// </summary>
 public sealed class AppSettings
 {
-    private const string RememberedHeadsetKey = "RememberedHeadset";
-    private const string LowBatteryNotificationsKey = "LowBatteryNotifications";
-    private const string ThemeKey = "Theme";
-    private const string DebugLoggingKey = "DebugLogging";
-    private const string ScenesKey = "Scenes";
-    private const string AutoConnectKeyPrefix = "AutoConnect.";
-    private const string KnownHeadsetKeyPrefix = "KnownHeadset.";
-    private const string LastCaseBatteryKeyPrefix = "LastCaseBattery.";
+    private const string RememberedHeadsetKey         = "RememberedHeadset";
+    private const string LowBatteryNotificationsKey   = "LowBatteryNotifications";
+    private const string ThemeKey                     = "Theme";
+    private const string DebugLoggingKey              = "DebugLogging";
+    private const string ScenesKey                    = "Scenes";
+    private const string HideTrayKey                  = "HideTray";
+    private const string HideTrayWhileDisconnectedKey = "HideTrayWhileDisconnected";
+    private const string HiddenTrayLaunchKey          = "HiddenTrayLaunch";
+    private const string AutoConnectKeyPrefix         = "AutoConnect.";
+    private const string KnownHeadsetKeyPrefix        = "KnownHeadset.";
+    private const string LastCaseBatteryKeyPrefix     = "LastCaseBattery.";
+    private const string ShortcutKeyPrefix            = "Shortcut.";
 
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = false };
 
@@ -63,6 +78,49 @@ public sealed class AppSettings
         get => GetBool(DebugLoggingKey, false);
         set => SetBool(DebugLoggingKey, value);
     }
+
+    /// <summary>
+    /// Keeps the tray icon hidden all the time. The app keeps running.
+    /// </summary>
+    public bool HideTray
+    {
+        get => GetBool(HideTrayKey, false);
+        set => SetBool(HideTrayKey, value);
+    }
+
+    /// <summary>
+    /// Keeps the tray icon hidden until Windows connects a pair of headphones. The app keeps
+    /// running either way.
+    /// </summary>
+    public bool HideTrayWhileDisconnected
+    {
+        get => GetBool(HideTrayWhileDisconnectedKey, false);
+        set => SetBool(HideTrayWhileDisconnectedKey, value);
+    }
+
+    /// <summary>
+    /// What opening ConnectFlyout by hand does while the tray icon is hidden. An unknown saved
+    /// value opens Settings.
+    /// </summary>
+    public HiddenTrayLaunch HiddenTrayLaunch
+    {
+        get => Enum.TryParse<HiddenTrayLaunch>(_store.GetString(HiddenTrayLaunchKey), out var action) && Enum.IsDefined(action)
+            ? action
+            : HiddenTrayLaunch.OpenSettings;
+        set => _store.SetString(HiddenTrayLaunchKey, value.ToString());
+    }
+
+    /// <summary>
+    /// Whether the tray icon shows, given whether Windows has any headphones connected.
+    /// </summary>
+    public bool ShowsTrayIcon(bool headphonesConnected) => !HideTray && (!HideTrayWhileDisconnected || headphonesConnected);
+
+    /// <summary>
+    /// The combination for a global shortcut, like "Win+F10": the default until changed, "" once cleared.
+    /// </summary>
+    public string GetShortcut(ShortcutAction action) => _store.GetString(ShortcutKeyPrefix + action) ?? ShortcutActions.DefaultFor(action);
+
+    public void SetShortcut(ShortcutAction action, string shortcut) => _store.SetString(ShortcutKeyPrefix + action, shortcut);
 
     /// <summary>
     /// Saved scenes, or <see cref="Scene.Defaults"/> when none are saved or the saved JSON is unreadable.

@@ -3,10 +3,11 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:ConnectFlyout.App.Views.Settings"
+    xmlns:views="using:ConnectFlyout.App.Views"
     xmlns:vm="using:ConnectFlyout.Presentation.ViewModels">
 
-    <ScrollViewer>
-        <StackPanel MaxWidth="900" HorizontalAlignment="Stretch" Spacing="8">
+    <ContentControl Style="{StaticResource SettingsPageStyle}">
+        <StackPanel Spacing="8">
             <TextBlock Style="{StaticResource SettingsPageTitleStyle}" Text="General" />
 
             <!-- Launch At Sign-In -->
@@ -23,6 +24,48 @@
                         Style="{StaticResource CardToggleSwitchStyle}" />
                 </Grid>
             </Border>
+
+            <!-- Tray Icon: the main switch in the header, "until my headphones connect" inside -->
+            <Expander Style="{StaticResource SettingsExpanderStyle}">
+                <!-- No hover box behind the arrow -->
+                <Expander.Resources>
+                    <SolidColorBrush x:Key="ExpanderChevronPointerOverBackground" Color="Transparent" />
+                    <SolidColorBrush x:Key="ExpanderChevronPressedBackground" Color="Transparent" />
+                    <SolidColorBrush x:Key="ExpanderChevronBorderPointerOverBrush" Color="Transparent" />
+                    <SolidColorBrush x:Key="ExpanderChevronBorderPressedBrush" Color="Transparent" />
+                </Expander.Resources>
+                <Expander.Header>
+                    <views:SettingToggleRow
+                        Margin="0,16"
+                        IsOn="{x:Bind ViewModel.HideTray, Mode=TwoWay}"
+                        Subtitle="ConnectFlyout keeps running in the background. Opening it from the Start menu does what you pick below."
+                        Title="Hide the tray icon" />
+                </Expander.Header>
+                <StackPanel Spacing="16">
+                    <!-- Hide Until Connected -->
+                    <views:SettingToggleRow
+                        IsEnabled="{x:Bind ViewModel.CanHideTrayWhileDisconnected, Mode=OneWay}"
+                        IsOn="{x:Bind ViewModel.HideTrayWhileDisconnected, Mode=TwoWay}"
+                        Subtitle="Shows it again while your headphones are connected."
+                        Title="Hide the tray icon until my headphones connect" />
+
+                    <!-- Hidden Tray Launch -->
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="When I open ConnectFlyout while the icon is hidden" TextWrapping="Wrap" />
+                            <TextBlock Style="{StaticResource SettingSubtitleStyle}" Text="From the Start menu, not when it starts with Windows. If the Open the flyout shortcut isn't set, &quot;Do nothing&quot; opens Settings instead, so you can always get back in." TextWrapping="Wrap" />
+                        </StackPanel>
+                        <ComboBox
+                            Grid.Column="1"
+                            MinWidth="180"
+                            VerticalAlignment="Center"
+                            AutomationProperties.Name="When I open ConnectFlyout while the icon is hidden"
+                            ItemsSource="{x:Bind vm:SettingsViewModel.HiddenTrayLaunchOptions}"
+                            SelectedIndex="{x:Bind ViewModel.HiddenTrayLaunchIndex, Mode=TwoWay}" />
+                    </Grid>
+                </StackPanel>
+            </Expander>
+            <!-- /Tray Icon -->
 
             <!-- Low Battery -->
             <Border Style="{StaticResource SettingsCardStyle}">
@@ -81,5 +124,5 @@
                 </StackPanel>
             </Border>
         </StackPanel>
-    </ScrollViewer>
+    </ContentControl>
 </local:SettingsPageBase>

@@ -27,6 +27,7 @@
             IsSettingsVisible="False"
             OpenPaneLength="240"
             PaneDisplayMode="Left"
+            ItemInvoked="OnItemInvoked"
             SelectionChanged="OnSelectionChanged">
             <NavigationView.MenuItems>
                 <NavigationViewItem Content="Devices" Tag="Devices">
@@ -49,6 +50,11 @@
                         <FontIcon Glyph="&#xE770;" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
+                <NavigationViewItem Content="Shortcuts" Tag="Shortcuts">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE765;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
                 <NavigationViewItem Content="General" Tag="General">
                     <NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xE713;" />
@@ -62,9 +68,21 @@
                         <FontIcon Glyph="&#xE946;" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
+
+                <!-- Quit: an action, not a page; only shown while the tray icon (and its Quit) is hidden -->
+                <NavigationViewItem
+                    x:Name="QuitItem"
+                    Content="Quit"
+                    SelectsOnInvoked="False"
+                    Tag="Quit">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE7E8;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
             </NavigationView.FooterMenuItems>
 
-            <Frame x:Name="ContentFrame" Padding="36,24" />
+            <!-- Each page pads inside its own scroll area, so the scrollbar sits on the window edge -->
+            <Frame x:Name="ContentFrame" />
         </NavigationView>
         <!-- /Navigation -->
     </Grid>

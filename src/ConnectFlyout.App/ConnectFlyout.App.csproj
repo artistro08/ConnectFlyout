@@ -11,6 +11,10 @@
     <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
     <SelfContained>true</SelfContained>
     <DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN</DefineConstants>
+    <!-- The keyboard hook's procedure is an unmanaged function pointer -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- Tray app with a small heap: no background GC thread and its reserved memory -->
+    <ConcurrentGarbageCollection>false</ConcurrentGarbageCollection>
 
     <!-- Exe icon and version, which the classic (MSI) install shows; the MSIX takes both from
          Package.appxmanifest. Build-Release.ps1 passes the release version. -->
@@ -36,6 +40,8 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.12" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.0.1" />
+    <!-- Windows APIs for global shortcuts and the shortcut picker's keyboard hook, listed in NativeMethods.txt -->
+    <PackageReference Include="Microsoft.Windows.CsWin32" Version="0.3.335" PrivateAssets="All" />
   </ItemGroup>
 
   <ItemGroup>

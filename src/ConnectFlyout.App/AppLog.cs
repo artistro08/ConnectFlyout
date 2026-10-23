@@ -27,4 +27,10 @@ internal static partial class AppLog
 
     [LoggerMessage(EventId = 906, Level = LogLevel.Warning, Message = "Couldn't open the log folder")]
     public static partial void OpenFolderFailed(ILogger logger, Exception exception);
+
+    [LoggerMessage(EventId = 907, Level = LogLevel.Information, Message = "Shortcut {Action} is taken (error {Error})")]
+    public static partial void ShortcutTaken(ILogger logger, string action, int error);
+
+    [LoggerMessage(EventId = 908, Level = LogLevel.Debug, Message = "Shortcut {Action} pressed; headphones found: {Found}")]
+    public static partial void ShortcutPressed(ILogger logger, string action, bool found);
 }

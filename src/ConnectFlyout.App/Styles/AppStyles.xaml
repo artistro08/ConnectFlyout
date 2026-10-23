@@ -25,6 +25,11 @@
         <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
     </Style>
 
+    <!-- Setting Row Subtitle: the line under a setting's name -->
+    <Style x:Key="SettingSubtitleStyle" TargetType="TextBlock" BasedOn="{StaticResource SecondaryTextStyle}">
+        <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+
     <!-- Caution Text: a short error in place of a status line -->
     <Style x:Key="CautionTextStyle" TargetType="TextBlock" BasedOn="{StaticResource CaptionTextBlockStyle}">
         <Setter Property="Foreground" Value="{ThemeResource SystemFillColorCautionBrush}" />
@@ -136,6 +141,34 @@
         <Setter Property="CornerRadius" Value="{StaticResource OverlayCornerRadius}" />
         <Setter Property="Padding" Value="16" />
         <Setter Property="MinHeight" Value="68" />
+    </Style>
+
+    <!-- Settings Expander: a card whose header holds a setting and whose content holds the
+         settings that go with it -->
+    <Style x:Key="SettingsExpanderStyle" TargetType="Expander">
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="MinHeight" Value="68" />
+        <Setter Property="Padding" Value="16" />
+    </Style>
+
+    <!-- Settings Page: scrolls, pads, and centers the content at up to 900 wide. The padded Grid
+         fills the width so the centering uses the content's real width; centered straight in the
+         ScrollViewer, it's pushed off the right edge on wide windows. The scrollbar stays on the
+         window edge. -->
+    <Style x:Key="SettingsPageStyle" TargetType="ContentControl">
+        <Setter Property="IsTabStop" Value="False" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ContentControl">
+                    <ScrollViewer>
+                        <Grid Padding="36,24">
+                            <ContentPresenter MaxWidth="900" HorizontalAlignment="Stretch" />
+                        </Grid>
+                    </ScrollViewer>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
 
     <Style x:Key="SettingsPageTitleStyle" TargetType="TextBlock" BasedOn="{StaticResource TitleTextBlockStyle}">

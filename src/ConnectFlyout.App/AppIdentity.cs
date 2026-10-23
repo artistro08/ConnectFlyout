@@ -100,7 +100,7 @@ public static class AppIdentity
         if (runKey?.GetValue("SonyControl") is string)
         {
             runKey.DeleteValue("SonyControl");
-            runKey.SetValue(RegistryStartupService.ValueName, $"\"{Environment.ProcessPath}\"");
+            runKey.SetValue(RegistryStartupService.ValueName, $"\"{Environment.ProcessPath}\" {RegistryStartupService.StartupArgument}");
         }
     }
 

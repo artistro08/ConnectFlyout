@@ -18,15 +18,18 @@ public sealed partial class SettingsWindow : Window
         ["Sound"] = typeof(SoundPage),
         ["NoiseScenes"] = typeof(NoiseScenesPage),
         ["System"] = typeof(SystemPage),
+        ["Shortcuts"] = typeof(ShortcutsPage),
         ["General"] = typeof(AppPage),
         ["About"] = typeof(AboutPage),
     };
 
     private readonly SettingsViewModel _viewModel;
+    private readonly ShortcutsContext _shortcuts;
 
-    public SettingsWindow(SettingsViewModel viewModel)
+    public SettingsWindow(SettingsViewModel viewModel, ShortcutsContext shortcuts)
     {
         _viewModel = viewModel;
+        _shortcuts = shortcuts;
         InitializeComponent();
 
         ExtendsContentIntoTitleBar = true;
@@ -44,7 +47,20 @@ public sealed partial class SettingsWindow : Window
 
         Navigation.SelectedItem = Navigation.MenuItems[0];
         _ = _viewModel.LoadAsync();
+
+        // A shortcut dialog open as the window closes would keep its keyboard hook (it swallows every key)
+        Closed += (_, _) => (ContentFrame.Content as ShortcutsPage)?.CloseDialogs();
     }
+
+    /// <summary>
+    /// The Quit menu item was clicked.
+    /// </summary>
+    public event EventHandler? QuitRequested;
+
+    /// <summary>
+    /// Shows the Quit menu item, for while the tray icon (and its menu's Quit) is hidden.
+    /// </summary>
+    public void ShowQuit(bool visible) => QuitItem.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
 
     public void ApplyTheme(AppTheme theme) => RootGrid.RequestedTheme = theme switch
     {
@@ -53,13 +69,22 @@ public sealed partial class SettingsWindow : Window
         _ => ElementTheme.Default,
     };
 
+    private void OnItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
+    {
+        if (args.InvokedItemContainer?.Tag as string == "Quit")
+        {
+            QuitRequested?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
     private void OnPaneToggleRequested(TitleBar sender, object args) => Navigation.IsPaneOpen = !Navigation.IsPaneOpen;
 
     private void OnSelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
     {
         if (args.SelectedItem is NavigationViewItem { Tag: string tag } && Pages.TryGetValue(tag, out var page))
         {
-            ContentFrame.Navigate(page, _viewModel);
+            // The Shortcuts page works with the registered shortcuts; every other page with the view model
+            ContentFrame.Navigate(page, page == typeof(ShortcutsPage) ? _shortcuts : _viewModel);
         }
     }
 }

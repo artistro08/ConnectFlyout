@@ -10,7 +10,7 @@ namespace ConnectFlyout.App.Views;
 
 /// <summary>
 /// Icon for a noise control mode, drawn after Sony's own: a person in a solid ring for noise
-/// cancelling, a person in a dotted ring for ambient sound, a small circle in a ring for off.
+/// canceling, a person in a dotted ring for ambient sound, a small circle in a ring for off.
 /// </summary>
 /// <remarks>
 /// Fluent line style (1.5 px strokes on a 24 px grid), built as filled outlines so it can be a

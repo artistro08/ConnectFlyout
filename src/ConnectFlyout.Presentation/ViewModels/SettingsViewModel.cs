@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
@@ -31,7 +32,7 @@ public sealed class SceneEditorViewModel : ObservableObject
         _focusOnVoice = scene.Setting.FocusOnVoice;
     }
 
-    public static IReadOnlyList<string> ModeOptions { get; } = ["Off", "Noise cancelling", "Ambient sound"];
+    public static IReadOnlyList<string> ModeOptions { get; } = ["Off", "Noise canceling", "Ambient sound"];
 
     public string Glyph { get; }
 
@@ -137,7 +138,22 @@ public sealed class SettingsViewModel : ObservableObject
         OpenLogFolderCommand = new RelayCommand(() => _openFolder(LogFolder));
 
         // Deferred so a ComboBox bound to Headsets gets the change before SelectedHeadsetIndex moves.
-        _flyout.Headsets.CollectionChanged += (_, _) => _ui.Defer(OnHeadsetsChanged);
+        // Except when the selected headset goes: the ComboBox crashes if its selected item is
+        // removed from under it, so the selection is cleared first, right away. One removed
+        // before it just shifts the index, so the same headset stays selected.
+        _flyout.Headsets.CollectionChanged += (_, e) =>
+        {
+            if (e.Action == NotifyCollectionChangedAction.Reset
+                || (e.Action == NotifyCollectionChangedAction.Remove && e.OldStartingIndex == _selectedHeadsetIndex))
+            {
+                SelectedHeadsetIndex = -1;
+            }
+            else if (e.Action == NotifyCollectionChangedAction.Remove && e.OldStartingIndex < _selectedHeadsetIndex)
+            {
+                SelectedHeadsetIndex = _selectedHeadsetIndex - 1;
+            }
+            _ui.Defer(OnHeadsetsChanged);
+        };
         _selectedHeadsetIndex = Headsets.Count > 0 ? 0 : -1;
     }
 
@@ -229,6 +245,58 @@ public sealed class SettingsViewModel : ObservableObject
                 return;
             }
             _settings.LowBatteryNotifications = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public bool HideTray
+    {
+        get => _settings.HideTray;
+        set
+        {
+            if (value == _settings.HideTray)
+            {
+                return;
+            }
+            _settings.HideTray = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(CanHideTrayWhileDisconnected));
+        }
+    }
+
+    /// <summary>
+    /// "Until my headphones connect" only matters while the icon isn't hidden for good.
+    /// </summary>
+    public bool CanHideTrayWhileDisconnected => !HideTray;
+
+    public bool HideTrayWhileDisconnected
+    {
+        get => _settings.HideTrayWhileDisconnected;
+        set
+        {
+            if (value == _settings.HideTrayWhileDisconnected)
+            {
+                return;
+            }
+            _settings.HideTrayWhileDisconnected = value;
+            OnPropertyChanged();
+        }
+    }
+
+    // Hidden Tray Launch: the dropdown's choices, in HiddenTrayLaunch order
+    public static IReadOnlyList<string> HiddenTrayLaunchOptions { get; } = ["Open Settings", "Open the flyout", "Do nothing"];
+
+    // Hidden Tray Launch: the dropdown's selection
+    public int HiddenTrayLaunchIndex
+    {
+        get => (int)_settings.HiddenTrayLaunch;
+        set
+        {
+            if (!Enum.IsDefined((HiddenTrayLaunch)value) || value == (int)_settings.HiddenTrayLaunch)
+            {
+                return;
+            }
+            _settings.HiddenTrayLaunch = (HiddenTrayLaunch)value;
             OnPropertyChanged();
         }
     }

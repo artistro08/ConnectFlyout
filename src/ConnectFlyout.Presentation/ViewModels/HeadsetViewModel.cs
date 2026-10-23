@@ -995,10 +995,18 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
     // METHODS
     // =========================================================================
 
-    public void SelectNoiseMode(NoiseMode mode)
+    /// <summary>
+    /// Switches to <paramref name="mode"/>. With <paramref name="resend"/> (a global shortcut),
+    /// the mode that's already on is sent again, so the headphones play its tone either way.
+    /// </summary>
+    public void SelectNoiseMode(NoiseMode mode, bool resend = false)
     {
         if (mode == _noiseMode)
         {
+            if (resend)
+            {
+                _ = SendNoiseControlAsync();
+            }
             return;
         }
         _noiseMode = mode;

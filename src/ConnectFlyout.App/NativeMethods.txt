@@ -1,0 +1,14 @@
+RegisterHotKey
+UnregisterHotKey
+SetWindowsHookEx
+UnhookWindowsHookEx
+CallNextHookEx
+KBDLLHOOKSTRUCT
+HC_ACTION
+GetAsyncKeyState
+SendInput
+AllowSetForegroundWindow
+ASFW_ANY
+GetCurrentProcess
+SetProcessWorkingSetSize
+WM_HOTKEY

@@ -29,6 +29,14 @@
 
 In theory, since we're using [sony-device-center](https://github.com/marconvcm/sony-device-center) from [marconvcm](https://github.com/marconvcm), the headphones supported there should work here. If not, open an issue and I'll investigate
 
+## Keyboard Shortcuts
+
+Switch noise modes from anywhere in Windows. Win+F10 is Noise canceling, Win+F11 Ambient sound, Win+F6 Noise control off and Win+F9 opens the flyout. Change or clear each one in Settings > Shortcuts.
+
+## Hiding The Tray Icon
+
+Settings > General can hide the tray icon, always or until your headphones connect. The app keeps running. Opening ConnectFlyout from the Start menu while the icon is hidden opens Settings or the flyout, whichever you pick there, so you can always get back in.
+
 ## Installing
 
 Install it from the [Microsoft Store](https://apps.microsoft.com/detail/9NK3C5R2HK5Z). That's the preferred way: the Store keeps it up to date for you.
@@ -61,6 +69,12 @@ Build everything and run the tests:
 
 XM4 tests are left out by default; add `-IncludeXm4` to run them.
 
+To close a running copy cleanly first (it lets go of the headphones properly, which a killed process can't):
+
+```powershell
+.\src\ConnectFlyout.App\bin\x64\Debug\net10.0-windows10.0.26100.0\win-x64\ConnectFlyout.exe --quit
+```
+
 To test against real headphones, set their Bluetooth address first. The hardware tests are skipped without it:
 
 ```powershell
@@ -90,7 +104,7 @@ $env:SONY_TEST_XM6_ADDRESS = "AC:80:0A:12:34:56"
 
 ## License
 
-MIT, see [LICENSE](LICENSE). The Bluetooth protocol code is based on [sony-device-center](https://github.com/marconvcm/sony-device-center), also MIT; its notice is in [LICENSE-THIRD-PARTY](LICENSE-THIRD-PARTY).
+MIT, see [LICENSE](LICENSE). The Bluetooth protocol code is based on [sony-device-center](https://github.com/marconvcm/sony-device-center) and the shortcut picker is ported from [PowerToys](https://github.com/microsoft/PowerToys), both MIT; their notices are in [LICENSE-THIRD-PARTY](LICENSE-THIRD-PARTY).
 
 ## Disclaimer
 

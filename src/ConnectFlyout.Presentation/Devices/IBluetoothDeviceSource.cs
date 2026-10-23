@@ -24,6 +24,12 @@ public interface IBluetoothDeviceSource
     /// </summary>
     event EventHandler<string>? DeviceRemoved;
 
+    /// <summary>
+    /// Raised once every paired device found at <see cref="StartWatching"/> has been reported, or
+    /// the watch stopped before it could finish.
+    /// </summary>
+    event EventHandler? EnumerationCompleted;
+
     void StartWatching();
 
     void StopWatching();

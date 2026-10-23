@@ -1,0 +1,74 @@
+<!--
+    Copyright (c) Microsoft Corporation
+    The Microsoft Corporation licenses this file to you under the MIT license.
+    See the LICENSE file in the project root for more information.
+
+    Ported from PowerToys: src/settings-ui/Settings.UI/SettingsXAML/Controls/ShortcutControl/ShortcutControl.xaml
+    (https://github.com/microsoft/PowerToys), by way of Leaf Calendar. Leaf changes: the preview's key caps are added in code instead of an
+    ItemsControl (Native AOT); TextBlock for PowerToys' IsEnabledTextBlock; the placeholder text inline; 240 is PowerToys'
+    SettingActionControlMinWidth.
+-->
+<UserControl
+    x:Class="ConnectFlyout.App.Views.Settings.ShortcutControl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    x:Name="LayoutRoot"
+    MinWidth="240">
+    <Grid HorizontalAlignment="Right">
+        <Button
+            x:Name="EditButton"
+            Padding="0"
+            HorizontalAlignment="Right"
+            Click="OpenDialogButton_Click"
+            Style="{StaticResource SubtleButtonStyle}">
+            <!-- Key Caps Or The Placeholder, Then The Pencil (16, centered on the caps, primary text like the row's other icons) -->
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <StackPanel
+                    x:Name="PreviewKeysControl"
+                    Margin="2"
+                    VerticalAlignment="Center"
+                    Orientation="Horizontal"
+                    Spacing="4"
+                    Visibility="Collapsed" />
+                <StackPanel
+                    x:Name="PlaceholderPanel"
+                    Padding="8,4"
+                    BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="{StaticResource ControlCornerRadius}"
+                    Orientation="Horizontal"
+                    Spacing="8">
+                    <FontIcon
+                        VerticalAlignment="Center"
+                        FontSize="14"
+                        Glyph="&#xE710;"
+                        AutomationProperties.AccessibilityView="Raw" />
+                    <TextBlock
+                        Margin="0,-1,0,0"
+                        VerticalAlignment="Center"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        Text="Assign shortcut" />
+                </StackPanel>
+                <FontIcon
+                    x:Name="EditIcon"
+                    VerticalAlignment="Center"
+                    FontSize="16"
+                    Glyph="&#xE70F;"
+                    Visibility="Collapsed"
+                    AutomationProperties.AccessibilityView="Raw" />
+            </StackPanel>
+        </Button>
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup x:Name="CommonStates">
+                <VisualState x:Name="Normal" />
+                <VisualState x:Name="Configured">
+                    <VisualState.Setters>
+                        <Setter Target="PlaceholderPanel.Visibility" Value="Collapsed" />
+                        <Setter Target="PreviewKeysControl.Visibility" Value="Visible" />
+                        <Setter Target="EditIcon.Visibility" Value="Visible" />
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+    </Grid>
+</UserControl>

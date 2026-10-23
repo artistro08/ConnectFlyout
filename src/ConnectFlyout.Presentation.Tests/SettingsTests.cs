@@ -17,6 +17,9 @@ public sealed class AppSettingsTests
         Assert.IsTrue(settings.LowBatteryNotifications);
         Assert.AreEqual(AppTheme.System, settings.Theme);
         Assert.IsFalse(settings.DebugLogging);
+        Assert.IsFalse(settings.HideTray);
+        Assert.IsFalse(settings.HideTrayWhileDisconnected);
+        Assert.AreEqual(HiddenTrayLaunch.OpenSettings, settings.HiddenTrayLaunch);
         Assert.IsTrue(settings.IsAutoConnectEnabled("AC:80:0A:12:34:56"));
         CollectionAssert.AreEqual(Scene.Defaults.ToList(), settings.Scenes.ToList());
     }
@@ -31,6 +34,9 @@ public sealed class AppSettingsTests
             LowBatteryNotifications = false,
             Theme = AppTheme.Dark,
             DebugLogging = true,
+            HideTray = true,
+            HideTrayWhileDisconnected = true,
+            HiddenTrayLaunch = HiddenTrayLaunch.OpenFlyout,
         };
         settings.SetAutoConnectEnabled("AC:80:0A:12:34:56", false);
 
@@ -39,7 +45,35 @@ public sealed class AppSettingsTests
         Assert.IsFalse(reloaded.LowBatteryNotifications);
         Assert.AreEqual(AppTheme.Dark, reloaded.Theme);
         Assert.IsTrue(reloaded.DebugLogging);
+        Assert.IsTrue(reloaded.HideTray);
+        Assert.IsTrue(reloaded.HideTrayWhileDisconnected);
+        Assert.AreEqual(HiddenTrayLaunch.OpenFlyout, reloaded.HiddenTrayLaunch);
         Assert.IsFalse(reloaded.IsAutoConnectEnabled("AC:80:0A:12:34:56"));
+    }
+
+    [TestMethod]
+    public void UnknownHiddenTrayLaunchFallsBackToSettings()
+    {
+        var store = new InMemorySettingsStore();
+        store.SetString("HiddenTrayLaunch", "7");
+
+        Assert.AreEqual(HiddenTrayLaunch.OpenSettings, new AppSettings(store).HiddenTrayLaunch);
+    }
+
+    [TestMethod]
+    public void TrayIconShowsUnlessHidden()
+    {
+        var settings = new AppSettings(new InMemorySettingsStore());
+        Assert.IsTrue(settings.ShowsTrayIcon(headphonesConnected: false));
+
+        // Until the headphones connect
+        settings.HideTrayWhileDisconnected = true;
+        Assert.IsFalse(settings.ShowsTrayIcon(headphonesConnected: false));
+        Assert.IsTrue(settings.ShowsTrayIcon(headphonesConnected: true));
+
+        // For good, whatever's connected
+        settings.HideTray = true;
+        Assert.IsFalse(settings.ShowsTrayIcon(headphonesConnected: true));
     }
 
     [TestMethod]

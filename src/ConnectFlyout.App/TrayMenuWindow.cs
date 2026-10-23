@@ -106,6 +106,11 @@ internal sealed partial class TrayMenuWindow : Window
         }
     }
 
+    /// <summary>
+    /// Closes the menu if it's open; the window hides with it.
+    /// </summary>
+    public void HideMenu() => _menu.Hide();
+
     public void ApplyTheme(AppTheme theme) => _root.RequestedTheme = theme switch
     {
         AppTheme.Light => ElementTheme.Light,

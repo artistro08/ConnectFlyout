@@ -5,8 +5,8 @@
     xmlns:local="using:ConnectFlyout.App.Views.Settings"
     xmlns:vm="using:ConnectFlyout.Presentation.ViewModels">
 
-    <ScrollViewer>
-        <StackPanel MaxWidth="900" HorizontalAlignment="Stretch" Spacing="8">
+    <ContentControl Style="{StaticResource SettingsPageStyle}">
+        <StackPanel Spacing="8">
             <TextBlock Style="{StaticResource SettingsPageTitleStyle}" Text="System" />
             <local:HeadsetSelector ViewModel="{x:Bind ViewModel}" />
 
@@ -101,5 +101,5 @@
                 Severity="Informational"
                 Visibility="{x:Bind ViewModel.NoSystemOptions, Mode=OneWay}" />
         </StackPanel>
-    </ScrollViewer>
+    </ContentControl>
 </local:SettingsPageBase>
