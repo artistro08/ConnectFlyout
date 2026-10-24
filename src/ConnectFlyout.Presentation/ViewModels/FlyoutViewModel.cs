@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 using ConnectFlyout.Presentation.Common;
 using ConnectFlyout.Presentation.Devices;
 using ConnectFlyout.Presentation.Navigation;
+using ConnectFlyout.Presentation.Settings;
 
 namespace ConnectFlyout.Presentation.ViewModels;
 
@@ -17,6 +18,7 @@ public sealed class FlyoutViewModel : ObservableObject, IDisposable
     private readonly Func<ManagedHeadset, HeadsetViewModel> _createHeadsetViewModel;
     private readonly IBluetoothAudio _bluetoothAudio;
     private readonly TimeProvider _timeProvider;
+    private readonly AppSettings _settings;
     private readonly UiContext _ui = new();
     private readonly CancellationTokenSource _lifetimeCancellation = new();
 
@@ -32,16 +34,19 @@ public sealed class FlyoutViewModel : ObservableObject, IDisposable
         FlyoutNavigator navigator,
         Func<ManagedHeadset, HeadsetViewModel> createHeadsetViewModel,
         IBluetoothAudio bluetoothAudio,
-        TimeProvider timeProvider)
+        TimeProvider timeProvider,
+        AppSettings settings)
     {
         ArgumentNullException.ThrowIfNull(manager);
         ArgumentNullException.ThrowIfNull(timeProvider);
+        ArgumentNullException.ThrowIfNull(settings);
 
         _manager = manager;
         _navigator = navigator;
         _createHeadsetViewModel = createHeadsetViewModel;
         _bluetoothAudio = bluetoothAudio;
         _timeProvider = timeProvider;
+        _settings = settings;
 
         PickCommand = new RelayCommand<HeadsetViewModel>(Pick);
         BackCommand = new RelayCommand(Back);
@@ -311,7 +316,30 @@ public sealed class FlyoutViewModel : ObservableObject, IDisposable
         viewModel.ReconnectRequested += OnReconnectRequested;
         viewModel.AudioReconnectRequested += OnAudioReconnectRequested;
         viewModel.ConnectRequested += OnConnectRequested;
-        Headsets.Add(viewModel);
+        Headsets.Insert(OrderedIndexFor(viewModel.Id), viewModel);
+    }
+
+    // Where a headset goes by the saved order: after the listed ones that rank before it,
+    // and before unlisted ones; unlisted headsets go last
+    private int OrderedIndexFor(string id)
+    {
+        var order = _settings.HeadsetOrder.ToList();
+        var rank = order.IndexOf(id);
+        if (rank < 0)
+        {
+            return Headsets.Count;
+        }
+        var index = 0;
+        while (index < Headsets.Count)
+        {
+            var other = order.IndexOf(Headsets[index].Id);
+            if (other < 0 || other > rank)
+            {
+                break;
+            }
+            index++;
+        }
+        return index;
     }
 
     private void Refresh()

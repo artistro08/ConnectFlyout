@@ -35,9 +35,9 @@
                         <FontIcon Glyph="&#xE7F6;" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
-                <NavigationViewItem Content="Noise &amp; scenes" Tag="NoiseScenes">
+                <NavigationViewItem Content="Scenes" Tag="Scenes">
                     <NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xF61F;" />
+                        <FontIcon Glyph="&#xE71D;" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
                 <NavigationViewItem Content="Shortcuts" Tag="Shortcuts">

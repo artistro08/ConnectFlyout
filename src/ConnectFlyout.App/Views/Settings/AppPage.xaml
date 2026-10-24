@@ -94,7 +94,7 @@
                         <views:SettingToggleRow
                             VerticalAlignment="Center"
                             IsOn="{x:Bind ViewModel.HideAmbientControls, Mode=TwoWay}"
-                            Subtitle="The Ambient sound slider and Focus on voice. Also in Settings &gt; Noise &amp; scenes."
+                            Subtitle="The Ambient sound slider and Focus on voice."
                             Title="Hide ambient sound controls" />
                     </Border>
                     <Border Style="{StaticResource SettingsExpanderDividerStyle}" />

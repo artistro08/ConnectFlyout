@@ -13,7 +13,7 @@ using ConnectFlyout.Presentation.Settings;
 namespace ConnectFlyout.Presentation.ViewModels;
 
 /// <summary>
-/// One editable scene in the Noise &amp; scenes settings page, or the draft on the New scene page.
+/// One editable scene in the Scenes settings page, or the draft on the New scene page.
 /// </summary>
 public sealed class SceneEditorViewModel : ObservableObject
 {
@@ -260,6 +260,11 @@ public sealed class SettingsViewModel : ObservableObject
     public bool HasHeadset => SelectedHeadset is not null;
 
     public bool NoHeadset => SelectedHeadset is null;
+
+    /// <summary>
+    /// Saves the headsets' current order (the Reorder headphones page dragged them).
+    /// </summary>
+    public void SaveHeadsetOrder() => _settings.HeadsetOrder = [.. Headsets.Select(headset => headset.Id)];
 
     /// <summary>
     /// Selects the headset the flyout is showing, so settings open on the same headphones.
@@ -611,7 +616,11 @@ public sealed class SettingsViewModel : ObservableObject
         }
     }
 
-    private void SaveScenes()
+    /// <summary>
+    /// Saves the scenes as they are, in their current order, and refreshes the flyout's buttons.
+    /// Each edit calls this on its own; the Reorder scenes page calls it after a drag.
+    /// </summary>
+    public void SaveScenes()
     {
         _settings.Scenes = [.. Scenes.Select(scene => scene.ToScene())];
         foreach (var headset in Headsets)

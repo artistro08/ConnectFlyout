@@ -113,7 +113,8 @@ public partial class App : Application, IDisposable
             new FlyoutNavigator(_settings),
             managed => new HeadsetViewModel(managed, _settings, lowBattery, time, headsetLogger),
             _bluetoothAudio,
-            time);
+            time,
+            _settings);
         _flyout.SettingsRequested += (_, _) => ShowSettings();
         _flyout.QuitRequested += (_, _) => Quit();
 

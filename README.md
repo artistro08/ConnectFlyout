@@ -35,11 +35,11 @@ Switch noise modes from anywhere in Windows. Win+F10 is Noise canceling, Win+F11
 
 ## Renaming Headphones
 
-Settings > Devices has a card per pair of headphones. Expand it to name them (shown in the app only; type a name and select Save, or clear the box and save to go back to the Windows name), set the equalizer, DSEE and the other sound options, turn Speak-to-Chat, Adaptive volume and Voice guidance on or off, set Auto power-off and the Connection mode, and use Disconnect app control, which lets another device, like the Sony app on a phone, control them. The Connect button in the card header asks Windows to connect the headphones while they're paired but not connected.
+Settings > Devices has a card per pair of headphones. Expand it to name them (shown in the app only; type a name and select Save, or clear the box and save to go back to the Windows name), set the equalizer, DSEE and the other sound options, turn Speak-to-Chat, Adaptive volume and Voice guidance on or off, set Auto power-off and the Connection mode, and use Disconnect app control, which lets another device, like the Sony app on a phone, control them. The Connect button in the card header asks Windows to connect the headphones while they're paired but not connected. Reorder headphones opens a page where you drag them into the order the flyout and this page use.
 
 ## Scenes
 
-Scenes are the buttons below Noise control in the flyout. Settings > Noise & scenes shows one card per scene: expand it to change the name, pick an icon from a searchable list, set the noise control mode, ambient level and Focus on voice, hide it from the flyout, or delete it. The switch in the card header is on while the connected headphones are in that scene; turn it on to apply the scene, off to turn noise control off. Changes save as you make them. Add scene opens a page where you fill in a new one and Save or Cancel. Reset to defaults brings back Focus, Office and Aware.
+Scenes are the buttons below Noise control in the flyout. Settings > Scenes shows one card per scene: expand it to change the name, pick an icon from a searchable list, set the noise control mode, ambient level and Focus on voice, hide it from the flyout, or delete it. The switch in the card header is on while the connected headphones are in that scene; turn it on to apply the scene, off to turn noise control off. Changes save as you make them. Add scene opens a page where you fill in a new one and Save or Cancel. Reset to defaults brings back Focus, Office and Aware. Reorder scenes opens a page where you drag them into the order the flyout shows.
 
 ## Hiding Flyout Controls
 

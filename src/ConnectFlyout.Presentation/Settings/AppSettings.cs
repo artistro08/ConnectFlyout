@@ -35,6 +35,7 @@ public sealed class AppSettings
     private const string ThemeKey                     = "Theme";
     private const string DebugLoggingKey              = "DebugLogging";
     private const string ScenesKey                    = "Scenes";
+    private const string HeadsetOrderKey              = "HeadsetOrder";
     private const string HideTrayKey                  = "HideTray";
     private const string HideTrayWhileDisconnectedKey = "HideTrayWhileDisconnected";
     private const string HiddenTrayLaunchKey          = "HiddenTrayLaunch";
@@ -190,6 +191,26 @@ public sealed class AppSettings
             }
         }
         set => _store.SetString(ScenesKey, JsonSerializer.Serialize(value, JsonOptions));
+    }
+
+    /// <summary>
+    /// The headphones' order in the flyout and in Settings, as headset IDs. Headphones not
+    /// listed come after, in the order found. Empty when never reordered or unreadable.
+    /// </summary>
+    public IReadOnlyList<string> HeadsetOrder
+    {
+        get
+        {
+            try
+            {
+                return JsonSerializer.Deserialize<List<string>>(_store.GetString(HeadsetOrderKey) ?? "[]", JsonOptions) ?? [];
+            }
+            catch (JsonException)
+            {
+                return [];
+            }
+        }
+        set => _store.SetString(HeadsetOrderKey, JsonSerializer.Serialize(value, JsonOptions));
     }
 
     /// <summary>

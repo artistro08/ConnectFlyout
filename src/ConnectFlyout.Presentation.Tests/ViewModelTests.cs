@@ -1064,7 +1064,8 @@ public sealed class FlyoutViewModelTests
             new FlyoutNavigator(_settings),
             managed => new HeadsetViewModel(managed, _settings, monitor, _time, NullLogger.Instance),
             _audio,
-            _time);
+            _time,
+            _settings);
         _manager.Start();
     }
 
@@ -1148,6 +1149,20 @@ public sealed class FlyoutViewModelTests
         Assert.IsFalse(xm4.IsBluetoothConnecting);
         Assert.AreEqual("Connection failed. Make sure that the headphones are on and near the PC.", xm4.ErrorMessage);
         Assert.AreEqual(xm4.ErrorMessage, xm4.PickerStatusText); // the list row says so too
+    }
+
+    [TestMethod]
+    public void HeadsetsFollowTheSavedOrder()
+    {
+        _settings.HeadsetOrder = ["AC:80:0A:00:00:04", "AC:80:0A:00:00:06"];
+
+        _source.Report(Xm6);
+        _source.Report(Xm4);
+        _source.Report(Xb900n);
+
+        CollectionAssert.AreEqual(
+            new[] { "WH-1000XM4", "WF-1000XM6", "WH-XB900N" },
+            _flyout.Headsets.Select(headset => headset.DeviceName).ToList());
     }
 
     [TestMethod]
@@ -1415,7 +1430,8 @@ public sealed class SettingsViewModelTests
             new FlyoutNavigator(_settings),
             managed => new HeadsetViewModel(managed, _settings, monitor, time, NullLogger.Instance),
             new FakeBluetoothAudio(),
-            time);
+            time,
+            _settings);
         _viewModel = new SettingsViewModel(_flyout, _settings, _logLevel, _startup, _themes.Add, _nativeDebug.Add, _ => { }, "C:\\Logs", NullLogger.Instance);
         _manager.Start();
     }
@@ -1503,7 +1519,8 @@ public sealed class SettingsViewModelTests
                 new FlyoutNavigator(settings),
                 managed => new HeadsetViewModel(managed, settings, monitor, time, NullLogger.Instance),
                 new FakeBluetoothAudio(),
-                time);
+                time,
+                settings);
             var viewModel = new SettingsViewModel(flyout, settings, new LogLevelSwitch(), new FakeStartupTaskService(), _ => { }, _ => { }, _ => { }, "C:\\Logs", NullLogger.Instance);
             manager.Start();
 
@@ -1551,7 +1568,8 @@ public sealed class SettingsViewModelTests
                 new FlyoutNavigator(settings),
                 managed => new HeadsetViewModel(managed, settings, monitor, time, NullLogger.Instance),
                 new FakeBluetoothAudio(),
-                time);
+                time,
+                settings);
             var viewModel = new SettingsViewModel(flyout, settings, new LogLevelSwitch(), new FakeStartupTaskService(), _ => { }, _ => { }, _ => { }, "C:\\Logs", NullLogger.Instance);
             manager.Start();
             source.Report(new BluetoothDeviceInfo("device-xm6", "WF-1000XM6", "ac:80:0a:00:00:06", true));
@@ -1671,6 +1689,21 @@ public sealed class SettingsViewModelTests
         _viewModel.DeleteScene(_viewModel.Scenes[1]);
 
         CollectionAssert.AreEqual(new[] { "Focus", "Aware" }, _settings.Scenes.Select(scene => scene.Name).ToList());
+    }
+
+    [TestMethod]
+    public void ReorderingSavesTheNewOrder()
+    {
+        _source.Report(new BluetoothDeviceInfo("device-xm6", "WF-1000XM6", "ac:80:0a:00:00:06", true));
+        _source.Report(new BluetoothDeviceInfo("device-xm4", "WH-1000XM4", "ac:80:0a:00:00:04", true));
+
+        _flyout.Headsets.Move(1, 0);
+        _viewModel.SaveHeadsetOrder();
+        CollectionAssert.AreEqual(new[] { "AC:80:0A:00:00:04", "AC:80:0A:00:00:06" }, _settings.HeadsetOrder.ToList());
+
+        _viewModel.Scenes.Move(2, 0);
+        _viewModel.SaveScenes();
+        CollectionAssert.AreEqual(new[] { "Aware", "Focus", "Office" }, _settings.Scenes.Select(scene => scene.Name).ToList());
     }
 
     [TestMethod]

@@ -3,7 +3,7 @@ using Microsoft.UI.Xaml;
 namespace ConnectFlyout.App.Views.Settings;
 
 /// <summary>
-/// The New scene page: the draft's rows with Save and Cancel, both returning to Noise &amp; scenes.
+/// The New scene page: the draft's rows with Save and Cancel, both returning to Scenes.
 /// </summary>
 public sealed partial class SceneEditorPage : SettingsPageBase
 {

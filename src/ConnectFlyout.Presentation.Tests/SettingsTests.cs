@@ -26,6 +26,7 @@ public sealed class AppSettingsTests
         Assert.IsFalse(settings.HideSoundControls);
         Assert.IsTrue(settings.IsAutoConnectEnabled("AC:80:0A:12:34:56"));
         Assert.IsNull(settings.GetDisplayName("AC:80:0A:12:34:56"));
+        Assert.AreEqual(0, settings.HeadsetOrder.Count);
         CollectionAssert.AreEqual(Scene.Defaults.ToList(), settings.Scenes.ToList());
     }
 
@@ -120,6 +121,17 @@ public sealed class AppSettingsTests
         store.SetString("Scenes", store.GetString("Scenes")!.Replace(",\"ShowInFlyout\":true", "", StringComparison.Ordinal));
 
         Assert.IsTrue(new AppSettings(store).Scenes[0].ShowInFlyout);
+    }
+
+    [TestMethod]
+    public void HeadsetOrderRoundTripsAndShrugsOffBrokenJson()
+    {
+        var store = new InMemorySettingsStore();
+        new AppSettings(store).HeadsetOrder = ["B", "A"];
+        CollectionAssert.AreEqual(new[] { "B", "A" }, new AppSettings(store).HeadsetOrder.ToList());
+
+        store.SetString("HeadsetOrder", "{not json");
+        Assert.AreEqual(0, new AppSettings(store).HeadsetOrder.Count);
     }
 
     [TestMethod]

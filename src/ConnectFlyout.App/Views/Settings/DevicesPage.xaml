@@ -331,6 +331,17 @@
             </ItemsRepeater>
             <!-- /Headset Cards -->
 
+            <!-- Reorder -->
+            <Border Style="{StaticResource SettingsCardStyle}">
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock VerticalAlignment="Center" Text="Reorder headphones" />
+                    <Button
+                        Grid.Column="1"
+                        Click="OnReorderClick"
+                        Content="Reorder" />
+                </Grid>
+            </Border>
+
             <!-- Bluetooth Settings -->
             <Border Style="{StaticResource SettingsCardStyle}">
                 <Grid ColumnDefinitions="*,Auto">

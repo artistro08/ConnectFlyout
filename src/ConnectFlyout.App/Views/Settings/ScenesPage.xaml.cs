@@ -5,11 +5,12 @@ using ConnectFlyout.Presentation.ViewModels;
 namespace ConnectFlyout.App.Views.Settings;
 
 /// <summary>
-/// The flyout's scenes: a card each, plus Add scene, which opens <see cref="SceneEditorPage"/>.
+/// The flyout's scenes: a card each, Add scene (opens <see cref="SceneEditorPage"/>) and
+/// Reorder (opens <see cref="ReorderScenesPage"/>).
 /// </summary>
-public sealed partial class NoiseScenesPage : SettingsPageBase
+public sealed partial class ScenesPage : SettingsPageBase
 {
-    public NoiseScenesPage()
+    public ScenesPage()
     {
         InitializeComponent();
     }
@@ -19,6 +20,8 @@ public sealed partial class NoiseScenesPage : SettingsPageBase
         ViewModel.BeginNewScene();
         Frame.Navigate(typeof(SceneEditorPage), ViewModel);
     }
+
+    private void OnReorderClick(object sender, RoutedEventArgs e) => Frame.Navigate(typeof(ReorderScenesPage), ViewModel);
 
     // The scene rides on Tag: ItemsRepeater doesn't reliably set the control's DataContext
     private void OnSceneToggled(object sender, RoutedEventArgs e)
