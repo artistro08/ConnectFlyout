@@ -529,17 +529,25 @@ public partial class App : Application, IDisposable
         _quitting = true;
         _trimTimer?.Stop();
         _shortcuts?.Suspend();
+        AppLog.QuitStep(_logger, "shortcuts off");
         _trayIcon?.Dispose();
+        AppLog.QuitStep(_logger, "tray icon gone");
         _trayMenu?.Close();
+        AppLog.QuitStep(_logger, "tray menu closed");
         _trayTooltip?.Close();
+        AppLog.QuitStep(_logger, "tray tooltip closed");
         _settingsWindow?.Close();
+        AppLog.QuitStep(_logger, "settings closed");
         _flyoutWindow?.Shutdown();
+        AppLog.QuitStep(_logger, "flyout shut down");
         _flyout?.Dispose();
         _manager?.Dispose();
+        AppLog.QuitStep(_logger, "headsets released");
         _notifications?.Dispose();
         _quitWait?.Unregister(null);
         _quitRequest?.Dispose();
         _showWait?.Unregister(null);
+        AppLog.QuitStep(_logger, "done");
         _loggerFactory?.Dispose();
         GC.SuppressFinalize(this);
     }
