@@ -14,7 +14,7 @@
             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
                 <StackPanel VerticalAlignment="Center">
                     <TextBlock Text="Name" />
-                    <TextBlock Style="{StaticResource SettingSubtitleStyle}" Text="Shown on the button in the flyout." />
+                    <TextBlock Style="{StaticResource SettingSubtitleStyle}" Text="The flyout shows this name on the scene button." />
                 </StackPanel>
                 <TextBox
                     Grid.Column="1"
@@ -31,7 +31,7 @@
             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
                 <StackPanel VerticalAlignment="Center">
                     <TextBlock Text="Icon" />
-                    <TextBlock Style="{StaticResource SettingSubtitleStyle}" Text="Shown beside the name on the button." />
+                    <TextBlock Style="{StaticResource SettingSubtitleStyle}" Text="The flyout shows this icon beside the name." />
                 </StackPanel>
                 <StackPanel
                     Grid.Column="1"
@@ -66,7 +66,7 @@
             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
                 <StackPanel VerticalAlignment="Center">
                     <TextBlock Text="Noise control" />
-                    <TextBlock Style="{StaticResource SettingSubtitleStyle}" Text="The mode the scene sets." />
+                    <TextBlock Style="{StaticResource SettingSubtitleStyle}" Text="The noise control mode that the scene sets." />
                 </StackPanel>
                 <ComboBox
                     Grid.Column="1"
@@ -106,7 +106,7 @@
                 <views:SettingToggleRow
                     VerticalAlignment="Center"
                     IsOn="{x:Bind Scene.FocusOnVoice, Mode=TwoWay}"
-                    Subtitle="Lets voices through more than other sound."
+                    Subtitle="Lets voices through more than other sounds."
                     Title="Focus on voice" />
             </Border>
         </StackPanel>

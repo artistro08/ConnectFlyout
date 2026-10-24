@@ -120,39 +120,40 @@ public sealed class AppSettings
     }
 
     /// <summary>
-    /// Hides the Focus, Office and Aware scene tiles in the flyout.
+    /// Whether the flyout shows the scene buttons. On by default. Stored as the older "hide"
+    /// key, so earlier settings keep their meaning.
     /// </summary>
-    public bool HideScenes
+    public bool ShowScenes
     {
-        get => GetBool(HideScenesKey, false);
-        set => SetBool(HideScenesKey, value);
+        get => !GetBool(HideScenesKey, false);
+        set => SetBool(HideScenesKey, !value);
     }
 
     /// <summary>
-    /// Hides the Playback section in the flyout (on headphones that can switch devices).
+    /// Whether the flyout shows the Playback section (on headphones that can switch). On by default.
     /// </summary>
-    public bool HidePlayback
+    public bool ShowPlayback
     {
-        get => GetBool(HidePlaybackKey, false);
-        set => SetBool(HidePlaybackKey, value);
+        get => !GetBool(HidePlaybackKey, false);
+        set => SetBool(HidePlaybackKey, !value);
     }
 
     /// <summary>
-    /// Hides the Ambient sound slider and Focus on voice in the flyout.
+    /// Whether the flyout shows the Ambient sound slider and Focus on voice. On by default.
     /// </summary>
-    public bool HideAmbientControls
+    public bool ShowAmbientControls
     {
-        get => GetBool(HideAmbientControlsKey, false);
-        set => SetBool(HideAmbientControlsKey, value);
+        get => !GetBool(HideAmbientControlsKey, false);
+        set => SetBool(HideAmbientControlsKey, !value);
     }
 
     /// <summary>
-    /// Hides the Equalizer and DSEE rows in the flyout.
+    /// Whether the flyout shows the Equalizer and DSEE rows. On by default.
     /// </summary>
-    public bool HideSoundControls
+    public bool ShowSoundControls
     {
-        get => GetBool(HideSoundControlsKey, false);
-        set => SetBool(HideSoundControlsKey, value);
+        get => !GetBool(HideSoundControlsKey, false);
+        set => SetBool(HideSoundControlsKey, !value);
     }
 
     /// <summary>

@@ -15,7 +15,7 @@
                 <TextBlock
                     Margin="0,0,0,8"
                     Style="{StaticResource SecondaryTextStyle}"
-                    Text="Scenes are the buttons below Noise control in the flyout. Each one applies a noise control setting. Changes are saved as you make them." />
+                    Text="Scenes are the buttons below Noise control in the flyout. Each scene applies a noise control setting. The app saves a change when you make it." />
 
                 <!-- Scene Cards: icon, name and a summary in the header; the settings and Delete inside -->
                 <ItemsRepeater ItemsSource="{x:Bind ViewModel.Scenes}">
@@ -46,7 +46,7 @@
                                             Style="{StaticResource CardToggleSwitchStyle}"
                                             Tag="{x:Bind}"
                                             Toggled="OnSceneToggled"
-                                            ToolTipService.ToolTip="Turns the scene on or off" />
+                                            ToolTipService.ToolTip="Turn the scene on or off" />
                                     </Grid>
                                 </views:SettingsExpander.Header>
                                 <StackPanel>

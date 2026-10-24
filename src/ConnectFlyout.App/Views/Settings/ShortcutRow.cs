@@ -216,7 +216,9 @@ public sealed class ShortcutRow
             var previous = _before ?? saved;
             if (_target.IsTaken(shortcuts) && saved != previous)
             {
-                _note = $"{saved} was taken by another app, so {(previous.Length == 0 ? "no shortcut" : previous)} is back.";
+                _note = previous.Length == 0
+                    ? $"A different app took {saved}. This has no shortcut again."
+                    : $"A different app took {saved}, so {previous} is back.";
                 _target.Set(settings, previous);
                 shortcuts.Apply(settings);
             }

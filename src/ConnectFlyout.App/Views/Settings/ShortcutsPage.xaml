@@ -24,13 +24,13 @@
             <TextBlock
                 Margin="0,0,0,8"
                 Style="{StaticResource SecondaryTextStyle}"
-                Text="Apply a scene from any Windows app. A scene has no shortcut until you set one. The same picker is on each scene's card in Settings &gt; Scenes."
+                Text="Apply a scene from any Windows app. A scene has no shortcut until you set one. The same picker is also on each scene card in Settings &gt; Scenes."
                 TextWrapping="Wrap" />
             <StackPanel x:Name="SceneRows" Spacing="8" />
             <TextBlock
                 x:Name="NoScenes"
                 Style="{StaticResource SecondaryTextStyle}"
-                Text="No scenes. Add one in Settings &gt; Scenes."
+                Text="There are no scenes. Add one in Settings &gt; Scenes."
                 Visibility="Collapsed" />
         </StackPanel>
     </ContentControl>

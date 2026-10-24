@@ -450,7 +450,7 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
     /// <summary>
     /// The Ambient sound slider and Focus on voice: only in Ambient, and unless Settings hides them.
     /// </summary>
-    public bool ShowAmbientControls => IsAmbient && !_settings.HideAmbientControls;
+    public bool ShowAmbientControls => IsAmbient && _settings.ShowAmbientControls;
 
     public double AmbientLevel
     {
@@ -786,10 +786,10 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
     /// </summary>
     /// <remarks>
     /// Connection-quality headsets hide these controls after reporting a codec other than
-    /// SBC or AAC. "Hide sound controls" in Settings > General hides them on every headset.
+    /// SBC or AAC. "Enable sound controls" in Settings > General, off, hides them on every headset.
     /// </remarks>
     public bool ShowPopupSoundSection =>
-        !_settings.HideSoundControls &&
+        _settings.ShowSoundControls &&
         (!HasConnectionQualityControl ||
          ((ShowPopupEqualizer || ShowPopupDsee) &&
           (string.IsNullOrEmpty(_snapshot.Codec) ||
@@ -805,12 +805,12 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
     /// Whether anything follows Noise Control in the popup, so the separator above it shows:
     /// the sound rows unless Settings hides them, or the Connection mode row.
     /// </summary>
-    public bool ShowPopupSoundSeparator => !_settings.HideSoundControls || HasConnectionQualityControl;
+    public bool ShowPopupSoundSeparator => _settings.ShowSoundControls || HasConnectionQualityControl;
 
     /// <summary>
-    /// The scene tiles show unless Settings hides them.
+    /// The scene buttons show while Settings has them on and there are scenes to show.
     /// </summary>
-    public bool ShowScenes => !_settings.HideScenes && SceneItems.Count > 0;
+    public bool ShowScenes => _settings.ShowScenes && SceneItems.Count > 0;
 
     /// <summary>
     /// VPT surround presets exposed by the legacy spatial control.
@@ -1012,7 +1012,7 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
     /// The Playback section shows with at least two devices to choose from. It stays through a
     /// reload or a dropped link, disabled, so the flyout doesn't jump.
     /// </summary>
-    public bool ShowPlayback => !_settings.HidePlayback && PlaybackDevices.Count >= 2;
+    public bool ShowPlayback => _settings.ShowPlayback && PlaybackDevices.Count >= 2;
 
     /// <summary>
     /// Moves the audio to the given device; the one already playing is left alone.

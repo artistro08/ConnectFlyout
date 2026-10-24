@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -457,68 +457,48 @@ public sealed class SettingsViewModel : ObservableObject
         }
     }
 
-    // Hide Flyout Controls: each switch saves, then tells every headset page which sections to redraw
-    public bool HideAmbientControls
+    // Flyout Controls: each switch is on by default and saves at once, then tells every headset
+    // page which sections to redraw
+    public bool EnableAmbientControls
     {
-        get => _settings.HideAmbientControls;
-        set
-        {
-            if (value == _settings.HideAmbientControls)
-            {
-                return;
-            }
-            _settings.HideAmbientControls = value;
-            OnPropertyChanged();
-            RefreshFlyoutSections(nameof(HeadsetViewModel.ShowAmbientControls));
-        }
+        get => _settings.ShowAmbientControls;
+        set => SetFlyoutSwitch(EnableAmbientControls, value, on => _settings.ShowAmbientControls = on, nameof(EnableAmbientControls), nameof(HeadsetViewModel.ShowAmbientControls));
     }
 
-    public bool HideScenes
+    public bool EnableScenes
     {
-        get => _settings.HideScenes;
-        set
-        {
-            if (value == _settings.HideScenes)
-            {
-                return;
-            }
-            _settings.HideScenes = value;
-            OnPropertyChanged();
-            RefreshFlyoutSections(nameof(HeadsetViewModel.ShowScenes));
-        }
+        get => _settings.ShowScenes;
+        set => SetFlyoutSwitch(EnableScenes, value, on => _settings.ShowScenes = on, nameof(EnableScenes), nameof(HeadsetViewModel.ShowScenes));
     }
 
-    public bool HidePlayback
+    public bool EnablePlayback
     {
-        get => _settings.HidePlayback;
-        set
-        {
-            if (value == _settings.HidePlayback)
-            {
-                return;
-            }
-            _settings.HidePlayback = value;
-            OnPropertyChanged();
-            RefreshFlyoutSections(nameof(HeadsetViewModel.ShowPlayback));
-        }
+        get => _settings.ShowPlayback;
+        set => SetFlyoutSwitch(EnablePlayback, value, on => _settings.ShowPlayback = on, nameof(EnablePlayback), nameof(HeadsetViewModel.ShowPlayback));
     }
 
-    public bool HideSoundControls
+    public bool EnableSoundControls
     {
-        get => _settings.HideSoundControls;
-        set
+        get => _settings.ShowSoundControls;
+        set => SetFlyoutSwitch(
+            EnableSoundControls,
+            value,
+            on => _settings.ShowSoundControls = on,
+            nameof(EnableSoundControls),
+            nameof(HeadsetViewModel.ShowPopupSoundSection),
+            nameof(HeadsetViewModel.ShowPopupConnectionSeparator),
+            nameof(HeadsetViewModel.ShowPopupSoundSeparator));
+    }
+
+    private void SetFlyoutSwitch(bool current, bool value, Action<bool> save, string name, params string[] sections)
+    {
+        if (value == current)
         {
-            if (value == _settings.HideSoundControls)
-            {
-                return;
-            }
-            _settings.HideSoundControls = value;
-            OnPropertyChanged();
-            RefreshFlyoutSections(
-                nameof(HeadsetViewModel.ShowPopupSoundSection),
-                nameof(HeadsetViewModel.ShowPopupConnectionSeparator),
-                nameof(HeadsetViewModel.ShowPopupSoundSeparator));
+            return;
         }
+        save(value);
+        OnPropertyChanged(name);
+        RefreshFlyoutSections(sections);
     }
 
     private void RefreshFlyoutSections(params string[] sections)
@@ -528,7 +508,7 @@ public sealed class SettingsViewModel : ObservableObject
             headset.RefreshFlyoutSections(sections);
         }
     }
-    // /Hide Flyout Controls
+    // /Flyout Controls
 
     public static IReadOnlyList<string> ThemeOptions { get; } = ["Use system setting", "Light", "Dark"];
 
