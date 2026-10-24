@@ -12,13 +12,14 @@
 
             <!-- Launch At Sign-In -->
             <Border Style="{StaticResource SettingsCardStyle}">
-                <Grid ColumnDefinitions="*,Auto">
-                    <StackPanel VerticalAlignment="Center">
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="20">
+                    <FontIcon Glyph="&#xE7E8;" Style="{StaticResource SettingsCardIconStyle}" />
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
                         <TextBlock Text="Start when you sign in" />
                         <TextBlock Style="{StaticResource SecondaryTextStyle}" Text="If you cannot turn this on, check Settings &gt; Apps &gt; Startup." />
                     </StackPanel>
                     <ToggleSwitch
-                        Grid.Column="1"
+                        Grid.Column="2"
                         AutomationProperties.Name="Start when you sign in"
                         IsOn="{x:Bind ViewModel.LaunchAtSignIn, Mode=TwoWay}"
                         Style="{StaticResource CardToggleSwitchStyle}" />
@@ -26,91 +27,137 @@
             </Border>
 
             <!-- Tray Icon: the main switch in the header, "until my headphones connect" inside -->
-            <Expander Style="{StaticResource SettingsExpanderStyle}">
-                <!-- No hover box behind the arrow -->
-                <Expander.Resources>
-                    <SolidColorBrush x:Key="ExpanderChevronPointerOverBackground" Color="Transparent" />
-                    <SolidColorBrush x:Key="ExpanderChevronPressedBackground" Color="Transparent" />
-                    <SolidColorBrush x:Key="ExpanderChevronBorderPointerOverBrush" Color="Transparent" />
-                    <SolidColorBrush x:Key="ExpanderChevronBorderPressedBrush" Color="Transparent" />
-                </Expander.Resources>
-                <Expander.Header>
-                    <views:SettingToggleRow
+            <views:SettingsExpander x:Name="TrayExpander" Style="{StaticResource SettingsExpanderStyle}">
+                <views:SettingsExpander.Header>
+                    <Grid
                         Margin="0,16"
-                        IsOn="{x:Bind ViewModel.HideTray, Mode=TwoWay}"
-                        Subtitle="ConnectFlyout continues to run in the background. Select what the Start menu opens."
-                        Title="Hide the tray icon" />
-                </Expander.Header>
-                <StackPanel Spacing="16">
+                        ColumnDefinitions="Auto,*"
+                        ColumnSpacing="20">
+                        <!-- The tray icon itself: the Headphone glyph the .ico is drawn from -->
+                        <FontIcon Glyph="&#xE7F6;" Style="{StaticResource SettingsCardIconStyle}" />
+                        <views:SettingToggleRow
+                            Grid.Column="1"
+                            IsOn="{x:Bind ViewModel.HideTray, Mode=TwoWay}"
+                            Subtitle="ConnectFlyout continues to run in the background. Select what the Start menu opens."
+                            Title="Hide the tray icon" />
+                    </Grid>
+                </views:SettingsExpander.Header>
+                <StackPanel>
                     <!-- Hide Until Connected -->
-                    <views:SettingToggleRow
-                        IsEnabled="{x:Bind ViewModel.CanHideTrayWhileDisconnected, Mode=OneWay}"
-                        IsOn="{x:Bind ViewModel.HideTrayWhileDisconnected, Mode=TwoWay}"
-                        Subtitle="Shows the icon while the headphones are connected."
-                        Title="Hide the tray icon until the headphones connect" />
+                    <Border Style="{StaticResource SettingsExpanderItemStyle}">
+                        <views:SettingToggleRow
+                            VerticalAlignment="Center"
+                            IsEnabled="{x:Bind ViewModel.CanHideTrayWhileDisconnected, Mode=OneWay}"
+                            IsOn="{x:Bind ViewModel.HideTrayWhileDisconnected, Mode=TwoWay}"
+                            Subtitle="Shows the icon while the headphones are connected."
+                            Title="Hide the tray icon until the headphones connect" />
+                    </Border>
+                    <Border Style="{StaticResource SettingsExpanderDividerStyle}" />
 
                     <!-- Hidden Tray Launch -->
-                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
-                        <StackPanel VerticalAlignment="Center">
-                            <TextBlock Text="When you open ConnectFlyout while the icon is hidden" TextWrapping="Wrap" />
-                            <TextBlock Style="{StaticResource SettingSubtitleStyle}" Text="Applies to the Start menu, not to the start with Windows. If the Open the flyout shortcut is not set, &quot;Do nothing&quot; opens Settings." TextWrapping="Wrap" />
-                        </StackPanel>
-                        <ComboBox
-                            Grid.Column="1"
-                            MinWidth="180"
-                            VerticalAlignment="Center"
-                            AutomationProperties.Name="When you open ConnectFlyout while the icon is hidden"
-                            ItemsSource="{x:Bind vm:SettingsViewModel.HiddenTrayLaunchOptions}"
-                            SelectedIndex="{x:Bind ViewModel.HiddenTrayLaunchIndex, Mode=TwoWay}" />
-                    </Grid>
+                    <Border Style="{StaticResource SettingsExpanderItemStyle}">
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="When you open ConnectFlyout while the icon is hidden" TextWrapping="Wrap" />
+                                <TextBlock Style="{StaticResource SettingSubtitleStyle}" Text="Applies to the Start menu, not to the start with Windows. If the Open the flyout shortcut is not set, &quot;Do nothing&quot; opens Settings." TextWrapping="Wrap" />
+                            </StackPanel>
+                            <ComboBox
+                                Grid.Column="1"
+                                MinWidth="180"
+                                VerticalAlignment="Center"
+                                AutomationProperties.Name="When you open ConnectFlyout while the icon is hidden"
+                                ItemsSource="{x:Bind vm:SettingsViewModel.HiddenTrayLaunchOptions}"
+                                SelectedIndex="{x:Bind ViewModel.HiddenTrayLaunchIndex, Mode=TwoWay}" />
+                        </Grid>
+                    </Border>
                 </StackPanel>
-            </Expander>
+            </views:SettingsExpander>
             <!-- /Tray Icon -->
 
             <!-- Low Battery -->
             <Border Style="{StaticResource SettingsCardStyle}">
-                <Grid ColumnDefinitions="*,Auto">
-                    <StackPanel VerticalAlignment="Center">
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="20">
+                    <!-- Fluent UI System Icons' battery_2_20_regular (MIT), the same line weight as the
+                         plug icon; Segoe's battery glyphs are heavier than the icons around them -->
+                    <Viewbox
+                        Width="20"
+                        Height="20"
+                        Margin="2,0,0,0"
+                        VerticalAlignment="Center">
+                        <PathIcon Data="M16 5C17.6569 5 19 6.34315 19 8C19.5523 8 20 8.44772 20 9V11C20 11.5523 19.5523 12 19 12C19 13.6569 17.6569 15 16 15H3C1.34315 15 0 13.6569 0 12V8C0 6.34315 1.34315 5 3 5H16ZM3 6C1.89543 6 1 6.89543 1 8V12C1 13.1046 1.89543 14 3 14H16C17.1046 14 18 13.1046 18 12V8C18 6.89543 17.1046 6 16 6H3ZM4 7C4.55228 7 5 7.44772 5 8V12C5 12.5523 4.55228 13 4 13H3C2.44772 13 2 12.5523 2 12V8C2 7.44772 2.44772 7 3 7H4Z" />
+                    </Viewbox>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
                         <TextBlock Text="Low battery notifications" />
                         <TextBlock Style="{StaticResource SecondaryTextStyle}" Text="Sends one notification when the battery is below 20%." />
                     </StackPanel>
                     <ToggleSwitch
-                        Grid.Column="1"
+                        Grid.Column="2"
                         AutomationProperties.Name="Low battery notifications"
                         IsOn="{x:Bind ViewModel.LowBatteryNotifications, Mode=TwoWay}"
                         Style="{StaticResource CardToggleSwitchStyle}" />
                 </Grid>
             </Border>
 
-            <!-- Hide Flyout Controls: a stack of switches, off by default -->
-            <Border Style="{StaticResource SettingsCardStyle}">
-                <StackPanel Spacing="16">
-                    <TextBlock Text="Hide flyout controls" />
-                    <views:SettingToggleRow
-                        IsOn="{x:Bind ViewModel.HideAmbientControls, Mode=TwoWay}"
-                        Subtitle="The Ambient sound slider and Focus on voice. Also in Settings &gt; Noise &amp; scenes."
-                        Title="Hide ambient sound controls" />
-                    <views:SettingToggleRow
-                        IsOn="{x:Bind ViewModel.HideScenes, Mode=TwoWay}"
-                        Subtitle="The Focus, Office and Aware tiles below Noise control."
-                        Title="Hide scenes" />
-                    <views:SettingToggleRow
-                        IsOn="{x:Bind ViewModel.HidePlayback, Mode=TwoWay}"
-                        Subtitle="The device that has the audio, on headphones that can change device. Not in Settings."
-                        Title="Hide playback" />
-                    <views:SettingToggleRow
-                        IsOn="{x:Bind ViewModel.HideSoundControls, Mode=TwoWay}"
-                        Subtitle="The Equalizer and DSEE rows. Also in Settings &gt; Sound."
-                        Title="Hide sound controls" />
+            <!-- Flyout Controls: which sections the flyout shows; the switches inside are off by default -->
+            <views:SettingsExpander x:Name="FlyoutControlsExpander" Style="{StaticResource SettingsExpanderStyle}">
+                <views:SettingsExpander.Header>
+                    <Grid
+                        Margin="0,16"
+                        ColumnDefinitions="Auto,*"
+                        ColumnSpacing="20">
+                        <FontIcon Glyph="&#xE9D5;" Style="{StaticResource SettingsCardIconStyle}" />
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <TextBlock Text="Flyout controls" />
+                            <TextBlock Style="{StaticResource SettingSubtitleStyle}" Text="Select the controls that the flyout shows. A hidden control stays on its Settings page." />
+                        </StackPanel>
+                    </Grid>
+                </views:SettingsExpander.Header>
+                <StackPanel>
+                    <Border Style="{StaticResource SettingsExpanderItemStyle}">
+                        <views:SettingToggleRow
+                            VerticalAlignment="Center"
+                            IsOn="{x:Bind ViewModel.HideAmbientControls, Mode=TwoWay}"
+                            Subtitle="The Ambient sound slider and Focus on voice."
+                            Title="Hide ambient sound controls" />
+                    </Border>
+                    <Border Style="{StaticResource SettingsExpanderDividerStyle}" />
+                    <Border Style="{StaticResource SettingsExpanderItemStyle}">
+                        <views:SettingToggleRow
+                            VerticalAlignment="Center"
+                            IsOn="{x:Bind ViewModel.HideScenes, Mode=TwoWay}"
+                            Subtitle="The scene tiles below Noise control."
+                            Title="Hide scenes" />
+                    </Border>
+                    <Border Style="{StaticResource SettingsExpanderDividerStyle}" />
+                    <Border Style="{StaticResource SettingsExpanderItemStyle}">
+                        <views:SettingToggleRow
+                            VerticalAlignment="Center"
+                            IsOn="{x:Bind ViewModel.HidePlayback, Mode=TwoWay}"
+                            Subtitle="The device that has the audio, on headphones that can change device. Not in Settings."
+                            Title="Hide playback" />
+                    </Border>
+                    <Border Style="{StaticResource SettingsExpanderDividerStyle}" />
+                    <Border Style="{StaticResource SettingsExpanderItemStyle}">
+                        <views:SettingToggleRow
+                            VerticalAlignment="Center"
+                            IsOn="{x:Bind ViewModel.HideSoundControls, Mode=TwoWay}"
+                            Subtitle="The Equalizer and DSEE rows. Also in Settings &gt; Devices."
+                            Title="Hide sound controls" />
+                    </Border>
                 </StackPanel>
-            </Border>
+            </views:SettingsExpander>
+            <!-- /Flyout Controls -->
 
             <!-- Theme -->
             <Border Style="{StaticResource SettingsCardStyle}">
-                <Grid ColumnDefinitions="*,Auto">
-                    <TextBlock VerticalAlignment="Center" Text="App theme" />
-                    <ComboBox
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="20">
+                    <FontIcon Glyph="&#xE790;" Style="{StaticResource SettingsCardIconStyle}" />
+                    <TextBlock
                         Grid.Column="1"
+                        VerticalAlignment="Center"
+                        Text="App theme" />
+                    <ComboBox
+                        Grid.Column="2"
                         MinWidth="180"
                         VerticalAlignment="Center"
                         AutomationProperties.Name="App theme"
@@ -119,33 +166,40 @@
                 </Grid>
             </Border>
 
-            <!-- Logging -->
-            <Border Style="{StaticResource SettingsCardStyle}">
-                <StackPanel Spacing="12">
-                    <Grid ColumnDefinitions="*,Auto">
-                        <StackPanel VerticalAlignment="Center">
-                            <TextBlock Text="Debug logging" />
-                            <TextBlock Style="{StaticResource SecondaryTextStyle}" Text="Also writes all data sent to and from the headphones to the log. Turn on only to find a fault." />
-                        </StackPanel>
-                        <ToggleSwitch
+            <!-- Logging: the switch in the header, the log folder inside -->
+            <views:SettingsExpander x:Name="LoggingExpander" Style="{StaticResource SettingsExpanderStyle}">
+                <views:SettingsExpander.Header>
+                    <Grid
+                        Margin="0,16"
+                        ColumnDefinitions="Auto,*"
+                        ColumnSpacing="20">
+                        <FontIcon Glyph="&#xE756;" Style="{StaticResource SettingsCardIconStyle}" />
+                        <views:SettingToggleRow
                             Grid.Column="1"
-                            AutomationProperties.Name="Debug logging"
                             IsOn="{x:Bind ViewModel.DebugLogging, Mode=TwoWay}"
-                            Style="{StaticResource CardToggleSwitchStyle}" />
+                            Subtitle="Also writes all data sent to and from the headphones to the log. Turn on only to find a fault."
+                            Title="Debug logging" />
                     </Grid>
-                    <Grid ColumnDefinitions="*,Auto">
-                        <TextBlock
-                            VerticalAlignment="Center"
-                            Style="{StaticResource SecondaryTextStyle}"
-                            Text="{x:Bind ViewModel.LogFolder}"
-                            TextTrimming="CharacterEllipsis" />
+                </views:SettingsExpander.Header>
+                <Border Style="{StaticResource SettingsExpanderItemStyle}">
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Log folder" />
+                            <TextBlock
+                                Style="{StaticResource SettingSubtitleStyle}"
+                                Text="{x:Bind ViewModel.LogFolder}"
+                                TextTrimming="CharacterEllipsis"
+                                TextWrapping="NoWrap" />
+                        </StackPanel>
                         <Button
                             Grid.Column="1"
+                            VerticalAlignment="Center"
                             Command="{x:Bind ViewModel.OpenLogFolderCommand}"
                             Content="Open log folder" />
                     </Grid>
-                </StackPanel>
-            </Border>
+                </Border>
+            </views:SettingsExpander>
+            <!-- /Logging -->
         </StackPanel>
     </ContentControl>
 </local:SettingsPageBase>

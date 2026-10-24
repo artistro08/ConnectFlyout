@@ -31,7 +31,15 @@ In theory, since we're using [sony-device-center](https://github.com/marconvcm/s
 
 ## Keyboard Shortcuts
 
-Switch noise modes from anywhere in Windows. Win+F10 is Noise canceling, Win+F11 Ambient sound, Win+F6 Noise control off and Win+F9 opens the flyout. Change or clear each one in Settings > Shortcuts. If the mode is already on, the PC plays a short sound in the headphones.
+Switch noise modes from anywhere in Windows. Win+F10 is Noise canceling, Win+F11 Ambient sound, Win+F6 Noise control off and Win+F9 opens the flyout. Change or clear each one in Settings > Shortcuts. Two more start off: Play on this PC and Play on <the other device's name> move the audio between the connected devices on headphones that can switch. Each scene can have a shortcut too, in the Scenes section of that page or on the scene's own card in Settings > Scenes; scenes start without one. If the mode or scene is already on, the PC plays a short sound in the headphones.
+
+## Renaming Headphones
+
+Settings > Devices has a card per pair of headphones. Expand it to name them (shown in the app only; type a name and select Save, or clear the box and save to go back to the Windows name), set the equalizer, DSEE and the other sound options, turn Speak-to-Chat, Adaptive volume and Voice guidance on or off, set Auto power-off and the Connection mode, and use Disconnect app control, which lets another device, like the Sony app on a phone, control them. The Connect button in the card header asks Windows to connect the headphones while they're paired but not connected. Reorder headphones opens a page where you drag them into the order the flyout and this page use.
+
+## Scenes
+
+Scenes are the buttons below Noise control in the flyout. Settings > Scenes shows one card per scene: expand it to change the name, pick an icon from a searchable list, set the noise control mode, ambient level and Focus on voice, hide it from the flyout, or delete it. The switch in the card header is on while the connected headphones are in that scene; turn it on to apply the scene, off to turn noise control off. Changes save as you make them. Add scene opens a page where you fill in a new one and Save or Cancel. Reset to defaults brings back Focus, Office and Aware. Reorder scenes opens a page where you drag them into the order the flyout shows.
 
 ## Hiding Flyout Controls
 
@@ -93,6 +101,8 @@ $env:SONY_TEST_XM6_ADDRESS = "AC:80:0A:12:34:56"
     ```powershell
     .\scripts\New-DevCertificate.ps1
     ```
+
+   The script also builds and runs the UI tests in `src\ConnectFlyout.App.UITests`. They load the app's real views on the view models' test fakes inside a WinUI window that opens for about twenty seconds, so they need a signed-in desktop session.
 
 2. Build the signed MSIX packages only:
 

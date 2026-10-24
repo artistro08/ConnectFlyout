@@ -113,7 +113,8 @@ public partial class App : Application, IDisposable
             new FlyoutNavigator(_settings),
             managed => new HeadsetViewModel(managed, _settings, lowBattery, time, headsetLogger),
             _bluetoothAudio,
-            time);
+            time,
+            _settings);
         _flyout.SettingsRequested += (_, _) => ShowSettings();
         _flyout.QuitRequested += (_, _) => Quit();
 
@@ -131,8 +132,17 @@ public partial class App : Application, IDisposable
             HeadsetClient.SetDebugLogging,
             OpenFolder,
             logFolder,
-            _loggerFactory.CreateLogger<SettingsViewModel>());
+            _loggerFactory.CreateLogger<SettingsViewModel>(),
+            time);
         _settingsViewModel.ApplyLogLevel();
+        // A scene added, deleted or reset changes which hotkeys there are
+        _settingsViewModel.ScenesChanged += (_, _) =>
+        {
+            if (_shortcuts is not null)
+            {
+                _shortcuts.Apply(_settings);
+            }
+        };
 
         // Tray Icon and Flyout
         _flyoutWindow = new FlyoutWindow(_flyout);
@@ -182,6 +192,7 @@ public partial class App : Application, IDisposable
         _shortcuts = new GlobalShortcuts(_loggerFactory.CreateLogger<GlobalShortcuts>());
         _trayIcon.HotkeyPressed += (_, id) => _shortcuts.OnHotkey(id);
         _shortcuts.Pressed += (_, action) => OnShortcutPressed(action);
+        _shortcuts.ScenePressed += (_, sceneId) => OnSceneShortcutPressed(sceneId);
         _shortcuts.Attach(_trayIcon.Handle, _settings);
 
         ApplyTheme(_settings.Theme);
@@ -321,7 +332,6 @@ public partial class App : Application, IDisposable
         _settingsWindow?.ShowQuit(!_trayIcon.IsVisible);
     }
 
-    // The headphones the flyout shows, or else the first connected ones
     private void OnShortcutPressed(ShortcutAction action)
     {
         var name = action.ToString();
@@ -337,13 +347,17 @@ public partial class App : Application, IDisposable
             return;
         }
 
-        var connected = _flyout?.ConnectedHeadsets ?? [];
-        var headset = _flyout?.CurrentHeadset is { IsConnected: true } current
-            ? current
-            : connected.Count > 0 ? connected[0] : null;
+        var headset = _flyout?.ShortcutHeadset;
         AppLog.ShortcutPressed(_logger, name, headset is not null);
         if (headset is null)
         {
+            return;
+        }
+
+        // Playback: move the audio to this PC or to the other connected device
+        if (ShortcutActions.IsPlayback(action))
+        {
+            _flyout?.SwitchPlayback(headset, toThisPc: action == ShortcutAction.PlaybackThisPc);
             return;
         }
 
@@ -356,6 +370,25 @@ public partial class App : Application, IDisposable
             _ = PlayModeAlreadyOnAsync(headset.Id);
         }
         headset.SelectNoiseMode(mode, resend: true);
+    }
+
+    // A scene's shortcut applies the scene as its flyout button would, with the same sound when
+    // the headphones are in it already. A scene deleted since the shortcut was registered is ignored.
+    private void OnSceneShortcutPressed(string sceneId)
+    {
+        var scene = _settings?.Scenes.FirstOrDefault(each => each.Id == sceneId);
+        var headset = _flyout?.ShortcutHeadset;
+        AppLog.ShortcutPressed(_logger, "Scene", scene is not null && headset is not null);
+        if (scene is null || headset is null)
+        {
+            return;
+        }
+
+        if (headset.MatchesScene(scene))
+        {
+            _ = PlayModeAlreadyOnAsync(headset.Id);
+        }
+        headset.ApplySceneCommand.Execute(scene);
     }
 
     private static readonly string ModeAlreadyOnSound = Path.Combine(AppContext.BaseDirectory, "Assets", "ModeAlreadyOn.wav");
@@ -449,7 +482,7 @@ public partial class App : Application, IDisposable
 
         if (_settingsWindow is null)
         {
-            _settingsWindow = new SettingsWindow(_settingsViewModel, new ShortcutsContext(_shortcuts, _settings));
+            _settingsWindow = new SettingsWindow(_settingsViewModel, new ShortcutsContext(_shortcuts, _settings, () => _flyout?.OtherPlaybackDeviceName));
             _settingsWindow.ApplyTheme(_settings.Theme);
             _settingsWindow.QuitRequested += (_, _) => Quit();
             _settingsWindow.ShowQuit(_trayIcon?.IsVisible != true);
@@ -463,9 +496,6 @@ public partial class App : Application, IDisposable
                     ScheduleMemoryTrim(IdleTrimDelay);
                 }
             };
-
-            // Open on the flyout's headphones; once open, the window keeps its own choice
-            _settingsViewModel.SelectCurrentHeadset();
         }
         _settingsWindow.Activate();
     }
@@ -495,6 +525,7 @@ public partial class App : Application, IDisposable
         // A show request already queued must not open windows that are shutting down
         _quitting = true;
         _trimTimer?.Stop();
+        _settingsViewModel?.FlushScenes();
         _shortcuts?.Suspend();
         _trayIcon?.Dispose();
         _trayMenu?.Close();

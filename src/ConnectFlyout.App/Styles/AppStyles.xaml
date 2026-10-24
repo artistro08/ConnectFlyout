@@ -25,6 +25,15 @@
         <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
     </Style>
 
+    <!-- Text Link: a link that stands in for a line of secondary text at the same size, so
+         swapping the two doesn't move the layout; hover shows the link color -->
+    <Style x:Key="TextLinkStyle" TargetType="HyperlinkButton" BasedOn="{StaticResource DefaultHyperlinkButtonStyle}">
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+    </Style>
+
     <!-- Setting Row Subtitle: the line under a setting's name -->
     <Style x:Key="SettingSubtitleStyle" TargetType="TextBlock" BasedOn="{StaticResource SecondaryTextStyle}">
         <Setter Property="TextWrapping" Value="Wrap" />
@@ -91,7 +100,7 @@
     <x:Double x:Key="SliderVerticalThumbWidth">18</x:Double>
     <x:Double x:Key="SliderVerticalThumbHeight">18</x:Double>
 
-    <!-- Equalizer Bands (Settings > Sound): the standard slider, turned vertical, -10 to +10,
+    <!-- Equalizer Bands (Settings > Devices): the standard slider, turned vertical, -10 to +10,
          with a notch every 5 steps -->
     <Style x:Key="EqualizerBandSliderStyle" TargetType="Slider" BasedOn="{StaticResource DefaultSliderStyle}">
         <Setter Property="Orientation" Value="Vertical" />
@@ -125,10 +134,12 @@
     </Style>
 
     <!-- Card Switch: no On/Off text beside it, so the switch sits flush right like the other
-         controls on a card -->
+         controls on a card. The template keeps a 12 px column for that text even when empty,
+         so the margin takes it back. -->
     <Style x:Key="CardToggleSwitchStyle" TargetType="ToggleSwitch" BasedOn="{StaticResource DefaultToggleSwitchStyle}">
         <Setter Property="MinWidth" Value="0" />
         <Setter Property="HorizontalAlignment" Value="Right" />
+        <Setter Property="Margin" Value="0,0,-12,0" />
         <Setter Property="OnContent" Value="" />
         <Setter Property="OffContent" Value="" />
     </Style>
@@ -143,13 +154,72 @@
         <Setter Property="MinHeight" Value="68" />
     </Style>
 
+    <!-- Expander Chevron: Windows Settings' metrics (the Community Toolkit's SettingsExpander):
+         a 32 px box 8 px from the edge, 12 px from the header's control to the 16 px glyph, no
+         hover box behind the arrow. The glyph size itself is set by SettingsExpander, since
+         WinUI reads it through a StaticResource an app can't override. -->
+    <Thickness x:Key="ExpanderChevronMargin">4,0,8,0</Thickness>
+    <SolidColorBrush x:Key="ExpanderChevronPointerOverBackground" Color="Transparent" />
+    <SolidColorBrush x:Key="ExpanderChevronPressedBackground" Color="Transparent" />
+    <SolidColorBrush x:Key="ExpanderChevronBorderPointerOverBrush" Color="Transparent" />
+    <SolidColorBrush x:Key="ExpanderChevronBorderPressedBrush" Color="Transparent" />
+
     <!-- Settings Expander: a card whose header holds a setting and whose content holds the
-         settings that go with it -->
+         settings that go with it, one SettingsExpanderItem each with a divider between -->
     <Style x:Key="SettingsExpanderStyle" TargetType="Expander">
         <Setter Property="HorizontalAlignment" Value="Stretch" />
         <Setter Property="HorizontalContentAlignment" Value="Stretch" />
         <Setter Property="MinHeight" Value="68" />
-        <Setter Property="Padding" Value="16" />
+        <Setter Property="Padding" Value="0" />
+    </Style>
+
+    <!-- Card Icon: Windows Settings' header icon slot, 20 px with a 2 px lead-in. With the
+         header's 20 px column spacing the title lands 58 px in, where expander rows start. -->
+    <Style x:Key="SettingsCardIconStyle" TargetType="FontIcon">
+        <Setter Property="FontSize" Value="20" />
+        <Setter Property="Width" Value="20" />
+        <Setter Property="Margin" Value="2,0,0,0" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <!-- Settings Expander Item: a row inside an expander, its text starting under the header's
+         title (past the icon), like Windows Settings. The right padding ends where the header's
+         control does (chevron box plus its margins), so controls line up. -->
+    <Style x:Key="SettingsExpanderItemStyle" TargetType="Border">
+        <Setter Property="MinHeight" Value="60" />
+        <Setter Property="Padding" Value="58,14,44,14" />
+    </Style>
+
+    <!-- Device Expander Item: the same, under a header with the 48 px device picture -->
+    <Style x:Key="DeviceExpanderItemStyle" TargetType="Border" BasedOn="{StaticResource SettingsExpanderItemStyle}">
+        <Setter Property="Padding" Value="80,14,44,14" />
+    </Style>
+
+    <Style x:Key="SettingsExpanderDividerStyle" TargetType="Border">
+        <Setter Property="Height" Value="2" />
+        <Setter Property="Background" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
+    </Style>
+
+    <!-- Current Icon Box: a scene's icon beside its label, in the card's secondary fill so it
+         sits a touch off the card behind it; no stroke, and as tall as the Change button -->
+    <Style x:Key="CurrentIconBoxStyle" TargetType="Border">
+        <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorSecondaryBrush}" />
+        <Setter Property="CornerRadius" Value="{StaticResource ControlCornerRadius}" />
+        <Setter Property="Padding" Value="12,0" />
+        <Setter Property="Height" Value="32" />
+    </Style>
+
+    <!-- Settings Footer: a bar over the bottom of a page's scroll area, in-app acrylic so the
+         cards frost as they scroll under it, with a window-edge stroke on top. Its content is
+         limited to the page content's width (900) so the buttons line up with the cards. Pages
+         leave SettingsFooterHeight of room under their content. -->
+    <x:Double x:Key="SettingsFooterHeight">57</x:Double>
+    <Style x:Key="SettingsFooterStyle" TargetType="Border">
+        <Setter Property="VerticalAlignment" Value="Bottom" />
+        <Setter Property="Background" Value="{ThemeResource AcrylicInAppFillColorDefaultBrush}" />
+        <Setter Property="BorderBrush" Value="{ThemeResource SurfaceStrokeColorDefaultBrush}" />
+        <Setter Property="BorderThickness" Value="0,1,0,0" />
+        <Setter Property="Padding" Value="36,12" />
     </Style>
 
     <!-- Settings Page: scrolls, pads, and centers the content at up to 900 wide. The padded Grid

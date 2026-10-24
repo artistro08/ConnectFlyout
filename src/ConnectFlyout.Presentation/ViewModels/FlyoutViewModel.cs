@@ -3,7 +3,9 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ConnectFlyout.Presentation.Common;
 using ConnectFlyout.Presentation.Devices;
+using ConnectFlyout.Presentation.Headsets;
 using ConnectFlyout.Presentation.Navigation;
+using ConnectFlyout.Presentation.Settings;
 
 namespace ConnectFlyout.Presentation.ViewModels;
 
@@ -17,6 +19,7 @@ public sealed class FlyoutViewModel : ObservableObject, IDisposable
     private readonly Func<ManagedHeadset, HeadsetViewModel> _createHeadsetViewModel;
     private readonly IBluetoothAudio _bluetoothAudio;
     private readonly TimeProvider _timeProvider;
+    private readonly AppSettings _settings;
     private readonly UiContext _ui = new();
     private readonly CancellationTokenSource _lifetimeCancellation = new();
 
@@ -26,22 +29,26 @@ public sealed class FlyoutViewModel : ObservableObject, IDisposable
 
     private FlyoutRoute _route = new(FlyoutPageKind.Empty, null, false);
     private HeadsetViewModel? _currentHeadset;
+    private string? _localAddress;
 
     public FlyoutViewModel(
         HeadsetManager manager,
         FlyoutNavigator navigator,
         Func<ManagedHeadset, HeadsetViewModel> createHeadsetViewModel,
         IBluetoothAudio bluetoothAudio,
-        TimeProvider timeProvider)
+        TimeProvider timeProvider,
+        AppSettings settings)
     {
         ArgumentNullException.ThrowIfNull(manager);
         ArgumentNullException.ThrowIfNull(timeProvider);
+        ArgumentNullException.ThrowIfNull(settings);
 
         _manager = manager;
         _navigator = navigator;
         _createHeadsetViewModel = createHeadsetViewModel;
         _bluetoothAudio = bluetoothAudio;
         _timeProvider = timeProvider;
+        _settings = settings;
 
         PickCommand = new RelayCommand<HeadsetViewModel>(Pick);
         BackCommand = new RelayCommand(Back);
@@ -57,6 +64,7 @@ public sealed class FlyoutViewModel : ObservableObject, IDisposable
             Add(headset);
         }
         Refresh();
+        _ = LoadLocalAddressAsync();
     }
 
     public event EventHandler? SettingsRequested;
@@ -132,8 +140,69 @@ public sealed class FlyoutViewModel : ObservableObject, IDisposable
             headset.ConnectRequested -= OnConnectRequested;
             headset.Dispose();
         }
-        Headsets.Clear();
+        // The list is left as it is: Dispose runs on quit after the windows have closed, and a
+        // Reset reaching their bindings then took the app down inside the XAML dispatcher
         _lifetimeCancellation.Dispose();
+    }
+
+    /// <summary>
+    /// The playback shortcuts: moves the headset's audio to this PC, or to the other connected
+    /// device. Nothing happens without that device in the headset's list, or before this PC's
+    /// address is known.
+    /// </summary>
+    public void SwitchPlayback(HeadsetViewModel headset, bool toThisPc)
+    {
+        ArgumentNullException.ThrowIfNull(headset);
+        var devices = headset.PlaybackDevices;
+        // Without this PC in the list the devices can't be told apart, so neither shortcut acts
+        if (!devices.Any(IsThisPc))
+        {
+            return;
+        }
+        var device = devices.FirstOrDefault(each => IsThisPc(each) == toThisPc);
+        if (device is not null)
+        {
+            headset.SwitchPlaybackCommand.Execute(device);
+        }
+    }
+
+    /// <summary>
+    /// The headphones a shortcut acts on: the ones the flyout shows, or else the first connected.
+    /// </summary>
+    public HeadsetViewModel? ShortcutHeadset
+    {
+        get
+        {
+            var connected = ConnectedHeadsets;
+            return CurrentHeadset is { IsConnected: true } current ? current : connected.Count > 0 ? connected[0] : null;
+        }
+    }
+
+    /// <summary>
+    /// The name of the other device connected to <see cref="ShortcutHeadset"/>, for the
+    /// playback shortcut's own name. Null when there's no such device, or this PC isn't in the list.
+    /// </summary>
+    public string? OtherPlaybackDeviceName
+    {
+        get
+        {
+            var devices = ShortcutHeadset?.PlaybackDevices;
+            return devices is not null && devices.Any(IsThisPc) ? devices.FirstOrDefault(each => !IsThisPc(each))?.Name : null;
+        }
+    }
+
+    private bool IsThisPc(PlaybackDevice device) => string.Equals(device.Address, _localAddress, StringComparison.OrdinalIgnoreCase);
+
+    // Read once; a PC without Bluetooth leaves it null and the playback shortcuts do nothing
+    private async Task LoadLocalAddressAsync()
+    {
+        try
+        {
+            _localAddress = await _bluetoothAudio.GetLocalAddressAsync().ConfigureAwait(true);
+        }
+        catch (Exception)
+        {
+        }
     }
 
     private void Pick(HeadsetViewModel? headset)
@@ -311,7 +380,17 @@ public sealed class FlyoutViewModel : ObservableObject, IDisposable
         viewModel.ReconnectRequested += OnReconnectRequested;
         viewModel.AudioReconnectRequested += OnAudioReconnectRequested;
         viewModel.ConnectRequested += OnConnectRequested;
-        Headsets.Add(viewModel);
+        Headsets.Insert(OrderedIndexFor(viewModel.Id), viewModel);
+    }
+
+    // Where a headset goes by the saved order: after the listed ones that rank before it,
+    // and before unlisted ones; unlisted headsets go last
+    private int OrderedIndexFor(string id)
+    {
+        var rank = _settings.HeadsetOrder.Select((each, index) => (each, index)).ToDictionary(pair => pair.each, pair => pair.index);
+        return rank.TryGetValue(id, out var mine)
+            ? Headsets.TakeWhile(each => rank.TryGetValue(each.Id, out var other) && other <= mine).Count()
+            : Headsets.Count;
     }
 
     private void Refresh()

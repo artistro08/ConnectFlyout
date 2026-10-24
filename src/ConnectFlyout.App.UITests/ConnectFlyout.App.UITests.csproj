@@ -1,0 +1,46 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- In-process WinUI tests: the normal test host starts a WinUI Application on its own
+       thread (UiHost) and loads the app's real views with view models built on the
+       Presentation tests' fakes. No package, no hardware; needs a desktop session. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <Platforms>x64</Platforms>
+    <PlatformTarget>x64</PlatformTarget>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <UseWinUI>true</UseWinUI>
+    <WindowsPackageType>None</WindowsPackageType>
+    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    <EnableMsixTooling>false</EnableMsixTooling>
+    <!-- An unpackaged WinUI process reads resources.pri next to its exe; the default name here
+         would be the assembly's, which XAML never looks for -->
+    <ProjectPriFileName>resources.pri</ProjectPriFileName>
+    <IsPackable>false</IsPackable>
+    <!-- The tests run inside this exe (MSTest's own runner), not the generic test host: an
+         unpackaged WinUI process needs this exe's manifest and initializers to activate XAML.
+         The runner makes the entry point; the XAML compiler must not make a second. -->
+    <EnableMSTestRunner>true</EnableMSTestRunner>
+    <!-- The app is a self-contained exe; this exe isn't, and only borrows its views -->
+    <ValidateExecutableReferencesMatchSelfContained>false</ValidateExecutableReferencesMatchSelfContained>
+    <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
+    <DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN</DefineConstants>
+    <!-- Test classes hold a disposable rig (CA1001); the linked fakes use collection expressions
+         the WinRT AOT analyzer dislikes (CsWinRT1032), which don't matter in a test host; the
+         app's internals bring its copy of the Windows App SDK initializer, which this project's
+         own copy shadows (CS0436) -->
+    <NoWarn>$(NoWarn);CA1001;CA1861;CsWinRT1032;CS0436</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.0.1" />
+    <PackageReference Include="MSTest" Version="3.11.1" />
+    <PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" Version="10.10.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ConnectFlyout.App\ConnectFlyout.App.csproj" />
+    <!-- The same fakes the view model tests use -->
+    <Compile Include="..\ConnectFlyout.Presentation.Tests\Fakes\*.cs" Link="Fakes\%(Filename)%(Extension)" />
+  </ItemGroup>
+
+</Project>

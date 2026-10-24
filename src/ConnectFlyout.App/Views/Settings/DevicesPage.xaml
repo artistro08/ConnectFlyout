@@ -16,63 +16,346 @@
                 Message="Pair the Sony headphones in the Windows Bluetooth settings."
                 Severity="Informational" />
 
-            <!-- Headset Cards -->
+            <!-- Headset Cards: the headphones in the header; their name, sound settings and app
+                 control inside. Each row after the first carries its own divider, so rows a
+                 model doesn't have collapse together with their line. -->
             <ItemsRepeater ItemsSource="{x:Bind ViewModel.Headsets}">
                 <ItemsRepeater.Layout>
                     <StackLayout Spacing="8" />
                 </ItemsRepeater.Layout>
                 <ItemsRepeater.ItemTemplate>
                     <DataTemplate x:DataType="vm:HeadsetViewModel">
-                        <Border Style="{StaticResource SettingsCardStyle}">
-                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="16">
-                                <!-- Model picture, or the headphone icon when there's no picture -->
-                                <views:DevicePicture VerticalAlignment="Center" ModelName="{x:Bind ModelName}" />
-                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                    <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="{x:Bind DeviceName}" />
-                                    <TextBlock Style="{StaticResource SecondaryTextStyle}" Text="{x:Bind StatusText, Mode=OneWay}" />
-                                    <TextBlock Style="{StaticResource SecondaryTextStyle}">
-                                        <Run Text="Model " /><Run Text="{x:Bind ModelName}" />
-                                        <Run Text=" · Firmware " /><Run Text="{x:Bind Firmware, Mode=OneWay}" />
-                                        <Run Text=" · Codec " /><Run Text="{x:Bind Codec, Mode=OneWay}" />
-                                    </TextBlock>
-                                </StackPanel>
-                                <!-- Release the headphones for another device, or take them back -->
-                                <Grid Grid.Column="2" VerticalAlignment="Center">
-                                    <Button
-                                        AutomationProperties.Name="Disconnect"
-                                        Command="{x:Bind DisconnectCommand}"
-                                        Visibility="{x:Bind IsConnected, Mode=OneWay}">
-                                        <StackPanel Orientation="Horizontal" Spacing="8">
-                                            <views:PlugIcon VerticalAlignment="Center" />
-                                            <TextBlock Text="Disconnect" />
+                        <views:SettingsExpander Style="{StaticResource SettingsExpanderStyle}">
+                            <views:SettingsExpander.Header>
+                                <Grid
+                                    Margin="0,16"
+                                    ColumnDefinitions="Auto,*,Auto"
+                                    ColumnSpacing="16">
+                                    <!-- Model picture, or the headphone icon when there's no picture -->
+                                    <views:DevicePicture VerticalAlignment="Center" ModelName="{x:Bind ModelName}" />
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="{x:Bind DeviceName, Mode=OneWay}" />
+                                        <TextBlock Style="{StaticResource SecondaryTextStyle}" Text="{x:Bind StatusText, Mode=OneWay}" />
+                                        <!-- Firmware and codec only once the app has read them -->
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Style="{StaticResource SecondaryTextStyle}">
+                                                <Run Text="Model " /><Run Text="{x:Bind ModelName}" />
+                                            </TextBlock>
+                                            <TextBlock Style="{StaticResource SecondaryTextStyle}" Visibility="{x:Bind IsConnected, Mode=OneWay}">
+                                                <Run Text=" · Firmware " /><Run Text="{x:Bind Firmware, Mode=OneWay}" />
+                                                <Run Text=" · Codec " /><Run Text="{x:Bind Codec, Mode=OneWay}" />
+                                            </TextBlock>
                                         </StackPanel>
-                                    </Button>
+                                    </StackPanel>
+
+                                    <!-- Connect: asks Windows to connect the headphones over Bluetooth. Reads
+                                         "Connecting…" meanwhile and goes once Windows has them. -->
                                     <Button
-                                        AutomationProperties.Name="Reconnect"
-                                        Command="{x:Bind ReconnectCommand}"
-                                        Visibility="{x:Bind ShowReconnect, Mode=OneWay}">
+                                        Grid.Column="2"
+                                        VerticalAlignment="Center"
+                                        AutomationProperties.Name="Connect over Bluetooth"
+                                        Command="{x:Bind ConnectCommand}"
+                                        IsEnabled="{x:Bind ShowConnect, Mode=OneWay}"
+                                        ToolTipService.ToolTip="Connects the headphones through Bluetooth. A different device can lose the audio."
+                                        Visibility="{x:Bind ShowBluetoothConnect, Mode=OneWay}">
                                         <StackPanel Orientation="Horizontal" Spacing="8">
-                                            <views:PlugIcon VerticalAlignment="Center" IsConnected="True" />
-                                            <TextBlock Text="Reconnect" />
+                                            <FontIcon FontSize="14" Glyph="&#xE702;" />
+                                            <TextBlock Text="{x:Bind BluetoothConnectText, Mode=OneWay}" />
                                         </StackPanel>
                                     </Button>
                                 </Grid>
-                            </Grid>
-                        </Border>
+                            </views:SettingsExpander.Header>
+                            <StackPanel>
+                                <!-- Device Name: typed here, applied with Save -->
+                                <Border Style="{StaticResource DeviceExpanderItemStyle}">
+                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                        <StackPanel VerticalAlignment="Center">
+                                            <TextBlock Text="Device name" />
+                                            <TextBlock Style="{StaticResource SettingSubtitleStyle}" Text="Shown in this app only. Clear the box and select Save to use the name from Windows." />
+                                        </StackPanel>
+                                        <StackPanel
+                                            Grid.Column="1"
+                                            VerticalAlignment="Center"
+                                            Orientation="Horizontal"
+                                            Spacing="8">
+                                            <TextBox
+                                                MinWidth="160"
+                                                AutomationProperties.Name="Device name"
+                                                PlaceholderText="{x:Bind WindowsName, Mode=OneWay}"
+                                                Text="{x:Bind PendingName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                            <Button
+                                                AutomationProperties.Name="Save the device name"
+                                                Command="{x:Bind SaveNameCommand}"
+                                                Content="Save" />
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+
+                                <!-- Sound, Speak-to-Chat and System (disabled while the headphones are disconnected) -->
+                                <ContentControl IsEnabled="{x:Bind IsConnected, Mode=OneWay}" Style="{StaticResource SectionStyle}">
+                                    <StackPanel>
+                                        <!-- Equalizer Preset -->
+                                        <StackPanel Visibility="{x:Bind Features.Equalizer}">
+                                            <Border Style="{StaticResource SettingsExpanderDividerStyle}" />
+                                            <Border Style="{StaticResource DeviceExpanderItemStyle}">
+                                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                                    <StackPanel VerticalAlignment="Center">
+                                                        <TextBlock Text="Equalizer preset" />
+                                                        <TextBlock Style="{StaticResource SettingSubtitleStyle}" Text="Select a preset." />
+                                                    </StackPanel>
+                                                    <ComboBox
+                                                        Grid.Column="1"
+                                                        MinWidth="180"
+                                                        VerticalAlignment="Center"
+                                                        AutomationProperties.Name="Equalizer preset"
+                                                        DisplayMemberPath="Name"
+                                                        IsEnabled="{x:Bind CanEditHeadsetSound, Mode=OneWay}"
+                                                        ItemsSource="{x:Bind EqualizerPresets, Mode=OneWay}"
+                                                        SelectedIndex="{x:Bind SelectedEqualizerIndex, Mode=TwoWay}" />
+                                                </Grid>
+                                            </Border>
+                                        </StackPanel>
+
+                                        <!-- Custom Equalizer (five-band models, which all have Clear Bass) -->
+                                        <StackPanel Visibility="{x:Bind Features.ClearBass}">
+                                            <Border Style="{StaticResource SettingsExpanderDividerStyle}" />
+                                            <Border Style="{StaticResource DeviceExpanderItemStyle}">
+                                                <StackPanel Spacing="12">
+                                                    <TextBlock Text="Custom equalizer" />
+                                                    <TextBlock Style="{StaticResource SettingSubtitleStyle}" Text="Each band has a range of -10 to +10. Apply sends the curve and sets the preset to Manual." />
+                                                    <!-- Bands: one vertical slider per column, frequency underneath -->
+                                                    <Grid ColumnDefinitions="*,*,*,*,*,*" RowDefinitions="Auto,Auto" RowSpacing="8">
+                                                        <Slider Grid.Column="0" AutomationProperties.Name="Clear Bass" IsEnabled="{x:Bind CanEditHeadsetSound, Mode=OneWay}" Style="{StaticResource EqualizerBandSliderStyle}" Value="{x:Bind ClearBass, Mode=TwoWay}" />
+                                                        <Slider Grid.Column="1" AutomationProperties.Name="400 hertz" IsEnabled="{x:Bind CanEditHeadsetSound, Mode=OneWay}" Style="{StaticResource EqualizerBandSliderStyle}" Value="{x:Bind Band1, Mode=TwoWay}" />
+                                                        <Slider Grid.Column="2" AutomationProperties.Name="1 kilohertz" IsEnabled="{x:Bind CanEditHeadsetSound, Mode=OneWay}" Style="{StaticResource EqualizerBandSliderStyle}" Value="{x:Bind Band2, Mode=TwoWay}" />
+                                                        <Slider Grid.Column="3" AutomationProperties.Name="2.5 kilohertz" IsEnabled="{x:Bind CanEditHeadsetSound, Mode=OneWay}" Style="{StaticResource EqualizerBandSliderStyle}" Value="{x:Bind Band3, Mode=TwoWay}" />
+                                                        <Slider Grid.Column="4" AutomationProperties.Name="6.3 kilohertz" IsEnabled="{x:Bind CanEditHeadsetSound, Mode=OneWay}" Style="{StaticResource EqualizerBandSliderStyle}" Value="{x:Bind Band4, Mode=TwoWay}" />
+                                                        <Slider Grid.Column="5" AutomationProperties.Name="16 kilohertz" IsEnabled="{x:Bind CanEditHeadsetSound, Mode=OneWay}" Style="{StaticResource EqualizerBandSliderStyle}" Value="{x:Bind Band5, Mode=TwoWay}" />
+                                                        <TextBlock Grid.Row="1" Grid.Column="0" Style="{StaticResource EqualizerBandLabelStyle}" Text="Clear Bass" />
+                                                        <TextBlock Grid.Row="1" Grid.Column="1" Style="{StaticResource EqualizerBandLabelStyle}" Text="400 Hz" />
+                                                        <TextBlock Grid.Row="1" Grid.Column="2" Style="{StaticResource EqualizerBandLabelStyle}" Text="1 kHz" />
+                                                        <TextBlock Grid.Row="1" Grid.Column="3" Style="{StaticResource EqualizerBandLabelStyle}" Text="2.5 kHz" />
+                                                        <TextBlock Grid.Row="1" Grid.Column="4" Style="{StaticResource EqualizerBandLabelStyle}" Text="6.3 kHz" />
+                                                        <TextBlock Grid.Row="1" Grid.Column="5" Style="{StaticResource EqualizerBandLabelStyle}" Text="16 kHz" />
+                                                    </Grid>
+                                                    <!-- /Bands -->
+                                                    <Button
+                                                        HorizontalAlignment="Right"
+                                                        Command="{x:Bind ApplyCustomEqualizerCommand}"
+                                                        Content="Apply"
+                                                        IsEnabled="{x:Bind CanEditHeadsetSound, Mode=OneWay}"
+                                                        Style="{StaticResource AccentButtonStyle}" />
+                                                </StackPanel>
+                                            </Border>
+                                        </StackPanel>
+                                        <!-- /Custom Equalizer -->
+
+                                        <!-- DSEE -->
+                                        <StackPanel Visibility="{x:Bind Features.Dsee}">
+                                            <Border Style="{StaticResource SettingsExpanderDividerStyle}" />
+                                            <Border Style="{StaticResource DeviceExpanderItemStyle}">
+                                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                                    <StackPanel VerticalAlignment="Center">
+                                                        <TextBlock Text="{x:Bind DseeName}" />
+                                                        <TextBlock Style="{StaticResource SettingSubtitleStyle}" Text="Improves the quality of compressed music. Uses more battery power." />
+                                                    </StackPanel>
+                                                    <ComboBox
+                                                        Grid.Column="1"
+                                                        MinWidth="180"
+                                                        VerticalAlignment="Center"
+                                                        AutomationProperties.Name="{x:Bind DseeName}"
+                                                        IsEnabled="{x:Bind CanEditHeadsetSound, Mode=OneWay}"
+                                                        ItemsSource="{x:Bind vm:HeadsetViewModel.DseeOptions}"
+                                                        SelectedIndex="{x:Bind DseeIndex, Mode=TwoWay}" />
+                                                </Grid>
+                                            </Border>
+                                        </StackPanel>
+
+                                        <!-- Legacy Spatial Controls -->
+                                        <StackPanel Visibility="{x:Bind Features.Vpt}">
+                                            <Border Style="{StaticResource SettingsExpanderDividerStyle}" />
+                                            <Border Style="{StaticResource DeviceExpanderItemStyle}">
+                                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                                    <StackPanel VerticalAlignment="Center">
+                                                        <TextBlock Text="Surround (VPT)" />
+                                                        <TextBlock Style="{StaticResource SettingSubtitleStyle}" Text="Adds a virtual surround effect." />
+                                                    </StackPanel>
+                                                    <ComboBox
+                                                        Grid.Column="1"
+                                                        MinWidth="180"
+                                                        VerticalAlignment="Center"
+                                                        AutomationProperties.Name="Surround (VPT)"
+                                                        IsEnabled="{x:Bind CanChangeSpatialEffect, Mode=OneWay}"
+                                                        ItemsSource="{x:Bind vm:HeadsetViewModel.VptPresetOptions}"
+                                                        SelectedIndex="{x:Bind VptPresetIndex, Mode=TwoWay}" />
+                                                </Grid>
+                                            </Border>
+                                        </StackPanel>
+
+                                        <StackPanel Visibility="{x:Bind Features.SoundPosition}">
+                                            <Border Style="{StaticResource SettingsExpanderDividerStyle}" />
+                                            <Border Style="{StaticResource DeviceExpanderItemStyle}">
+                                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                                    <StackPanel VerticalAlignment="Center">
+                                                        <TextBlock Text="Sound position" />
+                                                        <TextBlock Style="{StaticResource SettingSubtitleStyle}" Text="Changes the direction of the sound." />
+                                                    </StackPanel>
+                                                    <ComboBox
+                                                        Grid.Column="1"
+                                                        MinWidth="180"
+                                                        VerticalAlignment="Center"
+                                                        AutomationProperties.Name="Sound position"
+                                                        IsEnabled="{x:Bind CanChangeSpatialEffect, Mode=OneWay}"
+                                                        ItemsSource="{x:Bind vm:HeadsetViewModel.SoundPositionOptions}"
+                                                        SelectedIndex="{x:Bind SoundPositionIndex, Mode=TwoWay}" />
+                                                </Grid>
+                                            </Border>
+                                        </StackPanel>
+
+                                        <!-- Speak-to-Chat -->
+                                        <StackPanel Visibility="{x:Bind Features.SpeakToChat}">
+                                            <Border Style="{StaticResource SettingsExpanderDividerStyle}" />
+                                            <Border Style="{StaticResource DeviceExpanderItemStyle}">
+                                                <views:SettingToggleRow
+                                                    VerticalAlignment="Center"
+                                                    IsOn="{x:Bind SpeakToChat, Mode=TwoWay}"
+                                                    Subtitle="Stops the music and lets in outside sound when you speak."
+                                                    Title="Speak-to-Chat" />
+                                            </Border>
+                                        </StackPanel>
+
+                                        <!-- Auto Power-Off -->
+                                        <StackPanel Visibility="{x:Bind Features.AutoPowerOff}">
+                                            <Border Style="{StaticResource SettingsExpanderDividerStyle}" />
+                                            <Border Style="{StaticResource DeviceExpanderItemStyle}">
+                                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                                    <StackPanel VerticalAlignment="Center">
+                                                        <TextBlock Text="Auto power-off" />
+                                                        <TextBlock Style="{StaticResource SettingSubtitleStyle}" Text="Turns the headphones off after a set time without use." />
+                                                    </StackPanel>
+                                                    <ComboBox
+                                                        Grid.Column="1"
+                                                        MinWidth="180"
+                                                        VerticalAlignment="Center"
+                                                        AutomationProperties.Name="Auto power-off"
+                                                        ItemsSource="{x:Bind DisplayedAutoPowerOffOptions, Mode=OneWay}"
+                                                        SelectedIndex="{x:Bind AutoPowerOffIndex, Mode=TwoWay}" />
+                                                </Grid>
+                                            </Border>
+                                        </StackPanel>
+
+                                        <!-- Adaptive Volume -->
+                                        <StackPanel Visibility="{x:Bind Features.AdaptiveVolume}">
+                                            <Border Style="{StaticResource SettingsExpanderDividerStyle}" />
+                                            <Border Style="{StaticResource DeviceExpanderItemStyle}">
+                                                <views:SettingToggleRow
+                                                    VerticalAlignment="Center"
+                                                    IsOn="{x:Bind AdaptiveVolume, Mode=TwoWay}"
+                                                    Subtitle="Adjusts the volume to the noise around you."
+                                                    Title="Adaptive volume" />
+                                            </Border>
+                                        </StackPanel>
+
+                                        <!-- Voice Guidance -->
+                                        <StackPanel Visibility="{x:Bind HasVoiceGuidanceControl, Mode=OneWay}">
+                                            <Border Style="{StaticResource SettingsExpanderDividerStyle}" />
+                                            <Border Style="{StaticResource DeviceExpanderItemStyle}">
+                                                <views:SettingToggleRow
+                                                    VerticalAlignment="Center"
+                                                    IsOn="{x:Bind VoiceGuidance, Mode=TwoWay}"
+                                                    Subtitle="Speaks the status and the setting changes."
+                                                    Title="Voice guidance" />
+                                            </Border>
+                                        </StackPanel>
+
+                                        <!-- Bluetooth Connection Quality -->
+                                        <StackPanel Visibility="{x:Bind HasConnectionQualityControl}">
+                                            <Border Style="{StaticResource SettingsExpanderDividerStyle}" />
+                                            <Border Style="{StaticResource DeviceExpanderItemStyle}">
+                                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                                    <StackPanel VerticalAlignment="Center">
+                                                        <TextBlock Text="Connection mode" />
+                                                        <TextBlock Style="{StaticResource SettingSubtitleStyle}" Text="Selects SBC, AAC, or High Quality for Bluetooth audio." />
+                                                    </StackPanel>
+                                                    <ComboBox
+                                                        Grid.Column="1"
+                                                        MinWidth="180"
+                                                        VerticalAlignment="Center"
+                                                        AutomationProperties.Name="Connection mode"
+                                                        IsEnabled="{x:Bind CanChangeConnectionMode, Mode=OneWay}"
+                                                        ItemsSource="{x:Bind vm:HeadsetViewModel.ConnectionQualityOptions}"
+                                                        SelectedIndex="{x:Bind ConnectionQualityIndex, Mode=TwoWay}" />
+                                                </Grid>
+                                            </Border>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </ContentControl>
+                                <!-- /Sound, Speak-to-Chat and System -->
+
+                                <!-- Disconnect App Control: release the headphones for another device, or take them back -->
+                                <Border Style="{StaticResource SettingsExpanderDividerStyle}" />
+                                <Border Style="{StaticResource DeviceExpanderItemStyle}">
+                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                        <StackPanel VerticalAlignment="Center">
+                                            <TextBlock Text="Disconnect app control" />
+                                            <TextBlock Style="{StaticResource SettingSubtitleStyle}" Text="Lets a different device, such as the Sony app on a phone, control the headphones. The audio continues on this PC. The app stays disconnected until you select Reconnect." />
+                                        </StackPanel>
+                                        <Grid Grid.Column="1" VerticalAlignment="Center">
+                                            <Button
+                                                AutomationProperties.Name="Disconnect app control"
+                                                Command="{x:Bind DisconnectCommand}"
+                                                IsEnabled="{x:Bind IsConnected, Mode=OneWay}"
+                                                ToolTipService.ToolTip="Disconnect app control"
+                                                Visibility="{x:Bind ShowDisconnect, Mode=OneWay}">
+                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                                    <views:PlugIcon VerticalAlignment="Center" />
+                                                    <TextBlock Text="Disconnect" />
+                                                </StackPanel>
+                                            </Button>
+                                            <Button
+                                                AutomationProperties.Name="Reconnect"
+                                                Command="{x:Bind ReconnectCommand}"
+                                                Visibility="{x:Bind ShowReconnect, Mode=OneWay}">
+                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                                    <views:PlugIcon VerticalAlignment="Center" IsConnected="True" />
+                                                    <TextBlock Text="Reconnect" />
+                                                </StackPanel>
+                                            </Button>
+                                        </Grid>
+                                    </Grid>
+                                </Border>
+                            </StackPanel>
+                        </views:SettingsExpander>
                     </DataTemplate>
                 </ItemsRepeater.ItemTemplate>
             </ItemsRepeater>
             <!-- /Headset Cards -->
 
+            <!-- Reorder -->
+            <Border Style="{StaticResource SettingsCardStyle}">
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="20">
+                    <FontIcon Glyph="&#xE8CB;" Style="{StaticResource SettingsCardIconStyle}" />
+                    <TextBlock
+                        Grid.Column="1"
+                        VerticalAlignment="Center"
+                        Text="Reorder headphones" />
+                    <Button
+                        Grid.Column="2"
+                        Click="OnReorderClick"
+                        Content="Reorder" />
+                </Grid>
+            </Border>
+
             <!-- Bluetooth Settings -->
             <Border Style="{StaticResource SettingsCardStyle}">
-                <Grid ColumnDefinitions="*,Auto">
-                    <StackPanel VerticalAlignment="Center">
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="20">
+                    <FontIcon Glyph="&#xE702;" Style="{StaticResource SettingsCardIconStyle}" />
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
                         <TextBlock Text="Pair or forget headphones" />
                         <TextBlock Style="{StaticResource SecondaryTextStyle}" Text="Pair the headphones in the Windows Bluetooth settings." />
                     </StackPanel>
                     <HyperlinkButton
-                        Grid.Column="1"
+                        Grid.Column="2"
                         Content="Open Bluetooth settings"
                         NavigateUri="ms-settings:bluetooth" />
                 </Grid>

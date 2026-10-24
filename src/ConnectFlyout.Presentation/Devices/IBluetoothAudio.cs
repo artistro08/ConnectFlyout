@@ -27,6 +27,12 @@ public interface IBluetoothAudio
     /// plays at once. True once the clip is queued.
     /// </summary>
     Task<bool> PlaySoundAsync(string bluetoothAddress, string path);
+
+    /// <summary>
+    /// This PC's Bluetooth address as the headset lists it ("AA:BB:CC:DD:EE:FF"), or null
+    /// without a Bluetooth adapter.
+    /// </summary>
+    Task<string?> GetLocalAddressAsync();
 }
 
 /// <summary>
@@ -41,4 +47,10 @@ public sealed class WindowsBluetoothAudio : IBluetoothAudio
 
     public Task<bool> PlaySoundAsync(string bluetoothAddress, string path) =>
         Core.HeadsetClient.PlaySoundAsync(bluetoothAddress, path).AsTask();
+
+    public async Task<string?> GetLocalAddressAsync()
+    {
+        var address = await Core.HeadsetClient.LocalBluetoothAddressAsync();
+        return address.Length == 0 ? null : address;
+    }
 }

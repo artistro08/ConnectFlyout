@@ -3,43 +3,32 @@ using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
 using ConnectFlyout.App.Interop;
+using ConnectFlyout.App.Views;
 using ConnectFlyout.Presentation.Settings;
 using ConnectFlyout.Presentation.Shortcuts;
 
 namespace ConnectFlyout.App.Views.Settings;
 
 /// <summary>
-/// What Settings › Shortcuts needs: the registered shortcuts and the settings they're saved in.
+/// What Settings › Shortcuts needs: the registered shortcuts, the settings they're saved in, and the name of the
+/// other device connected to the headphones (null when unknown), for the "Play on …" shortcut's name.
 /// </summary>
-public sealed record ShortcutsContext(GlobalShortcuts Shortcuts, AppSettings Settings);
+public sealed record ShortcutsContext(GlobalShortcuts Shortcuts, AppSettings Settings, Func<string?> OtherDeviceName);
 
 /// <summary>
-/// Settings › Shortcuts: one PowerToys shortcut picker per noise mode, as in Leaf Calendar (press the new keys in its
-/// dialog; Reset picks the default, Clear turns it off). A combination another app holds shows a warning under its row
-/// and asks for another.
+/// Settings › Shortcuts: one PowerToys shortcut picker per noise mode and per scene, as in Leaf Calendar (press the
+/// new keys in its dialog; Reset picks the default, Clear turns it off; scenes have no default, so Reset clears). A
+/// combination another app holds shows a warning under its row and asks for another. Each row is a
+/// <see cref="ShortcutRow"/>.
 /// </summary>
 public sealed partial class ShortcutsPage : Page
 {
-    private readonly Dictionary<ShortcutAction, (ShortcutControl Control, InfoBar Warning)> _rows = [];
-
-    // Why a shortcut isn't what was picked (the new one was taken and the old one is back); cleared on the next change
-    private readonly Dictionary<ShortcutAction, string> _notes = [];
-
+    private readonly List<ShortcutRow> _rows = [];
     private ShortcutsContext _context = null!;
-
-    // Closed() applies the shortcuts itself and loads once at the end; the Changed it raises is skipped meanwhile
-    private bool _applying;
-
-    // The shortcut when its dialog opened, to restore if the new one turns out taken
-    private string? _before;
 
     public ShortcutsPage()
     {
         InitializeComponent();
-        foreach (var action in ShortcutActions.All)
-        {
-            AddRow(action);
-        }
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -47,153 +36,77 @@ public sealed partial class ShortcutsPage : Page
         ArgumentNullException.ThrowIfNull(e);
 
         _context = (ShortcutsContext)e.Parameter;
-        _context.Shortcuts.Changed += OnChanged;
+        BuildRows();
         Unloaded += OnUnloaded;
-        Load();
     }
 
-    protected override void OnNavigatedFrom(NavigationEventArgs e)
-    {
-        _context.Shortcuts.Changed -= OnChanged;
-    }
+    protected override void OnNavigatedFrom(NavigationEventArgs e) => DetachRows();
 
-    private void OnUnloaded(object sender, RoutedEventArgs e) => CloseDialogs();
+    private void OnUnloaded(object sender, RoutedEventArgs e) => DetachRows();
 
-    /// <summary>
-    /// Closes an open shortcut dialog, which lets go of the keyboard and registers the shortcuts again, and stops
-    /// following changes. The settings window calls it when it closes, since WinUI may not unload the page then.
-    /// </summary>
-    public void CloseDialogs()
+    // The noise mode and flyout rows, then one per scene. Scenes change on their own page, so the
+    // rows are built on each visit.
+    private void BuildRows()
     {
-        _context.Shortcuts.Changed -= OnChanged;
-        foreach (var (control, _) in _rows.Values)
+        DetachRows();
+        Rows.Children.Clear();
+        SceneRows.Children.Clear();
+
+        foreach (var action in ShortcutActions.All)
         {
-            control.CloseDialog();
+            AddRow(Rows, ShortcutTarget.For(action), IconFor(action));
         }
-    }
-
-    private void OnChanged(object? sender, EventArgs e)
-    {
-        if (!_applying)
+        foreach (var scene in _context.Settings.Scenes)
         {
-            Load();
+            if (scene.Id is { } id)
+            {
+                AddRow(SceneRows, ShortcutTarget.ForScene(id), new FontIcon { Glyph = scene.Glyph, Style = IconStyle });
+            }
         }
+        NoScenes.Visibility = SceneRows.Children.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
     }
 
-    // A card with the name and the picker, and the warning under it
-    private void AddRow(ShortcutAction action)
+    private static Style IconStyle => (Style)Application.Current.Resources["SettingsCardIconStyle"];
+
+    // The flyout's own noise mode icons for the mode rows; a new window, a laptop and a phone for the rest
+    private static FrameworkElement IconFor(ShortcutAction action) => action switch
     {
-        var name = ShortcutActions.NameFor(action);
+        ShortcutAction.OpenFlyout     => new FontIcon { Glyph = "\uE8A7", Style = IconStyle },
+        ShortcutAction.PlaybackThisPc => new FontIcon { Glyph = "\uE7F8", Style = IconStyle },
+        ShortcutAction.PlaybackOther  => new FontIcon { Glyph = "\uE717", Style = IconStyle },
+        _ => new NoiseModeIcon { Mode = ShortcutActions.NoiseModeFor(action), Margin = new Thickness(2, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center },
+    };
 
-        var title = new TextBlock { Text = name, VerticalAlignment = VerticalAlignment.Center };
-        var control = new ShortcutControl();
-        Grid.SetColumn(control, 1);
-
-        var grid = new Grid { ColumnSpacing = 16 };
+    // A card with the icon, the name and the picker, and the warning under it
+    private void AddRow(Panel panel, ShortcutTarget target, FrameworkElement icon)
+    {
+        var grid = new Grid { ColumnSpacing = 20 };
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+        grid.Children.Add(icon);
+        var title = new TextBlock { Text = target.Name(_context), VerticalAlignment = VerticalAlignment.Center };
+        Grid.SetColumn(title, 1);
+        var control = new ShortcutControl();
+        Grid.SetColumn(control, 2);
         grid.Children.Add(title);
         grid.Children.Add(control);
 
         var warning = new InfoBar { Severity = InfoBarSeverity.Warning, IsClosable = false, Visibility = Visibility.Collapsed };
         AutomationProperties.SetLiveSetting(warning, Microsoft.UI.Xaml.Automation.Peers.AutomationLiveSetting.Polite);
 
-        Rows.Children.Add(new Border { Style = (Style)Application.Current.Resources["SettingsCardStyle"], Child = grid });
-        Rows.Children.Add(warning);
-        _rows[action] = (control, warning);
-        Wire(control, action, name);
+        panel.Children.Add(new Border { Style = (Style)Application.Current.Resources["SettingsCardStyle"], Child = grid });
+        panel.Children.Add(warning);
+        _rows.Add(new ShortcutRow(_context, target, control, warning, title));
     }
 
-    private void Load()
+    private void DetachRows()
     {
-        foreach (var (action, (control, warning)) in _rows)
+        foreach (var row in _rows)
         {
-            Show(control, warning, _context.Settings.GetShortcut(action), action);
+            row.Detach();
         }
-    }
-
-    // The shortcut as key caps; a taken one shows its caps in the warning state, and the warning under the row is
-    // collapsed when there's nothing to say
-    private void Show(ShortcutControl control, InfoBar warning, string shortcut, ShortcutAction action)
-    {
-        var shortcuts = _context.Shortcuts;
-        control.HotkeySettings = Hotkey.TryParse(shortcut, out var hotkey) ? HotkeySettings.FromHotkey(hotkey) : new HotkeySettings();
-
-        // Without the tray icon's window nothing can be registered, which isn't another app's doing
-        var message = !shortcuts.IsAvailable ? "Shortcuts are not available because the tray icon did not start."
-            : _notes.TryGetValue(action, out var note) ? note
-            : shortcuts.IsTaken(action) ? $"A different app uses {shortcut}. Select a different shortcut."
-            : null;
-        control.HasConflict = shortcuts.IsAvailable && shortcuts.IsTaken(action);
-        control.Tooltip = message;
-        warning.Message = message ?? string.Empty;
-        warning.IsOpen = message is not null;
-        warning.Visibility = message is not null ? Visibility.Visible : Visibility.Collapsed;
-    }
-
-    // Wires A Picker To Its Shortcut: the default for Reset, the conflict check, and saving
-    private void Wire(ShortcutControl control, ShortcutAction action, string name)
-    {
-        control.ButtonName = name;
-        control.DefaultHotkeySettings = Hotkey.TryParse(ShortcutActions.DefaultFor(action), out var fallback) ? HotkeySettings.FromHotkey(fallback) : new HotkeySettings();
-        control.CheckConflict = hotkey => Conflict(action, hotkey);
-        control.DialogOpening += (_, _) => Opening(action);
-        control.DialogClosed += (_, _) => Closed(action);
-        control.HotkeySettingsChanged += (_, _) =>
-        {
-            // A New Combination, The Default (Reset), Or "" (cleared)
-            var picked = control.HotkeySettings is { } settings && !settings.IsEmpty() ? settings.ToHotkey()?.ToString() : "";
-            if (picked is not null)
-            {
-                _context.Settings.SetShortcut(action, picked);
-            }
-        };
-    }
-
-    // Another noise mode has it, or Windows or another app holds it (a RegisterHotKey probe). Without the tray
-    // icon's window nothing can be registered, which isn't another app's doing.
-    private string? Conflict(ShortcutAction action, Hotkey hotkey)
-    {
-        var text = hotkey.ToString();
-        var other = ShortcutActions.All.FirstOrDefault(each => each != action && _context.Settings.GetShortcut(each) == text);
-        return !_context.Shortcuts.IsAvailable ? "Shortcuts are not available because the tray icon did not start."
-            : other != default ? $"“{ShortcutActions.NameFor(other)}” already uses {text}."
-            : !_context.Shortcuts.IsFree(hotkey) ? $"Windows or a different app uses {text}. Select a different shortcut."
-            : null;
-    }
-
-    // The app's own shortcuts let go while the dialog listens (so pressing them reaches it)
-    private void Opening(ShortcutAction action)
-    {
-        _before = _context.Settings.GetShortcut(action);
-        _notes.Remove(action);
-        _context.Shortcuts.Suspend();
-    }
-
-    // ...and come back from the settings after, whichever way the dialog closed. A new combination another app took
-    // since the dialog checked it gives way to the one that worked before.
-    private void Closed(ShortcutAction action)
-    {
-        var shortcuts = _context.Shortcuts;
-        _applying = true;
-        try
-        {
-            shortcuts.Apply(_context.Settings);
-
-            var saved = _context.Settings.GetShortcut(action);
-            var previous = _before ?? saved;
-            if (shortcuts.IsTaken(action) && saved != previous)
-            {
-                _notes[action] = $"{saved} was taken by another app, so {(previous.Length == 0 ? "no shortcut" : previous)} is back.";
-                _context.Settings.SetShortcut(action, previous);
-                shortcuts.Apply(_context.Settings);
-            }
-        }
-        finally
-        {
-            _applying = false;
-        }
-
-        Load();
+        _rows.Clear();
     }
 }

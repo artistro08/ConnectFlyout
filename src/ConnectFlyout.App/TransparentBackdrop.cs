@@ -62,6 +62,13 @@ public sealed partial class TransparentBackdrop : SystemBackdrop
         return 1;
     }
 
+    // A theme change (Settings > App theme) calls this for every backdrop. The stock handler
+    // throws "The parameter is incorrect" for these windows' target and took the app down; a
+    // clear brush has no theme to follow, so there's nothing to do.
+    protected override void OnDefaultSystemBackdropConfigurationChanged(ICompositionSupportsSystemBackdrop target, XamlRoot xamlRoot)
+    {
+    }
+
     protected override void OnTargetDisconnected(ICompositionSupportsSystemBackdrop disconnectedTarget)
     {
         var brush = disconnectedTarget.SystemBackdrop;

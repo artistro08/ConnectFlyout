@@ -13,6 +13,9 @@
 #include "sony/transport/Logger.h"
 #include "sony/transport/WindowsRfcommTransport.h"
 
+#include <winrt/Windows.Devices.Bluetooth.h>
+
+#include <cstdio>
 #include <mutex>
 #include <string>
 
@@ -184,6 +187,28 @@ void HeadsetClient::SetLogHandler(Core::NativeLogHandler const& handler) {
 void HeadsetClient::SetDebugLogging(bool enabled) {
     sony::Logger::setDeveloperMode(enabled);
     sony::Logger::setLogLevel(enabled ? sony::LogLevel::Debug : sony::LogLevel::Info);
+}
+
+IAsyncOperation<hstring> HeadsetClient::LocalBluetoothAddressAsync() {
+    winrt::Windows::Devices::Bluetooth::BluetoothAdapter adapter{nullptr};
+    try {
+        adapter = co_await winrt::Windows::Devices::Bluetooth::BluetoothAdapter::GetDefaultAsync();
+    } catch (const winrt::hresult_error& error) {
+        // Without it the playback shortcuts can't tell this PC from the other device; say so
+        sony::Logger::warn("device", "Couldn't read this PC's Bluetooth address: " + winrt::to_string(error.message()));
+        co_return hstring{};
+    }
+    if (!adapter) {
+        sony::Logger::warn("device", "This PC has no Bluetooth adapter, so the playback shortcuts can't tell the devices apart");
+        co_return hstring{};
+    }
+    const uint64_t address = adapter.BluetoothAddress();
+    wchar_t text[18];
+    swprintf_s(text, L"%02X:%02X:%02X:%02X:%02X:%02X",
+        static_cast<unsigned>((address >> 40) & 0xFF), static_cast<unsigned>((address >> 32) & 0xFF),
+        static_cast<unsigned>((address >> 24) & 0xFF), static_cast<unsigned>((address >> 16) & 0xFF),
+        static_cast<unsigned>((address >> 8) & 0xFF), static_cast<unsigned>(address & 0xFF));
+    co_return hstring{text};
 }
 
 IAsyncOperation<bool> HeadsetClient::ConnectAudioAsync(hstring bluetoothAddress) {

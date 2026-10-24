@@ -16,6 +16,7 @@ struct HeadsetClient : HeadsetClientT<HeadsetClient> {
     static void SetLogHandler(Core::NativeLogHandler const& handler);
     static void SetDebugLogging(bool enabled);
     static com_array<Core::EqualizerPresetInfo> GetEqualizerPresets();
+    static Windows::Foundation::IAsyncOperation<hstring> LocalBluetoothAddressAsync();
     static Windows::Foundation::IAsyncOperation<bool> ConnectAudioAsync(hstring bluetoothAddress);
     static Windows::Foundation::IAsyncOperation<bool> DisconnectAudioAsync(hstring bluetoothAddress);
     static Windows::Foundation::IAsyncOperation<bool> PlaySoundAsync(hstring bluetoothAddress, hstring path);

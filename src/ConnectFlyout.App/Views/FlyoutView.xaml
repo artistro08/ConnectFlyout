@@ -77,7 +77,7 @@
                 <ListView.ItemTemplate>
                     <DataTemplate x:DataType="vm:HeadsetViewModel">
                         <Grid
-                            AutomationProperties.Name="{x:Bind DeviceName}"
+                            AutomationProperties.Name="{x:Bind DeviceName, Mode=OneWay}"
                             ColumnDefinitions="Auto,*,Auto"
                             ColumnSpacing="12"
                             PointerCanceled="OnPickerRowRest"
@@ -98,7 +98,7 @@
                             <!-- Model picture, or the headphone icon when there's no picture -->
                             <local:DevicePicture ModelName="{x:Bind ModelName}" />
                             <StackPanel Grid.Column="1" Spacing="4">
-                                <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="{x:Bind DeviceName}" />
+                                <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="{x:Bind DeviceName, Mode=OneWay}" />
                                 <!-- Status, or a failed connect in the caution color (the list has no warning bar) -->
                                 <TextBlock Style="{x:Bind app:TileStyles.PickStatus(HasError), Mode=OneWay}" Text="{x:Bind PickerStatusText, Mode=OneWay}" />
                                 <local:BatteryRow Headset="{x:Bind}" Visibility="{x:Bind IsConnected, Mode=OneWay}" />
@@ -133,7 +133,7 @@
             <StackPanel x:Name="DevicePanel" Padding="20" Spacing="12">
 
                 <!-- Header: picture, name, battery row and audio line, centered like Sony's app -->
-                <Grid>
+                <Grid x:Name="Header">
                     <StackPanel HorizontalAlignment="Center" Spacing="6">
                         <!-- Picture, with breathing room above and below -->
                         <Image
@@ -151,29 +151,37 @@
                         <!-- Battery -->
                         <local:BatteryRow HorizontalAlignment="Center" Headset="{x:Bind ViewModel.CurrentHeadset, Mode=OneWay}" />
 
-                        <!-- Status Line: "Connecting…" / "App Disconnected" / "Disconnected" until connected, then the audio line -->
+                        <!-- Status Line: "Connecting…" / "Disconnected" until connected, then the audio
+                             line, which also stays through a reload so the header keeps its size -->
                         <TextBlock
+                            x:Name="StatusLine"
                             HorizontalAlignment="Center"
                             Style="{StaticResource SecondaryTextStyle}"
                             Text="{x:Bind ViewModel.CurrentHeadset.StatusText, Mode=OneWay}"
                             Visibility="{x:Bind ViewModel.CurrentHeadset.ShowStatus, Mode=OneWay}" />
-                        <TextBlock
-                            HorizontalAlignment="Center"
-                            Style="{StaticResource SecondaryTextStyle}"
-                            Text="{x:Bind ViewModel.CurrentHeadset.AudioText, Mode=OneWay}"
-                            Visibility="{x:Bind ViewModel.CurrentHeadset.IsConnected, Mode=OneWay}" />
 
-                        <!-- Reconnect: a plain link under "App Disconnected" (Windows has the headset, the app doesn't) -->
+                        <!-- Reconnect: stands in for the "App disconnected" line, in its text style, so the
+                             header keeps its size (Windows has the headset, the app doesn't) -->
                         <HyperlinkButton
+                            x:Name="ReconnectLink"
                             HorizontalAlignment="Center"
                             AutomationProperties.Name="Reconnect device"
                             Command="{x:Bind ViewModel.CurrentHeadset.ReconnectCommand, Mode=OneWay}"
+                            Style="{StaticResource TextLinkStyle}"
                             Visibility="{x:Bind ViewModel.CurrentHeadset.ShowReconnect, Mode=OneWay, FallbackValue=Collapsed}">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
+                            <!-- The icon is as tall as the caption's line, so the link is no taller than the text it replaces -->
+                            <StackPanel Orientation="Horizontal" Spacing="6">
                                 <local:PlugIcon VerticalAlignment="Center" IsConnected="True" />
-                                <TextBlock Text="Reconnect device" />
+                                <TextBlock Style="{StaticResource CaptionTextBlockStyle}" Text="Reconnect device" />
                             </StackPanel>
                         </HyperlinkButton>
+
+                        <TextBlock
+                            x:Name="AudioLine"
+                            HorizontalAlignment="Center"
+                            Style="{StaticResource SecondaryTextStyle}"
+                            Text="{x:Bind ViewModel.CurrentHeadset.AudioText, Mode=OneWay}"
+                            Visibility="{x:Bind ViewModel.CurrentHeadset.ShowAudioText, Mode=OneWay, FallbackValue=Collapsed}" />
 
                         <!-- Connect: asks Windows to connect the headset over Bluetooth, while Windows isn't -->
                         <HyperlinkButton
@@ -202,13 +210,15 @@
                         Visibility="{x:Bind ViewModel.ShowBack, Mode=OneWay}">
                         <FontIcon FontSize="16" Glyph="&#xE72B;" />
                     </Button>
-                    <!-- Pulled out of the page padding so it lines up with the back arrow's center -->
+                    <!-- Pulled out of the page padding so it lines up with the back arrow's center; in
+                         the text color like the icons around it -->
                     <ProgressRing
                         Width="20"
                         Height="20"
                         Margin="0,-6,-6,0"
                         HorizontalAlignment="Right"
                         VerticalAlignment="Top"
+                        Foreground="{ThemeResource TextFillColorPrimaryBrush}"
                         IsActive="{x:Bind ViewModel.CurrentHeadset.IsConnecting, Mode=OneWay}" />
                 </Grid>
                 <!-- /Header -->
@@ -276,7 +286,7 @@
                         </Grid>
 
                         <!-- Scenes -->
-                        <ItemsRepeater ItemsSource="{x:Bind ViewModel.CurrentHeadset.SceneItems, Mode=OneWay}" Visibility="{x:Bind ViewModel.CurrentHeadset.ShowScenes, Mode=OneWay, FallbackValue=Collapsed}">
+                        <ItemsRepeater x:Name="SceneButtons" ItemsSource="{x:Bind ViewModel.CurrentHeadset.SceneItems, Mode=OneWay}" Visibility="{x:Bind ViewModel.CurrentHeadset.ShowScenes, Mode=OneWay, FallbackValue=Collapsed}">
                             <ItemsRepeater.Layout>
                                 <app:UniformColumnsLayout
                                     ColumnSpacing="8"
@@ -304,9 +314,15 @@
                 <!-- /Noise Control -->
 
                 <!-- Playback: which connected device (multipoint) has the audio. Only with two or
-                     more to choose from, on headphones that can switch. -->
+                     more to choose from, on headphones that can switch; disabled, not hidden,
+                     while the link is down, so a reload doesn't move the flyout. -->
                 <MenuFlyoutSeparator Visibility="{x:Bind ViewModel.CurrentHeadset.ShowPlayback, Mode=OneWay, FallbackValue=Collapsed}" />
-                <StackPanel Spacing="12" Visibility="{x:Bind ViewModel.CurrentHeadset.ShowPlayback, Mode=OneWay, FallbackValue=Collapsed}">
+                <ContentControl
+                    x:Name="PlaybackSection"
+                    IsEnabled="{x:Bind ViewModel.CurrentHeadset.IsConnected, Mode=OneWay, FallbackValue=False}"
+                    Style="{StaticResource SectionStyle}"
+                    Visibility="{x:Bind ViewModel.CurrentHeadset.ShowPlayback, Mode=OneWay, FallbackValue=Collapsed}">
+                <StackPanel Spacing="12">
                     <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="Playback" />
                     <ItemsRepeater ItemsSource="{x:Bind ViewModel.CurrentHeadset.PlaybackDevices, Mode=OneWay}">
                         <ItemsRepeater.Layout>
@@ -330,6 +346,7 @@
                         </ItemsRepeater.ItemTemplate>
                     </ItemsRepeater>
                 </StackPanel>
+                </ContentControl>
                 <!-- /Playback -->
 
                 <MenuFlyoutSeparator Visibility="{x:Bind ViewModel.CurrentHeadset.ShowPopupSoundSeparator, Mode=OneWay, FallbackValue=Collapsed}" />
@@ -392,6 +409,7 @@
 
         <!-- Footer -->
         <Grid
+            x:Name="Footer"
             Grid.Row="1"
             Height="52"
             Padding="12,0"
@@ -399,7 +417,8 @@
             BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
             BorderThickness="0,1,0,0"
             ColumnDefinitions="*,Auto">
-            <!-- Turn Off: far left, only while connected to the shown headset -->
+            <!-- Turn Off: far left, on headphones that can; disabled until connected. The footer
+                 buttons stay in place while disconnected, so nothing jumps during a reload. -->
             <Button
                 Height="36"
                 Padding="10,0"
@@ -408,7 +427,7 @@
                 IsEnabled="{x:Bind ViewModel.CurrentHeadset.CanPowerOffFromPopup, Mode=OneWay, FallbackValue=False}"
                 Style="{StaticResource SubtleButtonStyle}"
                 ToolTipService.ToolTip="Turn off the headphones"
-                Visibility="{x:Bind ViewModel.CurrentHeadset.CanPowerOffFromPopup, Mode=OneWay, FallbackValue=Collapsed}">
+                Visibility="{x:Bind ViewModel.CurrentHeadset.ShowPowerOff, Mode=OneWay, FallbackValue=Collapsed}">
                 <StackPanel Orientation="Horizontal" Spacing="8">
                     <FontIcon FontSize="16" Glyph="&#xE7E8;" />
                     <TextBlock VerticalAlignment="Center" Text="Turn off" />
@@ -420,35 +439,37 @@
                 VerticalAlignment="Center"
                 Orientation="Horizontal"
                 Spacing="4">
-                <!-- Refresh: reopens the link while connected -->
+                <!-- Refresh: reopens the link; disabled until connected -->
                 <Button
                     Style="{StaticResource FooterIconButtonStyle}"
                     AutomationProperties.Name="Refresh"
                     Command="{x:Bind ViewModel.ReconnectCommand}"
-                    ToolTipService.ToolTip="Refresh"
-                    Visibility="{x:Bind ViewModel.CurrentHeadset.IsConnected, Mode=OneWay, FallbackValue=Collapsed}">
+                    IsEnabled="{x:Bind ViewModel.CurrentHeadset.IsConnected, Mode=OneWay, FallbackValue=False}"
+                    ToolTipService.ToolTip="Refresh">
                     <FontIcon FontSize="16" Glyph="&#xE72C;" />
                 </Button>
 
-                <!-- Disconnect: lets another device (like the phone app) take over -->
-                <Button
-                    Style="{StaticResource FooterIconButtonStyle}"
-                    AutomationProperties.Name="Disconnect"
-                    Command="{x:Bind ViewModel.CurrentHeadset.DisconnectCommand, Mode=OneWay}"
-                    ToolTipService.ToolTip="Disconnect control"
-                    Visibility="{x:Bind ViewModel.CurrentHeadset.IsConnected, Mode=OneWay, FallbackValue=Collapsed}">
-                    <local:PlugIcon Size="20" />
-                </Button>
-
-                <!-- Reconnect: takes Disconnect's place while disconnected -->
-                <Button
-                    Style="{StaticResource FooterIconButtonStyle}"
-                    AutomationProperties.Name="Reconnect"
-                    Command="{x:Bind ViewModel.CurrentHeadset.ReconnectCommand, Mode=OneWay}"
-                    ToolTipService.ToolTip="Reconnect"
-                    Visibility="{x:Bind ViewModel.CurrentHeadset.ShowReconnect, Mode=OneWay, FallbackValue=Collapsed}">
-                    <local:PlugIcon IsConnected="True" Size="20" />
-                </Button>
+                <!-- Disconnect: lets another device (like the phone app) take over; disabled until
+                     connected. Reconnect takes the same slot while the app has let go. -->
+                <Grid>
+                    <Button
+                        Style="{StaticResource FooterIconButtonStyle}"
+                        AutomationProperties.Name="Disconnect app control"
+                        Command="{x:Bind ViewModel.CurrentHeadset.DisconnectCommand, Mode=OneWay}"
+                        IsEnabled="{x:Bind ViewModel.CurrentHeadset.IsConnected, Mode=OneWay, FallbackValue=False}"
+                        ToolTipService.ToolTip="Disconnect app control"
+                        Visibility="{x:Bind ViewModel.CurrentHeadset.ShowDisconnect, Mode=OneWay, FallbackValue=Visible}">
+                        <local:PlugIcon Size="20" />
+                    </Button>
+                    <Button
+                        Style="{StaticResource FooterIconButtonStyle}"
+                        AutomationProperties.Name="Reconnect"
+                        Command="{x:Bind ViewModel.CurrentHeadset.ReconnectCommand, Mode=OneWay}"
+                        ToolTipService.ToolTip="Reconnect"
+                        Visibility="{x:Bind ViewModel.CurrentHeadset.ShowReconnect, Mode=OneWay, FallbackValue=Collapsed}">
+                        <local:PlugIcon IsConnected="True" Size="20" />
+                    </Button>
+                </Grid>
 
                 <Button
                     Style="{StaticResource FooterIconButtonStyle}"

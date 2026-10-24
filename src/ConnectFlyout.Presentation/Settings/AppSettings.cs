@@ -35,6 +35,7 @@ public sealed class AppSettings
     private const string ThemeKey                     = "Theme";
     private const string DebugLoggingKey              = "DebugLogging";
     private const string ScenesKey                    = "Scenes";
+    private const string HeadsetOrderKey              = "HeadsetOrder";
     private const string HideTrayKey                  = "HideTray";
     private const string HideTrayWhileDisconnectedKey = "HideTrayWhileDisconnected";
     private const string HiddenTrayLaunchKey          = "HiddenTrayLaunch";
@@ -44,12 +45,16 @@ public sealed class AppSettings
     private const string HideAmbientControlsKey       = "HideAmbientControls";
     private const string AutoConnectKeyPrefix         = "AutoConnect.";
     private const string KnownHeadsetKeyPrefix        = "KnownHeadset.";
+    private const string DisplayNameKeyPrefix         = "DisplayName.";
     private const string LastCaseBatteryKeyPrefix     = "LastCaseBattery.";
     private const string ShortcutKeyPrefix            = "Shortcut.";
+    private const string SceneShortcutKeyPrefix       = "SceneShortcut.";
 
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = false };
 
     private readonly ISettingsStore _store;
+    private IReadOnlyList<Scene>? _scenes;
+    private IReadOnlyList<string>? _headsetOrder;
 
     public AppSettings(ISettingsStore store)
     {
@@ -163,32 +168,86 @@ public sealed class AppSettings
     public void SetShortcut(ShortcutAction action, string shortcut) => _store.SetString(ShortcutKeyPrefix + action, shortcut);
 
     /// <summary>
+    /// A scene's shortcut, by the scene's <see cref="Scene.Id"/>; "" when none is set (there's no default).
+    /// </summary>
+    public string GetSceneShortcut(string sceneId) => _store.GetString(SceneShortcutKeyPrefix + sceneId) ?? "";
+
+    public void SetSceneShortcut(string sceneId, string? shortcut) =>
+        _store.SetString(SceneShortcutKeyPrefix + sceneId, string.IsNullOrEmpty(shortcut) ? null : shortcut);
+
+    /// <summary>
     /// Saved scenes, or <see cref="Scene.Defaults"/> when none are saved or the saved JSON is unreadable.
+    /// Parsed once and kept until set.
     /// </summary>
     public IReadOnlyList<Scene> Scenes
     {
-        get
+        get => _scenes ??= LoadScenes();
+        set
         {
-            var json = _store.GetString(ScenesKey);
-            if (string.IsNullOrEmpty(json))
-            {
-                return Scene.Defaults;
-            }
-            try
-            {
-                var scenes = JsonSerializer.Deserialize<List<Scene>>(json, JsonOptions);
-                if (scenes is null)
-                {
-                    return Scene.Defaults;
-                }
-                return [.. scenes.Select(scene => scene.Glyph == Scene.OldOfficeGlyph ? scene with { Glyph = Scene.OfficeGlyph } : scene)];
-            }
-            catch (JsonException)
-            {
-                return Scene.Defaults;
-            }
+            _store.SetString(ScenesKey, JsonSerializer.Serialize(value, JsonOptions));
+            _scenes = null;
         }
-        set => _store.SetString(ScenesKey, JsonSerializer.Serialize(value, JsonOptions));
+    }
+
+    private IReadOnlyList<Scene> LoadScenes()
+    {
+        var json = _store.GetString(ScenesKey);
+        if (string.IsNullOrEmpty(json))
+        {
+            return Scene.Defaults;
+        }
+        try
+        {
+            var scenes = JsonSerializer.Deserialize<List<Scene>>(json, JsonOptions);
+            if (scenes is null)
+            {
+                return Scene.Defaults;
+            }
+            List<Scene> loaded = [.. scenes
+                .Select(scene => scene.Glyph == Scene.OldOfficeGlyph ? scene with { Glyph = Scene.OfficeGlyph } : scene)
+                .Select(scene => scene.Id is null ? scene with { Id = IdForLegacy(scene) } : scene)];
+            // Scenes saved before IDs existed get theirs once and keep them, so shortcuts stay put
+            if (scenes.Any(scene => scene.Id is null))
+            {
+                _store.SetString(ScenesKey, JsonSerializer.Serialize(loaded, JsonOptions));
+            }
+            return loaded;
+        }
+        catch (JsonException)
+        {
+            return Scene.Defaults;
+        }
+    }
+
+    // A stock scene saved before IDs existed keeps its stock ID, so Reset to defaults still
+    // knows it; anything else gets a fresh one
+    private static string IdForLegacy(Scene scene) =>
+        Scene.Defaults.FirstOrDefault(standard => standard.Name == scene.Name && standard.Setting == scene.Setting)?.Id ?? Scene.NewId();
+
+    /// <summary>
+    /// The headphones' order in the flyout and in Settings, as headset IDs. Headphones not
+    /// listed come after, in the order found. Empty when never reordered or unreadable.
+    /// </summary>
+    public IReadOnlyList<string> HeadsetOrder
+    {
+        get => _headsetOrder ??= LoadHeadsetOrder();
+        set
+        {
+            _store.SetString(HeadsetOrderKey, JsonSerializer.Serialize(value, JsonOptions));
+            _headsetOrder = null;
+        }
+    }
+
+    private List<string> LoadHeadsetOrder()
+    {
+        try
+        {
+            return JsonSerializer.Deserialize<List<string>>(_store.GetString(HeadsetOrderKey) ?? "[]", JsonOptions) ?? [];
+        }
+        catch (JsonException)
+        {
+            return [];
+        }
     }
 
     /// <summary>
@@ -198,6 +257,14 @@ public sealed class AppSettings
     public string? GetKnownHeadsetName(string headsetId) => _store.GetString(KnownHeadsetKeyPrefix + headsetId);
 
     public void SetKnownHeadsetName(string headsetId, string name) => _store.SetString(KnownHeadsetKeyPrefix + headsetId, name);
+
+    /// <summary>
+    /// The name entered in Settings > Devices, shown in the app instead of the name in Windows.
+    /// Null when none is set.
+    /// </summary>
+    public string? GetDisplayName(string headsetId) => _store.GetString(DisplayNameKeyPrefix + headsetId);
+
+    public void SetDisplayName(string headsetId, string? name) => _store.SetString(DisplayNameKeyPrefix + headsetId, name);
 
     /// <summary>
     /// Last charging case level the headset reported. The case only reports while an earbud

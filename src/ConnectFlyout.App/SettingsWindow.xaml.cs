@@ -15,9 +15,7 @@ public sealed partial class SettingsWindow : Window
     private static readonly Dictionary<string, Type> Pages = new()
     {
         ["Devices"] = typeof(DevicesPage),
-        ["Sound"] = typeof(SoundPage),
-        ["NoiseScenes"] = typeof(NoiseScenesPage),
-        ["System"] = typeof(SystemPage),
+        ["Scenes"] = typeof(ScenesPage),
         ["Shortcuts"] = typeof(ShortcutsPage),
         ["General"] = typeof(AppPage),
         ["About"] = typeof(AboutPage),
@@ -25,22 +23,24 @@ public sealed partial class SettingsWindow : Window
 
     private readonly SettingsViewModel _viewModel;
     private readonly ShortcutsContext _shortcuts;
+    private readonly SettingsPageContext _context;
 
     public SettingsWindow(SettingsViewModel viewModel, ShortcutsContext shortcuts)
     {
         _viewModel = viewModel;
         _shortcuts = shortcuts;
+        _context = new SettingsPageContext(viewModel, shortcuts);
         InitializeComponent();
 
         ExtendsContentIntoTitleBar = true;
         SetTitleBar(AppTitleBar);
-        AppWindow.Resize(new Windows.Graphics.SizeInt32(1000, 720));
+        AppWindow.Resize(new Windows.Graphics.SizeInt32(1180, 780));
 
-        // Opening size is also the smallest it can get
+        // Opens roomy, but can shrink to fit a 768 px laptop screen with its taskbar
         if (AppWindow.Presenter is OverlappedPresenter presenter)
         {
-            presenter.PreferredMinimumWidth = AppWindow.Size.Width;
-            presenter.PreferredMinimumHeight = AppWindow.Size.Height;
+            presenter.PreferredMinimumWidth = 1000;
+            presenter.PreferredMinimumHeight = 660;
         }
         // Taskbar and title bar icon; SetIcon only takes .ico files (a PNG leaves the blank default)
         AppWindow.SetIcon(Path.Combine(AppContext.BaseDirectory, "Assets", "AppIcon.ico"));
@@ -48,8 +48,13 @@ public sealed partial class SettingsWindow : Window
         Navigation.SelectedItem = Navigation.MenuItems[0];
         _ = _viewModel.LoadAsync();
 
-        // A shortcut dialog open as the window closes would keep its keyboard hook (it swallows every key)
-        Closed += (_, _) => (ContentFrame.Content as ShortcutsPage)?.CloseDialogs();
+        // A shortcut dialog open as the window closes would keep its keyboard hook (it swallows every
+        // key), and a scene edit made a moment ago is still waiting to save
+        Closed += (_, _) =>
+        {
+            ShortcutRow.CloseAll();
+            _viewModel.FlushScenes();
+        };
     }
 
     /// <summary>
@@ -83,8 +88,8 @@ public sealed partial class SettingsWindow : Window
     {
         if (args.SelectedItem is NavigationViewItem { Tag: string tag } && Pages.TryGetValue(tag, out var page))
         {
-            // The Shortcuts page works with the registered shortcuts; every other page with the view model
-            ContentFrame.Navigate(page, page == typeof(ShortcutsPage) ? _shortcuts : _viewModel);
+            // The Shortcuts page works with the registered shortcuts alone; every other page gets both
+            ContentFrame.Navigate(page, page == typeof(ShortcutsPage) ? _shortcuts : _context);
         }
     }
 }

@@ -53,6 +53,10 @@
     <ProjectCapability Include="Msix" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="ConnectFlyout.App.UITests" />
+  </ItemGroup>
+
   <!-- Sign ConnectFlyout.exe itself (not just the package), so Windows keeps the tray icon's
        placement across updates. Signs the apphost in obj right after it's created, since the
        output folder and the package both copy it from there. Runs only when the build script

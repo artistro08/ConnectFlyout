@@ -89,6 +89,8 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
     private bool _connectRetried;
     private bool _applying;
     private int _noiseCommandsInFlight;
+    private string _customName;
+    private string _pendingName;
 
     public HeadsetViewModel(
         ManagedHeadset managed,
@@ -107,6 +109,8 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
         _logger = logger;
         _noiseThrottler = new Throttler(SliderInterval, timeProvider);
         _connectionState = managed.ConnectionState;
+        _customName = settings.GetDisplayName(managed.Id) ?? "";
+        _pendingName = _customName;
 
         SetNoiseModeCommand = new RelayCommand<string>(mode =>
         {
@@ -134,9 +138,10 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
         DisconnectCommand = new RelayCommand(() => AutoConnect = false);
         ReconnectCommand = new RelayCommand(() => ReconnectRequested?.Invoke(this, EventArgs.Empty));
         ConnectCommand = new RelayCommand(() => ConnectRequested?.Invoke(this, EventArgs.Empty));
+        SaveNameCommand = new RelayCommand(() => CustomName = PendingName);
 
         _headset.StateChanged += OnHeadsetStateChanged;
-        SceneItems = [.. settings.Scenes.Select(scene => new SceneItemViewModel(scene))];
+        SceneItems = FlyoutScenes();
         ApplySnapshot(_headset.State);
     }
 
@@ -146,7 +151,47 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
 
     public string Id => _managed.Id;
 
-    public string DeviceName => _managed.Name;
+    /// <summary>
+    /// The name the app shows: <see cref="CustomName"/> when one is set, else the name in Windows.
+    /// </summary>
+    public string DeviceName => _customName.Length > 0 ? _customName : _managed.Name;
+
+    /// <summary>
+    /// Name in Windows. Follows renames there.
+    /// </summary>
+    public string WindowsName => _managed.Name;
+
+    /// <summary>
+    /// The saved name from Settings > Devices; empty means the name in Windows.
+    /// </summary>
+    public string CustomName
+    {
+        get => _customName;
+        set
+        {
+            var trimmed = value?.Trim() ?? "";
+            PendingName = trimmed;
+            if (trimmed == _customName)
+            {
+                return;
+            }
+            _customName = trimmed;
+            _settings.SetDisplayName(Id, trimmed.Length == 0 ? null : trimmed);
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(DeviceName));
+        }
+    }
+
+    /// <summary>
+    /// What's in the Device name box; <see cref="SaveNameCommand"/> makes it the <see cref="CustomName"/>.
+    /// </summary>
+    public string PendingName
+    {
+        get => _pendingName;
+        set => SetProperty(ref _pendingName, value ?? "");
+    }
+
+    public IRelayCommand SaveNameCommand { get; }
 
     public string ModelName => _headset.ModelName;
 
@@ -196,10 +241,23 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
     public bool ShowReconnect => _connectionState == HeadsetConnectionState.Disconnected && IsWindowsConnected;
 
     /// <summary>
+    /// The footer's Disconnect button; Reconnect takes its place while <see cref="ShowReconnect"/>.
+    /// </summary>
+    public bool ShowDisconnect => !ShowReconnect;
+
+    /// <summary>
     /// Connect (Bluetooth) shows while the headset is paired but Windows isn't connected to it,
     /// and not while a connect is already under way.
     /// </summary>
     public bool ShowConnect => !IsWindowsConnected && !IsBluetoothConnecting;
+
+    /// <summary>
+    /// The Devices page's Connect button stays through the connect, reading "Connecting…", and
+    /// goes once Windows has the headset.
+    /// </summary>
+    public bool ShowBluetoothConnect => !IsWindowsConnected;
+
+    public string BluetoothConnectText => IsBluetoothConnecting ? "Connecting…" : "Connect";
 
     /// <summary>
     /// Windows has been asked to connect the headset and hasn't yet.
@@ -214,6 +272,7 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
                 return;
             }
             OnPropertyChanged(nameof(ShowConnect));
+            OnPropertyChanged(nameof(BluetoothConnectText));
             OnPropertyChanged(nameof(StatusText));
             OnPropertyChanged(nameof(PickerStatusText));
         }
@@ -252,10 +311,22 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
     public string DisconnectedMessage => IsWindowsConnected ? "App disconnected" : "The device is disconnected.";
 
     /// <summary>
-    /// The status line only shows while not connected; once connected the header shows the
-    /// battery and <see cref="AudioText"/> instead, like Sony's app.
+    /// A reload (Refresh, or the link coming back on its own) keeps the header as it was: the
+    /// ring in the corner shows the work. True while connecting with the codec still known.
     /// </summary>
-    public bool ShowStatus => !IsConnected;
+    public bool IsReloading => IsConnecting && !string.IsNullOrEmpty(_snapshot.Codec);
+
+    /// <summary>
+    /// The status line only shows while not connected, and not during a reload; once connected
+    /// the header shows the battery and <see cref="AudioText"/> instead, like Sony's app. The
+    /// Reconnect link stands in for it while it would say "App disconnected".
+    /// </summary>
+    public bool ShowStatus => !IsConnected && !IsReloading && !ShowReconnect;
+
+    /// <summary>
+    /// The audio line stays through a reload, so the header keeps its size.
+    /// </summary>
+    public bool ShowAudioText => IsConnected || IsReloading;
 
     /// <summary>
     /// DSEE branding advertised by the headset's feature profile.
@@ -350,6 +421,16 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
     public IRelayCommand<Scene> ApplySceneCommand { get; }
 
     public IReadOnlyList<SceneItemViewModel> SceneItems { get; private set; } = [];
+
+    /// <summary>
+    /// Whether the headphones are in this scene's setting right now, by the flyout's rule: the
+    /// same mode, and in Ambient sound the same level and Focus on voice.
+    /// </summary>
+    public bool MatchesScene(Scene scene)
+    {
+        ArgumentNullException.ThrowIfNull(scene);
+        return scene.Matches(_noiseMode, (int)_ambientLevel, _focusOnVoice);
+    }
 
     public NoiseMode NoiseMode => _noiseMode;
 
@@ -729,7 +810,7 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
     /// <summary>
     /// The scene tiles show unless Settings hides them.
     /// </summary>
-    public bool ShowScenes => !_settings.HideScenes;
+    public bool ShowScenes => !_settings.HideScenes && SceneItems.Count > 0;
 
     /// <summary>
     /// VPT surround presets exposed by the legacy spatial control.
@@ -868,8 +949,10 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
     }
 
     /// <summary>
-    /// Whether the compact popup should offer the power-off action.
+    /// Turn off stays in the footer, disabled, while disconnected, so the footer doesn't jump.
     /// </summary>
+    public bool ShowPowerOff => Features.PowerOff;
+
     public bool CanPowerOffFromPopup => IsConnected && Features.PowerOff;
 
     public double ClearBass
@@ -926,9 +1009,10 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
     public IReadOnlyList<PlaybackDevice> PlaybackDevices { get; private set; } = [];
 
     /// <summary>
-    /// The Playback section shows while connected with at least two devices to choose from.
+    /// The Playback section shows with at least two devices to choose from. It stays through a
+    /// reload or a dropped link, disabled, so the flyout doesn't jump.
     /// </summary>
-    public bool ShowPlayback => !_settings.HidePlayback && IsConnected && PlaybackDevices.Count >= 2;
+    public bool ShowPlayback => !_settings.HidePlayback && PlaybackDevices.Count >= 2;
 
     /// <summary>
     /// Moves the audio to the given device; the one already playing is left alone.
@@ -1095,13 +1179,12 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
     {
         // Windows connection and name changes arrive on the same event
         OnPropertyChanged(nameof(DeviceName));
+        OnPropertyChanged(nameof(WindowsName));
         OnPropertyChanged(nameof(IsWindowsConnected));
+        OnPropertyChanged(nameof(ShowBluetoothConnect));
         OnPropertyChanged(nameof(IsAvailable));
         OnPropertyChanged(nameof(ShowBattery));
-        OnPropertyChanged(nameof(ShowReconnect));
         OnPropertyChanged(nameof(ShowConnect));
-        OnPropertyChanged(nameof(StatusText));
-        OnPropertyChanged(nameof(PickerStatusText));
         OnPropertyChanged(nameof(DisconnectedMessage));
         if (IsBluetoothConnecting && IsWindowsConnected)
         {
@@ -1111,10 +1194,14 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
         {
             EndBluetoothConnect();
         }
-        if (!SetProperty(ref _connectionState, state, nameof(ConnectionState)))
-        {
-            return;
-        }
+        // Raised whether or not the state changed: ShowReconnect and friends also follow the
+        // Windows connection, which arrives on this same call
+        SetProperty(ref _connectionState, state, nameof(ConnectionState));
+        OnPropertyChanged(nameof(ShowReconnect));
+        OnPropertyChanged(nameof(ShowDisconnect));
+        OnPropertyChanged(nameof(ShowStatus));
+        OnPropertyChanged(nameof(StatusText));
+        OnPropertyChanged(nameof(PickerStatusText));
         OnPropertyChanged(nameof(IsConnected));
         OnPropertyChanged(nameof(CanChangeConnectionMode));
         OnPropertyChanged(nameof(CanEditHeadsetSound));
@@ -1123,11 +1210,9 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(ShowPopupSoundSection));
         OnPropertyChanged(nameof(ShowPopupConnectionSeparator));
         OnPropertyChanged(nameof(IsConnecting));
-        OnPropertyChanged(nameof(StatusText));
-        OnPropertyChanged(nameof(PickerStatusText));
-        OnPropertyChanged(nameof(ShowStatus));
+        OnPropertyChanged(nameof(IsReloading));
+        OnPropertyChanged(nameof(ShowAudioText));
         OnPropertyChanged(nameof(ShowDisconnectedWarning));
-        OnPropertyChanged(nameof(ShowReconnect));
         OnPropertyChanged(nameof(ShowPlayback));
         UpdateMissingEarbudPolling();
         if (state == HeadsetConnectionState.Connected)
@@ -1149,10 +1234,14 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
 
     internal void RefreshScenes()
     {
-        SceneItems = [.. _settings.Scenes.Select(scene => new SceneItemViewModel(scene))];
+        SceneItems = FlyoutScenes();
         UpdateActiveScene();
         OnPropertyChanged(nameof(SceneItems));
+        OnPropertyChanged(nameof(ShowScenes));
     }
+
+    private SceneItemViewModel[] FlyoutScenes() =>
+        [.. _settings.Scenes.Where(scene => scene.ShowInFlyout).Select(scene => new SceneItemViewModel(scene))];
 
     public void Dispose()
     {
@@ -1278,6 +1367,9 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(ShowPopupSoundSection));
         OnPropertyChanged(nameof(ShowPopupConnectionSeparator));
         OnPropertyChanged(nameof(AudioText));
+        OnPropertyChanged(nameof(IsReloading));
+        OnPropertyChanged(nameof(ShowAudioText));
+        OnPropertyChanged(nameof(ShowStatus));
         OnPropertyChanged(nameof(StatusText));
         OnPropertyChanged(nameof(PickerStatusText));
 
