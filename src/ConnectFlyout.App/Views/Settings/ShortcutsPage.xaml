@@ -14,6 +14,23 @@
 
             <!-- Shortcut Rows: one card and warning per noise mode, built in code -->
             <StackPanel x:Name="Rows" Spacing="8" />
+
+            <!-- Scenes: one row per scene, none set until the user sets one -->
+            <TextBlock
+                Margin="0,16,0,0"
+                Style="{StaticResource BodyStrongTextBlockStyle}"
+                Text="Scenes" />
+            <TextBlock
+                Margin="0,0,0,8"
+                Style="{StaticResource SecondaryTextStyle}"
+                Text="Apply a scene from any Windows app. A scene has no shortcut until you set one."
+                TextWrapping="Wrap" />
+            <StackPanel x:Name="SceneRows" Spacing="8" />
+            <TextBlock
+                x:Name="NoScenes"
+                Style="{StaticResource SecondaryTextStyle}"
+                Text="No scenes. Add one in Settings &gt; Scenes."
+                Visibility="Collapsed" />
         </StackPanel>
     </ContentControl>
 </Page>

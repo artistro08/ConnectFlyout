@@ -31,7 +31,7 @@ In theory, since we're using [sony-device-center](https://github.com/marconvcm/s
 
 ## Keyboard Shortcuts
 
-Switch noise modes from anywhere in Windows. Win+F10 is Noise canceling, Win+F11 Ambient sound, Win+F6 Noise control off and Win+F9 opens the flyout. Change or clear each one in Settings > Shortcuts. If the mode is already on, the PC plays a short sound in the headphones.
+Switch noise modes from anywhere in Windows. Win+F10 is Noise canceling, Win+F11 Ambient sound, Win+F6 Noise control off and Win+F9 opens the flyout. Change or clear each one in Settings > Shortcuts. Each scene can have a shortcut too, in the Scenes section of that page; scenes start without one. If the mode or scene is already on, the PC plays a short sound in the headphones.
 
 ## Renaming Headphones
 

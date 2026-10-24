@@ -183,6 +183,7 @@ public partial class App : Application, IDisposable
         _shortcuts = new GlobalShortcuts(_loggerFactory.CreateLogger<GlobalShortcuts>());
         _trayIcon.HotkeyPressed += (_, id) => _shortcuts.OnHotkey(id);
         _shortcuts.Pressed += (_, action) => OnShortcutPressed(action);
+        _shortcuts.ScenePressed += (_, sceneId) => OnSceneShortcutPressed(sceneId);
         _shortcuts.Attach(_trayIcon.Handle, _settings);
 
         ApplyTheme(_settings.Theme);
@@ -322,7 +323,6 @@ public partial class App : Application, IDisposable
         _settingsWindow?.ShowQuit(!_trayIcon.IsVisible);
     }
 
-    // The headphones the flyout shows, or else the first connected ones
     private void OnShortcutPressed(ShortcutAction action)
     {
         var name = action.ToString();
@@ -338,10 +338,7 @@ public partial class App : Application, IDisposable
             return;
         }
 
-        var connected = _flyout?.ConnectedHeadsets ?? [];
-        var headset = _flyout?.CurrentHeadset is { IsConnected: true } current
-            ? current
-            : connected.Count > 0 ? connected[0] : null;
+        var headset = ShortcutHeadset();
         AppLog.ShortcutPressed(_logger, name, headset is not null);
         if (headset is null)
         {
@@ -357,6 +354,34 @@ public partial class App : Application, IDisposable
             _ = PlayModeAlreadyOnAsync(headset.Id);
         }
         headset.SelectNoiseMode(mode, resend: true);
+    }
+
+    // A scene's shortcut applies the scene as its flyout button would, with the same sound when
+    // the headphones are in it already. A scene deleted since the shortcut was registered is ignored.
+    private void OnSceneShortcutPressed(string sceneId)
+    {
+        var scene = _settings?.Scenes.FirstOrDefault(each => each.Id == sceneId);
+        var headset = ShortcutHeadset();
+        AppLog.ShortcutPressed(_logger, "Scene", scene is not null && headset is not null);
+        if (scene is null || headset is null)
+        {
+            return;
+        }
+
+        if (headset.MatchesScene(scene))
+        {
+            _ = PlayModeAlreadyOnAsync(headset.Id);
+        }
+        headset.ApplySceneCommand.Execute(scene);
+    }
+
+    // The headphones a shortcut acts on: the ones the flyout shows, or else the first connected ones
+    private HeadsetViewModel? ShortcutHeadset()
+    {
+        var connected = _flyout?.ConnectedHeadsets ?? [];
+        return _flyout?.CurrentHeadset is { IsConnected: true } current
+            ? current
+            : connected.Count > 0 ? connected[0] : null;
     }
 
     private static readonly string ModeAlreadyOnSound = Path.Combine(AppContext.BaseDirectory, "Assets", "ModeAlreadyOn.wav");

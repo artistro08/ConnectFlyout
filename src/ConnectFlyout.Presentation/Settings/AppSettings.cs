@@ -48,6 +48,7 @@ public sealed class AppSettings
     private const string DisplayNameKeyPrefix         = "DisplayName.";
     private const string LastCaseBatteryKeyPrefix     = "LastCaseBattery.";
     private const string ShortcutKeyPrefix            = "Shortcut.";
+    private const string SceneShortcutKeyPrefix       = "SceneShortcut.";
 
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = false };
 
@@ -165,6 +166,14 @@ public sealed class AppSettings
     public void SetShortcut(ShortcutAction action, string shortcut) => _store.SetString(ShortcutKeyPrefix + action, shortcut);
 
     /// <summary>
+    /// A scene's shortcut, by the scene's <see cref="Scene.Id"/>; "" when none is set (there's no default).
+    /// </summary>
+    public string GetSceneShortcut(string sceneId) => _store.GetString(SceneShortcutKeyPrefix + sceneId) ?? "";
+
+    public void SetSceneShortcut(string sceneId, string? shortcut) =>
+        _store.SetString(SceneShortcutKeyPrefix + sceneId, string.IsNullOrEmpty(shortcut) ? null : shortcut);
+
+    /// <summary>
     /// Saved scenes, or <see cref="Scene.Defaults"/> when none are saved or the saved JSON is unreadable.
     /// </summary>
     public IReadOnlyList<Scene> Scenes
@@ -183,7 +192,15 @@ public sealed class AppSettings
                 {
                     return Scene.Defaults;
                 }
-                return [.. scenes.Select(scene => scene.Glyph == Scene.OldOfficeGlyph ? scene with { Glyph = Scene.OfficeGlyph } : scene)];
+                List<Scene> loaded = [.. scenes
+                    .Select(scene => scene.Glyph == Scene.OldOfficeGlyph ? scene with { Glyph = Scene.OfficeGlyph } : scene)
+                    .Select(scene => scene.Id is null ? scene with { Id = Scene.NewId() } : scene)];
+                // Scenes saved before IDs existed get theirs once and keep them, so shortcuts stay put
+                if (scenes.Any(scene => scene.Id is null))
+                {
+                    Scenes = loaded;
+                }
+                return loaded;
             }
             catch (JsonException)
             {

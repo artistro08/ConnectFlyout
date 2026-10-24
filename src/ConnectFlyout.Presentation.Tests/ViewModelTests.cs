@@ -1641,7 +1641,7 @@ public sealed class SettingsViewModelTests
         _viewModel.Scenes[0].AmbientLevel = 5;
         _viewModel.Scenes[0].Glyph = SceneIcon.All[3].Glyph;
 
-        Assert.AreEqual(new Scene("Deep work", "\uE80F", new NoiseControlSetting(NoiseMode.Ambient, 5, false)), _settings.Scenes[0]);
+        Assert.AreEqual(new Scene("Deep work", "\uE80F", new NoiseControlSetting(NoiseMode.Ambient, 5, false), Id: "focus"), _settings.Scenes[0]);
         Assert.AreEqual("Ambient sound · Level 5", _viewModel.Scenes[0].Summary);
     }
 
@@ -1665,7 +1665,9 @@ public sealed class SettingsViewModelTests
 
         Assert.IsNull(_viewModel.NewScene);
         Assert.AreEqual(4, _viewModel.Scenes.Count);
-        Assert.AreEqual(new Scene("Gym", SceneIcon.All[4].Glyph, new NoiseControlSetting(NoiseMode.NoiseCancelling, 0, false)), _settings.Scenes[3]);
+        Assert.AreEqual(new Scene("Gym", SceneIcon.All[4].Glyph, new NoiseControlSetting(NoiseMode.NoiseCancelling, 0, false)), _settings.Scenes[3] with { Id = null });
+        Assert.IsFalse(string.IsNullOrEmpty(_settings.Scenes[3].Id));
+        Assert.AreEqual(_viewModel.Scenes[3].Id, _settings.Scenes[3].Id);
 
         // The added scene saves its edits like the others
         _viewModel.Scenes[3].ShowInFlyout = false;
@@ -1684,11 +1686,17 @@ public sealed class SettingsViewModelTests
     }
 
     [TestMethod]
-    public void DeletingASceneSavesTheRest()
+    public void DeletingASceneSavesTheRestAndDropsItsShortcut()
     {
-        _viewModel.DeleteScene(_viewModel.Scenes[1]);
+        var office = _viewModel.Scenes[1];
+        _settings.SetSceneShortcut(office.Id, "Win+F2");
+        _settings.SetSceneShortcut(_viewModel.Scenes[0].Id, "Win+F3");
+
+        _viewModel.DeleteScene(office);
 
         CollectionAssert.AreEqual(new[] { "Focus", "Aware" }, _settings.Scenes.Select(scene => scene.Name).ToList());
+        Assert.AreEqual("", _settings.GetSceneShortcut(office.Id));
+        Assert.AreEqual("Win+F3", _settings.GetSceneShortcut(_viewModel.Scenes[0].Id));
     }
 
     [TestMethod]

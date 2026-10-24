@@ -18,6 +18,7 @@ namespace ConnectFlyout.Presentation.ViewModels;
 public sealed class SceneEditorViewModel : ObservableObject
 {
     private readonly Action? _changed;
+    private readonly string _id;
     private string _name;
     private string _glyph;
     private int _modeIndex;
@@ -33,6 +34,7 @@ public sealed class SceneEditorViewModel : ObservableObject
         ArgumentNullException.ThrowIfNull(scene);
 
         _changed = changed;
+        _id = scene.Id ?? Scene.NewId();
         _name = scene.Name;
         _glyph = scene.Glyph;
         _modeIndex = (int)scene.Setting.Mode;
@@ -42,6 +44,11 @@ public sealed class SceneEditorViewModel : ObservableObject
     }
 
     public static IReadOnlyList<string> ModeOptions { get; } = ["Off", "Noise canceling", "Ambient sound"];
+
+    /// <summary>
+    /// The scene's stable ID (see <see cref="Scene.Id"/>).
+    /// </summary>
+    public string Id => _id;
 
     public string Name
     {
@@ -139,7 +146,7 @@ public sealed class SceneEditorViewModel : ObservableObject
         var mode = (NoiseMode)Math.Clamp(_modeIndex, 0, 2);
         var level = mode == NoiseMode.Ambient ? (int)_ambientLevel : 0;
         var name = string.IsNullOrWhiteSpace(_name) ? "Scene" : _name.Trim();
-        return new Scene(name, _glyph, new NoiseControlSetting(mode, level, _focusOnVoice), _showInFlyout);
+        return new Scene(name, _glyph, new NoiseControlSetting(mode, level, _focusOnVoice), _showInFlyout, _id);
     }
 
     // SetProperty, then the save callback
@@ -377,8 +384,10 @@ public sealed class SettingsViewModel : ObservableObject
 
     public void DeleteScene(SceneEditorViewModel scene)
     {
+        ArgumentNullException.ThrowIfNull(scene);
         if (Scenes.Remove(scene))
         {
+            _settings.SetSceneShortcut(scene.Id, null);
             SaveScenes();
         }
     }

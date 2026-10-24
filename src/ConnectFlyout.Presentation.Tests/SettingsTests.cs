@@ -27,7 +27,9 @@ public sealed class AppSettingsTests
         Assert.IsTrue(settings.IsAutoConnectEnabled("AC:80:0A:12:34:56"));
         Assert.IsNull(settings.GetDisplayName("AC:80:0A:12:34:56"));
         Assert.AreEqual(0, settings.HeadsetOrder.Count);
+        Assert.AreEqual("", settings.GetSceneShortcut("focus"));
         CollectionAssert.AreEqual(Scene.Defaults.ToList(), settings.Scenes.ToList());
+        Assert.IsTrue(settings.Scenes.All(scene => scene.Id is not null));
     }
 
     [TestMethod]
@@ -107,7 +109,7 @@ public sealed class AppSettingsTests
     public void RoundTripsScenes()
     {
         var store = new InMemorySettingsStore();
-        Scene[] scenes = [new Scene("Gym", "", new NoiseControlSetting(NoiseMode.Ambient, 14, true))];
+        Scene[] scenes = [new Scene("Gym", "", new NoiseControlSetting(NoiseMode.Ambient, 14, true), Id: "gym")];
         new AppSettings(store).Scenes = scenes;
 
         CollectionAssert.AreEqual(scenes, new AppSettings(store).Scenes.ToList());
@@ -132,6 +134,34 @@ public sealed class AppSettingsTests
 
         store.SetString("HeadsetOrder", "{not json");
         Assert.AreEqual(0, new AppSettings(store).HeadsetOrder.Count);
+    }
+
+    [TestMethod]
+    public void ScenesSavedWithoutIdsGetOnesThatStick()
+    {
+        var store = new InMemorySettingsStore();
+        new AppSettings(store).Scenes = [.. Scene.Defaults];
+        store.SetString("Scenes", System.Text.RegularExpressions.Regex.Replace(store.GetString("Scenes")!, ",\"Id\":\"[a-z0-9]+\"", ""));
+
+        var ids = new AppSettings(store).Scenes.Select(scene => scene.Id).ToList();
+
+        Assert.IsTrue(ids.All(id => !string.IsNullOrEmpty(id)));
+        Assert.AreEqual(3, ids.Distinct().Count());
+        CollectionAssert.AreEqual(ids, new AppSettings(store).Scenes.Select(scene => scene.Id).ToList());
+    }
+
+    [TestMethod]
+    public void SceneShortcutsRoundTripAndClear()
+    {
+        var store = new InMemorySettingsStore();
+        var settings = new AppSettings(store);
+
+        settings.SetSceneShortcut("gym", "Win+F2");
+        Assert.AreEqual("Win+F2", new AppSettings(store).GetSceneShortcut("gym"));
+
+        settings.SetSceneShortcut("gym", "");
+        Assert.AreEqual("", new AppSettings(store).GetSceneShortcut("gym"));
+        Assert.IsNull(store.GetString("SceneShortcut.gym"));
     }
 
     [TestMethod]
