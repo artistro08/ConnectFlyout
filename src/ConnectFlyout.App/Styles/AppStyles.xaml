@@ -185,6 +185,16 @@
         <Setter Property="Background" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
     </Style>
 
+    <!-- Current Icon Box: a scene's icon under a label, a shade off the card behind it -->
+    <Style x:Key="CurrentIconBoxStyle" TargetType="Border">
+        <Setter Property="Background" Value="{ThemeResource ControlFillColorDefaultBrush}" />
+        <Setter Property="BorderBrush" Value="{ThemeResource ControlStrokeColorDefaultBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="{StaticResource ControlCornerRadius}" />
+        <Setter Property="Padding" Value="12,8" />
+        <Setter Property="MinWidth" Value="96" />
+    </Style>
+
     <!-- Settings Footer: a bar over the bottom of a page's scroll area, in-app acrylic so the
          cards frost as they scroll under it, with a window-edge stroke on top. Its content is
          limited to the page content's width (900) so the buttons line up with the cards. Pages

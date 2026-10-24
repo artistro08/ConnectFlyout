@@ -6,7 +6,8 @@
     Title="Select an icon"
     CloseButtonText="Cancel"
     DefaultButton="Primary"
-    PrimaryButtonText="Select">
+    PrimaryButtonText="Select"
+    Style="{ThemeResource DefaultContentDialogStyle}">
 
     <!-- Search box over a grid of icons; the grid scrolls on its own -->
     <StackPanel MinWidth="440" Spacing="12">

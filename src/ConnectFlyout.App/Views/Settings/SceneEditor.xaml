@@ -32,16 +32,27 @@
                     <TextBlock Text="Icon" />
                     <TextBlock Style="{StaticResource SettingSubtitleStyle}" Text="Shown beside the name on the button." />
                 </StackPanel>
-                <Button
+                <StackPanel
                     Grid.Column="1"
                     VerticalAlignment="Center"
-                    AutomationProperties.Name="Change the icon"
-                    Click="OnChangeIconClick">
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <FontIcon FontSize="16" Glyph="{x:Bind Scene.Glyph, Mode=OneWay}" />
-                        <TextBlock Text="Change" />
-                    </StackPanel>
-                </Button>
+                    Orientation="Horizontal"
+                    Spacing="12">
+                    <!-- Current Icon: a labeled box, a shade off the card -->
+                    <Border Style="{StaticResource CurrentIconBoxStyle}">
+                        <StackPanel Spacing="8">
+                            <TextBlock
+                                HorizontalAlignment="Center"
+                                Style="{StaticResource SecondaryTextStyle}"
+                                Text="Current icon" />
+                            <FontIcon FontSize="20" Glyph="{x:Bind Scene.Glyph, Mode=OneWay}" />
+                        </StackPanel>
+                    </Border>
+                    <Button
+                        VerticalAlignment="Center"
+                        AutomationProperties.Name="Change the icon"
+                        Click="OnChangeIconClick"
+                        Content="Change" />
+                </StackPanel>
             </Grid>
         </Border>
 
