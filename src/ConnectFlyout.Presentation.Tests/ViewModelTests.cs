@@ -1176,6 +1176,8 @@ public sealed class FlyoutViewModelTests
             PlaybackDevices = [new PlaybackDevice("AA:BB:CC:DD:EE:01", "DESKTOP", true), new PlaybackDevice("AA:BB:CC:DD:EE:02", "Pixel 9", false)],
         });
 
+        Assert.AreEqual("Pixel 9", _flyout.OtherPlaybackDeviceName);
+
         _flyout.SwitchPlayback(headset, toThisPc: false);
         Assert.IsTrue(await TestWait.UntilAsync(() => fake.Commands.Contains(("switchPlayback", "AA:BB:CC:DD:EE:02"))));
 

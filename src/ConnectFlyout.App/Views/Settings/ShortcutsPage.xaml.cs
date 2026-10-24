@@ -10,9 +10,10 @@ using ConnectFlyout.Presentation.Shortcuts;
 namespace ConnectFlyout.App.Views.Settings;
 
 /// <summary>
-/// What Settings › Shortcuts needs: the registered shortcuts and the settings they're saved in.
+/// What Settings › Shortcuts needs: the registered shortcuts, the settings they're saved in, and the name of the
+/// other device connected to the headphones (null when unknown), for the "Play on …" shortcut's name.
 /// </summary>
-public sealed record ShortcutsContext(GlobalShortcuts Shortcuts, AppSettings Settings);
+public sealed record ShortcutsContext(GlobalShortcuts Shortcuts, AppSettings Settings, Func<string?> OtherDeviceName);
 
 /// <summary>
 /// Settings › Shortcuts: one PowerToys shortcut picker per noise mode and per scene, as in Leaf Calendar (press the
@@ -85,7 +86,7 @@ public sealed partial class ShortcutsPage : Page
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
         grid.Children.Add(icon);
-        var title = new TextBlock { Text = target.Name(_context.Settings), VerticalAlignment = VerticalAlignment.Center };
+        var title = new TextBlock { Text = target.Name(_context), VerticalAlignment = VerticalAlignment.Center };
         Grid.SetColumn(title, 1);
         var control = new ShortcutControl();
         Grid.SetColumn(control, 2);

@@ -24,9 +24,19 @@ public sealed record ShortcutTarget(ShortcutAction? Action, string? SceneId)
     /// <summary>The default combination; "" for a scene, which has none.</summary>
     public string Default => Action is { } action ? ShortcutActions.DefaultFor(action) : "";
 
-    public string Name(AppSettings settings) => Action is { } action
-        ? ShortcutActions.NameFor(action)
-        : settings.Scenes.FirstOrDefault(scene => scene.Id == SceneId)?.Name ?? "Scene";
+    /// <summary>
+    /// The row's name: the action's, with the other device's own name in "Play on …" when known, or the scene's.
+    /// </summary>
+    public string Name(ShortcutsContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        return Action switch
+        {
+            ShortcutAction.PlaybackOther when context.OtherDeviceName() is { Length: > 0 } device => $"Play on {device}",
+            { } action => ShortcutActions.NameFor(action),
+            null => context.Settings.Scenes.FirstOrDefault(scene => scene.Id == SceneId)?.Name ?? "Scene",
+        };
+    }
 
     public string Get(AppSettings settings) => Action is { } action ? settings.GetShortcut(action) : settings.GetSceneShortcut(SceneId!);
 
@@ -82,7 +92,7 @@ public sealed class ShortcutRow
         _warning = warning;
         Live.Add(this);
 
-        control.ButtonName = target.Name(context.Settings);
+        control.ButtonName = target.Name(context);
         control.DefaultHotkeySettings = Hotkey.TryParse(target.Default, out var fallback) ? HotkeySettings.FromHotkey(fallback) : new HotkeySettings();
         control.CheckConflict = Conflict;
         control.DialogOpening += OnDialogOpening;
@@ -163,7 +173,7 @@ public sealed class ShortcutRow
         var text = hotkey.ToString();
         var other = ShortcutTarget.All(settings).FirstOrDefault(each => each != _target && each.Get(settings) == text);
         return !_context.Shortcuts.IsAvailable ? "Shortcuts are not available because the tray icon did not start."
-            : other is not null ? $"“{other.Name(settings)}” already uses {text}."
+            : other is not null ? $"“{other.Name(_context)}” already uses {text}."
             : !_context.Shortcuts.IsFree(hotkey) ? "Windows or a different app uses " + text + ". Select a different shortcut."
             : null;
     }

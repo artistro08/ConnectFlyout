@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ConnectFlyout.Presentation.Common;
 using ConnectFlyout.Presentation.Devices;
+using ConnectFlyout.Presentation.Headsets;
 using ConnectFlyout.Presentation.Navigation;
 using ConnectFlyout.Presentation.Settings;
 
@@ -155,13 +156,33 @@ public sealed class FlyoutViewModel : ObservableObject, IDisposable
         {
             return;
         }
-        var device = headset.PlaybackDevices.FirstOrDefault(each =>
-            string.Equals(each.Address, _localAddress, StringComparison.OrdinalIgnoreCase) == toThisPc);
+        var device = headset.PlaybackDevices.FirstOrDefault(each => IsThisPc(each) == toThisPc);
         if (device is not null)
         {
             headset.SwitchPlaybackCommand.Execute(device);
         }
     }
+
+    /// <summary>
+    /// The name of the other device connected to the headphones a shortcut acts on (the ones
+    /// shown, else the first connected), for the shortcut's own name. Null when there's no such
+    /// device, or before this PC's address is known.
+    /// </summary>
+    public string? OtherPlaybackDeviceName
+    {
+        get
+        {
+            if (_localAddress is null)
+            {
+                return null;
+            }
+            var connected = ConnectedHeadsets;
+            var headset = CurrentHeadset is { IsConnected: true } current ? current : connected.Count > 0 ? connected[0] : null;
+            return headset?.PlaybackDevices.FirstOrDefault(each => !IsThisPc(each))?.Name;
+        }
+    }
+
+    private bool IsThisPc(PlaybackDevice device) => string.Equals(device.Address, _localAddress, StringComparison.OrdinalIgnoreCase);
 
     // Read once; a PC without Bluetooth leaves it null and the playback shortcuts do nothing
     private async Task LoadLocalAddressAsync()

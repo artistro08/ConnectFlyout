@@ -482,7 +482,7 @@ public partial class App : Application, IDisposable
 
         if (_settingsWindow is null)
         {
-            _settingsWindow = new SettingsWindow(_settingsViewModel, new ShortcutsContext(_shortcuts, _settings));
+            _settingsWindow = new SettingsWindow(_settingsViewModel, new ShortcutsContext(_shortcuts, _settings, () => _flyout?.OtherPlaybackDeviceName));
             _settingsWindow.ApplyTheme(_settings.Theme);
             _settingsWindow.QuitRequested += (_, _) => Quit();
             _settingsWindow.ShowQuit(_trayIcon?.IsVisible != true);

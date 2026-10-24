@@ -47,7 +47,8 @@ public static class ShortcutActions
     };
 
     /// <summary>
-    /// The setting's name, as Settings › Shortcuts and the picker's dialog title show it.
+    /// The setting's name, as Settings › Shortcuts and the picker's dialog title show it. The other-device
+    /// shortcut is named after that device where the name is known (see the Settings window).
     /// </summary>
     public static string NameFor(ShortcutAction action) => action switch
     {
@@ -55,7 +56,7 @@ public static class ShortcutActions
         ShortcutAction.Off            => "Noise control off",
         ShortcutAction.OpenFlyout     => "Open the flyout",
         ShortcutAction.PlaybackThisPc => "Play on this PC",
-        ShortcutAction.PlaybackOther  => "Play on the other device",
+        ShortcutAction.PlaybackOther  => "Play on another device",
         _                             => "Noise canceling",
     };
 
