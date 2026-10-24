@@ -133,7 +133,7 @@
             <StackPanel x:Name="DevicePanel" Padding="20" Spacing="12">
 
                 <!-- Header: picture, name, battery row and audio line, centered like Sony's app -->
-                <Grid>
+                <Grid x:Name="Header">
                     <StackPanel HorizontalAlignment="Center" Spacing="6">
                         <!-- Picture, with breathing room above and below -->
                         <Image
@@ -154,6 +154,7 @@
                         <!-- Status Line: "Connecting…" / "Disconnected" until connected, then the audio
                              line, which also stays through a reload so the header keeps its size -->
                         <TextBlock
+                            x:Name="StatusLine"
                             HorizontalAlignment="Center"
                             Style="{StaticResource SecondaryTextStyle}"
                             Text="{x:Bind ViewModel.CurrentHeadset.StatusText, Mode=OneWay}"
@@ -162,6 +163,7 @@
                         <!-- Reconnect: stands in for the "App disconnected" line, in its text style, so the
                              header keeps its size (Windows has the headset, the app doesn't) -->
                         <HyperlinkButton
+                            x:Name="ReconnectLink"
                             HorizontalAlignment="Center"
                             AutomationProperties.Name="Reconnect device"
                             Command="{x:Bind ViewModel.CurrentHeadset.ReconnectCommand, Mode=OneWay}"
@@ -175,6 +177,7 @@
                         </HyperlinkButton>
 
                         <TextBlock
+                            x:Name="AudioLine"
                             HorizontalAlignment="Center"
                             Style="{StaticResource SecondaryTextStyle}"
                             Text="{x:Bind ViewModel.CurrentHeadset.AudioText, Mode=OneWay}"
@@ -283,7 +286,7 @@
                         </Grid>
 
                         <!-- Scenes -->
-                        <ItemsRepeater ItemsSource="{x:Bind ViewModel.CurrentHeadset.SceneItems, Mode=OneWay}" Visibility="{x:Bind ViewModel.CurrentHeadset.ShowScenes, Mode=OneWay, FallbackValue=Collapsed}">
+                        <ItemsRepeater x:Name="SceneButtons" ItemsSource="{x:Bind ViewModel.CurrentHeadset.SceneItems, Mode=OneWay}" Visibility="{x:Bind ViewModel.CurrentHeadset.ShowScenes, Mode=OneWay, FallbackValue=Collapsed}">
                             <ItemsRepeater.Layout>
                                 <app:UniformColumnsLayout
                                     ColumnSpacing="8"
@@ -315,6 +318,7 @@
                      while the link is down, so a reload doesn't move the flyout. -->
                 <MenuFlyoutSeparator Visibility="{x:Bind ViewModel.CurrentHeadset.ShowPlayback, Mode=OneWay, FallbackValue=Collapsed}" />
                 <ContentControl
+                    x:Name="PlaybackSection"
                     IsEnabled="{x:Bind ViewModel.CurrentHeadset.IsConnected, Mode=OneWay, FallbackValue=False}"
                     Style="{StaticResource SectionStyle}"
                     Visibility="{x:Bind ViewModel.CurrentHeadset.ShowPlayback, Mode=OneWay, FallbackValue=Collapsed}">
@@ -405,6 +409,7 @@
 
         <!-- Footer -->
         <Grid
+            x:Name="Footer"
             Grid.Row="1"
             Height="52"
             Padding="12,0"

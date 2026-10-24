@@ -27,7 +27,7 @@
             </Border>
 
             <!-- Tray Icon: the main switch in the header, "until my headphones connect" inside -->
-            <views:SettingsExpander Style="{StaticResource SettingsExpanderStyle}">
+            <views:SettingsExpander x:Name="TrayExpander" Style="{StaticResource SettingsExpanderStyle}">
                 <views:SettingsExpander.Header>
                     <Grid
                         Margin="0,16"
@@ -99,7 +99,7 @@
             </Border>
 
             <!-- Flyout Controls: which sections the flyout shows; the switches inside are off by default -->
-            <views:SettingsExpander Style="{StaticResource SettingsExpanderStyle}">
+            <views:SettingsExpander x:Name="FlyoutControlsExpander" Style="{StaticResource SettingsExpanderStyle}">
                 <views:SettingsExpander.Header>
                     <Grid
                         Margin="0,16"
@@ -167,7 +167,7 @@
             </Border>
 
             <!-- Logging: the switch in the header, the log folder inside -->
-            <views:SettingsExpander Style="{StaticResource SettingsExpanderStyle}">
+            <views:SettingsExpander x:Name="LoggingExpander" Style="{StaticResource SettingsExpanderStyle}">
                 <views:SettingsExpander.Header>
                     <Grid
                         Margin="0,16"

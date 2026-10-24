@@ -102,6 +102,8 @@ $env:SONY_TEST_XM6_ADDRESS = "AC:80:0A:12:34:56"
     .\scripts\New-DevCertificate.ps1
     ```
 
+   The script also builds and runs the UI tests in `src\ConnectFlyout.App.UITests`. They load the app's real views on the view models' test fakes inside a WinUI window that opens for about twenty seconds, so they need a signed-in desktop session.
+
 2. Build the signed MSIX packages only:
 
     ```powershell
