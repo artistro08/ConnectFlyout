@@ -20,10 +20,10 @@ public sealed class AppSettingsTests
         Assert.IsFalse(settings.HideTray);
         Assert.IsFalse(settings.HideTrayWhileDisconnected);
         Assert.AreEqual(HiddenTrayLaunch.OpenSettings, settings.HiddenTrayLaunch);
-        Assert.IsFalse(settings.HideAmbientControls);
-        Assert.IsFalse(settings.HideScenes);
-        Assert.IsFalse(settings.HidePlayback);
-        Assert.IsFalse(settings.HideSoundControls);
+        Assert.IsTrue(settings.ShowAmbientControls);
+        Assert.IsTrue(settings.ShowScenes);
+        Assert.IsTrue(settings.ShowPlayback);
+        Assert.IsTrue(settings.ShowSoundControls);
         Assert.IsTrue(settings.IsAutoConnectEnabled("AC:80:0A:12:34:56"));
         Assert.IsNull(settings.GetDisplayName("AC:80:0A:12:34:56"));
         Assert.AreEqual(0, settings.HeadsetOrder.Count);
@@ -45,10 +45,10 @@ public sealed class AppSettingsTests
             HideTray = true,
             HideTrayWhileDisconnected = true,
             HiddenTrayLaunch = HiddenTrayLaunch.OpenFlyout,
-            HideAmbientControls = true,
-            HideScenes = true,
-            HidePlayback = true,
-            HideSoundControls = true,
+            ShowAmbientControls = false,
+            ShowScenes = false,
+            ShowPlayback = false,
+            ShowSoundControls = false,
         };
         settings.SetAutoConnectEnabled("AC:80:0A:12:34:56", false);
         settings.SetDisplayName("AC:80:0A:12:34:56", "Desk buds");
@@ -61,10 +61,12 @@ public sealed class AppSettingsTests
         Assert.IsTrue(reloaded.HideTray);
         Assert.IsTrue(reloaded.HideTrayWhileDisconnected);
         Assert.AreEqual(HiddenTrayLaunch.OpenFlyout, reloaded.HiddenTrayLaunch);
-        Assert.IsTrue(reloaded.HideAmbientControls);
-        Assert.IsTrue(reloaded.HideScenes);
-        Assert.IsTrue(reloaded.HidePlayback);
-        Assert.IsTrue(reloaded.HideSoundControls);
+        Assert.IsFalse(reloaded.ShowAmbientControls);
+        Assert.IsFalse(reloaded.ShowScenes);
+        Assert.IsFalse(reloaded.ShowPlayback);
+        Assert.IsFalse(reloaded.ShowSoundControls);
+        // The stored keys are the older "hide" ones, so settings from earlier builds still read right
+        Assert.AreEqual("True", store.GetString("HideScenes"));
         Assert.IsFalse(reloaded.IsAutoConnectEnabled("AC:80:0A:12:34:56"));
         Assert.AreEqual("Desk buds", reloaded.GetDisplayName("AC:80:0A:12:34:56"));
     }

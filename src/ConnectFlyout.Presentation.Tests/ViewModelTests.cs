@@ -641,7 +641,7 @@ public sealed class HeadsetViewModelTests
     }
 
     [TestMethod]
-    public void SettingsCanHideScenesPlaybackAndSoundControls()
+    public void SettingsCanTurnOffScenesPlaybackAndSoundControls()
     {
         _headset.RaiseStateChanged(_headset.State with { PlaybackDevices = TwoDevices });
         _viewModel.SelectNoiseMode(NoiseMode.Ambient);
@@ -650,10 +650,10 @@ public sealed class HeadsetViewModelTests
         Assert.IsTrue(_viewModel.ShowPlayback);
         Assert.IsTrue(_viewModel.ShowPopupSoundSection);
 
-        _settings.HideAmbientControls = true;
-        _settings.HideScenes = true;
-        _settings.HidePlayback = true;
-        _settings.HideSoundControls = true;
+        _settings.ShowAmbientControls = false;
+        _settings.ShowScenes = false;
+        _settings.ShowPlayback = false;
+        _settings.ShowSoundControls = false;
 
         Assert.IsFalse(_viewModel.ShowAmbientControls);
         Assert.IsFalse(_viewModel.ShowScenes);
@@ -685,7 +685,7 @@ public sealed class HeadsetViewModelTests
         Assert.IsTrue(viewModel.ShowPopupConnectionSeparator);
         Assert.IsTrue(viewModel.ShowPopupSoundSeparator);
 
-        _settings.HideSoundControls = true;
+        _settings.ShowSoundControls = false;
 
         Assert.IsFalse(viewModel.ShowPopupSoundSection);
         Assert.IsFalse(viewModel.ShowPopupConnectionSeparator);
@@ -1537,13 +1537,16 @@ public sealed class SettingsViewModelTests
         {
             headset.PropertyChanged += (_, e) => raised.Add(e.PropertyName ?? "");
         }
-        Assert.IsTrue(_viewModel.EnableScenes && _viewModel.EnablePlayback && _viewModel.EnableAmbientControls && _viewModel.EnableSoundControls);
+        Assert.IsTrue(_viewModel.EnableScenes, "scenes");
+        Assert.IsTrue(_viewModel.EnablePlayback, "playback");
+        Assert.IsTrue(_viewModel.EnableAmbientControls, "ambient controls");
+        Assert.IsTrue(_viewModel.EnableSoundControls, "sound controls");
 
         _viewModel.EnableScenes = false;
         _viewModel.EnableSoundControls = false;
 
         Assert.IsFalse(_viewModel.EnableScenes);
-        Assert.IsTrue(_settings.HideScenes);
+        Assert.IsFalse(_settings.ShowScenes);
         Assert.IsTrue(_flyout.Headsets.All(headset => !headset.ShowScenes && !headset.ShowPopupSoundSection));
         Assert.AreEqual(2, raised.Count(name => name == nameof(HeadsetViewModel.ShowScenes)));
         Assert.AreEqual(2, raised.Count(name => name == nameof(HeadsetViewModel.ShowPopupSoundSeparator)));

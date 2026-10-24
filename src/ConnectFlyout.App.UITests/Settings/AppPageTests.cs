@@ -53,20 +53,25 @@ public sealed class AppPageTests
         var (_, page) = await Pages.OpenAsync<AppPage>(_rig.Context);
         var expander = VisualTree.FindByName<SettingsExpander>(page, "FlyoutControlsExpander");
         await Pages.ExpandAsync(expander);
-        Assert.IsTrue(Switch(expander, "Enable scenes").IsOn && Switch(expander, "Enable playback").IsOn && Switch(expander, "Enable ambient sound controls").IsOn && Switch(expander, "Enable sound controls").IsOn);
+        foreach (var name in new[] { "Enable scenes", "Enable playback", "Enable ambient sound controls", "Enable sound controls" })
+        {
+            Assert.IsTrue(Switch(expander, name).IsOn, name);
+        }
 
         Switch(expander, "Enable scenes").IsOn = false;
         Switch(expander, "Enable playback").IsOn = false;
         Switch(expander, "Enable ambient sound controls").IsOn = false;
         await UiHost.IdleAsync();
-        Assert.IsTrue(_rig.Settings.HideScenes && _rig.Settings.HidePlayback && _rig.Settings.HideAmbientControls);
+        Assert.IsFalse(_rig.Settings.ShowScenes, "scenes");
+        Assert.IsFalse(_rig.Settings.ShowPlayback, "playback");
+        Assert.IsFalse(_rig.Settings.ShowAmbientControls, "ambient controls");
         Assert.IsFalse(headset.ShowScenes);
         Assert.IsFalse(headset.ShowPlayback);
         Assert.IsFalse(headset.ShowAmbientControls);
 
         Switch(expander, "Enable scenes").IsOn = true;
         await UiHost.IdleAsync();
-        Assert.IsFalse(_rig.Settings.HideScenes);
+        Assert.IsTrue(_rig.Settings.ShowScenes);
         Assert.IsTrue(headset.ShowScenes);
     });
 
