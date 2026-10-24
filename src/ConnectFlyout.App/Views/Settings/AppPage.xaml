@@ -118,7 +118,7 @@
                         <views:SettingToggleRow
                             VerticalAlignment="Center"
                             IsOn="{x:Bind ViewModel.HideSoundControls, Mode=TwoWay}"
-                            Subtitle="The Equalizer and DSEE rows. Also in Settings &gt; Sound."
+                            Subtitle="The Equalizer and DSEE rows. Also in Settings &gt; Devices."
                             Title="Hide sound controls" />
                     </Border>
                 </StackPanel>

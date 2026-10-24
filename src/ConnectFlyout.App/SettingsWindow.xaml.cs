@@ -15,7 +15,6 @@ public sealed partial class SettingsWindow : Window
     private static readonly Dictionary<string, Type> Pages = new()
     {
         ["Devices"] = typeof(DevicesPage),
-        ["Sound"] = typeof(SoundPage),
         ["NoiseScenes"] = typeof(NoiseScenesPage),
         ["System"] = typeof(SystemPage),
         ["Shortcuts"] = typeof(ShortcutsPage),

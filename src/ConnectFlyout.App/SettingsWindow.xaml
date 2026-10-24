@@ -35,11 +35,6 @@
                         <FontIcon Glyph="&#xE7F6;" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
-                <NavigationViewItem Content="Sound" Tag="Sound">
-                    <NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xE8D6;" />
-                    </NavigationViewItem.Icon>
-                </NavigationViewItem>
                 <NavigationViewItem Content="Noise &amp; scenes" Tag="NoiseScenes">
                     <NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xF61F;" />

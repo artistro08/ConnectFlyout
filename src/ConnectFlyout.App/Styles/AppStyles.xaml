@@ -100,7 +100,7 @@
     <x:Double x:Key="SliderVerticalThumbWidth">18</x:Double>
     <x:Double x:Key="SliderVerticalThumbHeight">18</x:Double>
 
-    <!-- Equalizer Bands (Settings > Sound): the standard slider, turned vertical, -10 to +10,
+    <!-- Equalizer Bands (Settings > Devices): the standard slider, turned vertical, -10 to +10,
          with a notch every 5 steps -->
     <Style x:Key="EqualizerBandSliderStyle" TargetType="Slider" BasedOn="{StaticResource DefaultSliderStyle}">
         <Setter Property="Orientation" Value="Vertical" />
@@ -176,8 +176,8 @@
     <!-- Settings Expander Item: a row inside an expander. The right padding ends where the
          header's control does (chevron box plus its margins), so controls line up. -->
     <Style x:Key="SettingsExpanderItemStyle" TargetType="Border">
-        <Setter Property="MinHeight" Value="52" />
-        <Setter Property="Padding" Value="16,8,44,8" />
+        <Setter Property="MinHeight" Value="60" />
+        <Setter Property="Padding" Value="16,14,44,14" />
     </Style>
 
     <Style x:Key="SettingsExpanderDividerStyle" TargetType="Border">
