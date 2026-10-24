@@ -13,5 +13,5 @@ public sealed partial class DevicesPage : SettingsPageBase
         InitializeComponent();
     }
 
-    private void OnReorderClick(object sender, RoutedEventArgs e) => Frame.Navigate(typeof(ReorderDevicesPage), ViewModel);
+    private void OnReorderClick(object sender, RoutedEventArgs e) => Frame.Navigate(typeof(ReorderDevicesPage), Context);
 }

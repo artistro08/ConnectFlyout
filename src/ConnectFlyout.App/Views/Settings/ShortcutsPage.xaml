@@ -6,13 +6,14 @@
     <ContentControl Style="{StaticResource SettingsPageStyle}">
         <StackPanel Spacing="8">
             <TextBlock Style="{StaticResource SettingsPageTitleStyle}" Text="Shortcuts" />
+
+            <!-- Main Shortcuts: one card and warning per noise mode and the flyout, built in code -->
+            <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="Main shortcuts" />
             <TextBlock
                 Margin="0,0,0,8"
                 Style="{StaticResource SecondaryTextStyle}"
-                Text="Change the noise mode from any Windows app."
+                Text="Change the noise mode or open the flyout from any Windows app."
                 TextWrapping="Wrap" />
-
-            <!-- Shortcut Rows: one card and warning per noise mode, built in code -->
             <StackPanel x:Name="Rows" Spacing="8" />
 
             <!-- Scenes: one row per scene, none set until the user sets one -->
@@ -23,7 +24,7 @@
             <TextBlock
                 Margin="0,0,0,8"
                 Style="{StaticResource SecondaryTextStyle}"
-                Text="Apply a scene from any Windows app. A scene has no shortcut until you set one."
+                Text="Apply a scene from any Windows app. A scene has no shortcut until you set one. The same picker is on each scene's card in Settings &gt; Scenes."
                 TextWrapping="Wrap" />
             <StackPanel x:Name="SceneRows" Spacing="8" />
             <TextBlock

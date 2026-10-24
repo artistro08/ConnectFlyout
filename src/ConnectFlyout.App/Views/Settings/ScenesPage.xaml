@@ -55,6 +55,10 @@
                                 <StackPanel>
                                     <local:SceneEditor Scene="{x:Bind}" />
 
+                                    <!-- Shortcut: the same picker as Settings > Shortcuts -->
+                                    <Border Style="{StaticResource SettingsExpanderDividerStyle}" />
+                                    <local:SceneShortcutRow SceneId="{x:Bind Id}" />
+
                                     <!-- Delete: only here, inside the open card -->
                                     <Border Style="{StaticResource SettingsExpanderDividerStyle}" />
                                     <Border Style="{StaticResource SettingsExpanderItemStyle}">

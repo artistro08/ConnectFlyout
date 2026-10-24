@@ -23,11 +23,13 @@ public sealed partial class SettingsWindow : Window
 
     private readonly SettingsViewModel _viewModel;
     private readonly ShortcutsContext _shortcuts;
+    private readonly SettingsPageContext _context;
 
     public SettingsWindow(SettingsViewModel viewModel, ShortcutsContext shortcuts)
     {
         _viewModel = viewModel;
         _shortcuts = shortcuts;
+        _context = new SettingsPageContext(viewModel, shortcuts);
         InitializeComponent();
 
         ExtendsContentIntoTitleBar = true;
@@ -47,7 +49,7 @@ public sealed partial class SettingsWindow : Window
         _ = _viewModel.LoadAsync();
 
         // A shortcut dialog open as the window closes would keep its keyboard hook (it swallows every key)
-        Closed += (_, _) => (ContentFrame.Content as ShortcutsPage)?.CloseDialogs();
+        Closed += (_, _) => ShortcutRow.CloseAll();
     }
 
     /// <summary>
@@ -81,8 +83,8 @@ public sealed partial class SettingsWindow : Window
     {
         if (args.SelectedItem is NavigationViewItem { Tag: string tag } && Pages.TryGetValue(tag, out var page))
         {
-            // The Shortcuts page works with the registered shortcuts; every other page with the view model
-            ContentFrame.Navigate(page, page == typeof(ShortcutsPage) ? _shortcuts : _viewModel);
+            // The Shortcuts page works with the registered shortcuts alone; every other page gets both
+            ContentFrame.Navigate(page, page == typeof(ShortcutsPage) ? _shortcuts : _context);
         }
     }
 }

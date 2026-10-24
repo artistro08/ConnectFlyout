@@ -5,17 +5,27 @@ using ConnectFlyout.Presentation.ViewModels;
 namespace ConnectFlyout.App.Views.Settings;
 
 /// <summary>
-/// Settings page that receives the shared <see cref="SettingsViewModel"/> as its navigation parameter.
+/// What every settings page gets as its navigation parameter: the shared view model, and the
+/// shortcuts for pages that show a shortcut picker.
+/// </summary>
+public sealed record SettingsPageContext(SettingsViewModel ViewModel, ShortcutsContext Shortcuts);
+
+/// <summary>
+/// Settings page that receives the shared <see cref="SettingsPageContext"/> as its navigation parameter.
 /// </summary>
 public partial class SettingsPageBase : Page
 {
-    public SettingsViewModel ViewModel { get; private set; } = null!;
+    public SettingsPageContext Context { get; private set; } = null!;
+
+    public SettingsViewModel ViewModel => Context.ViewModel;
+
+    public ShortcutsContext Shortcuts => Context.Shortcuts;
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         ArgumentNullException.ThrowIfNull(e);
 
-        ViewModel = (SettingsViewModel)e.Parameter;
+        Context = (SettingsPageContext)e.Parameter;
         base.OnNavigatedTo(e);
     }
 }

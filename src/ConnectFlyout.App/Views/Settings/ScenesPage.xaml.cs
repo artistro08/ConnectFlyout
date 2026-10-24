@@ -18,10 +18,10 @@ public sealed partial class ScenesPage : SettingsPageBase
     private void OnAddSceneClick(object sender, RoutedEventArgs e)
     {
         ViewModel.BeginNewScene();
-        Frame.Navigate(typeof(SceneEditorPage), ViewModel);
+        Frame.Navigate(typeof(SceneEditorPage), Context);
     }
 
-    private void OnReorderClick(object sender, RoutedEventArgs e) => Frame.Navigate(typeof(ReorderScenesPage), ViewModel);
+    private void OnReorderClick(object sender, RoutedEventArgs e) => Frame.Navigate(typeof(ReorderScenesPage), Context);
 
     // The scene rides on Tag: ItemsRepeater doesn't reliably set the control's DataContext
     private void OnSceneToggled(object sender, RoutedEventArgs e)
