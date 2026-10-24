@@ -36,11 +36,11 @@ public sealed partial class SettingsWindow : Window
         SetTitleBar(AppTitleBar);
         AppWindow.Resize(new Windows.Graphics.SizeInt32(1180, 780));
 
-        // Opening size is also the smallest it can get
+        // Opens roomy, but can shrink to fit a 768 px laptop screen with its taskbar
         if (AppWindow.Presenter is OverlappedPresenter presenter)
         {
-            presenter.PreferredMinimumWidth = AppWindow.Size.Width;
-            presenter.PreferredMinimumHeight = AppWindow.Size.Height;
+            presenter.PreferredMinimumWidth = 1000;
+            presenter.PreferredMinimumHeight = 660;
         }
         // Taskbar and title bar icon; SetIcon only takes .ico files (a PNG leaves the blank default)
         AppWindow.SetIcon(Path.Combine(AppContext.BaseDirectory, "Assets", "AppIcon.ico"));

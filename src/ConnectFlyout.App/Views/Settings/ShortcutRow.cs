@@ -69,6 +69,7 @@ public sealed class ShortcutRow
     private readonly ShortcutTarget _target;
     private readonly ShortcutControl _control;
     private readonly InfoBar _warning;
+    private readonly TextBlock? _title;
 
     // Why the shortcut isn't what was picked (the new one was taken and the old one is back); cleared on the next change
     private string? _note;
@@ -79,7 +80,8 @@ public sealed class ShortcutRow
     // Closed() applies the shortcuts itself and loads once at the end; the Changed it raises is skipped meanwhile
     private bool _applying;
 
-    public ShortcutRow(ShortcutsContext context, ShortcutTarget target, ShortcutControl control, InfoBar warning)
+    /// <param name="title">The row's title, kept in step with the name (a scene's rename, the other device appearing).</param>
+    public ShortcutRow(ShortcutsContext context, ShortcutTarget target, ShortcutControl control, InfoBar warning, TextBlock? title = null)
     {
         ArgumentNullException.ThrowIfNull(context);
         ArgumentNullException.ThrowIfNull(target);
@@ -90,9 +92,9 @@ public sealed class ShortcutRow
         _target = target;
         _control = control;
         _warning = warning;
+        _title = title;
         Live.Add(this);
 
-        control.ButtonName = target.Name(context);
         control.DefaultHotkeySettings = Hotkey.TryParse(target.Default, out var fallback) ? HotkeySettings.FromHotkey(fallback) : new HotkeySettings();
         control.CheckConflict = Conflict;
         control.DialogOpening += OnDialogOpening;
@@ -132,6 +134,7 @@ public sealed class ShortcutRow
     {
         var shortcuts = _context.Shortcuts;
         var shortcut = _target.Get(_context.Settings);
+        RefreshName();
         var taken = _target.IsTaken(shortcuts);
         _control.HotkeySettings = Hotkey.TryParse(shortcut, out var hotkey) ? HotkeySettings.FromHotkey(hotkey) : new HotkeySettings();
 
@@ -145,6 +148,17 @@ public sealed class ShortcutRow
         _warning.Message = message ?? string.Empty;
         _warning.IsOpen = message is not null;
         _warning.Visibility = message is not null ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    // The name can change while the page is open: a scene renamed, the other device appearing
+    private void RefreshName()
+    {
+        var name = _target.Name(_context);
+        _control.ButtonName = name;
+        if (_title is not null)
+        {
+            _title.Text = name;
+        }
     }
 
     private void OnChanged(object? sender, EventArgs e)
@@ -181,6 +195,7 @@ public sealed class ShortcutRow
     // The app's own shortcuts let go while the dialog listens (so pressing them reaches it)
     private void OnDialogOpening(object? sender, EventArgs e)
     {
+        RefreshName();
         _before = _target.Get(_context.Settings);
         _note = null;
         _context.Shortcuts.Suspend();

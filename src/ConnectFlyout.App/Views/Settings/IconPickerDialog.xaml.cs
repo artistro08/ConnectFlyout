@@ -5,12 +5,12 @@ using ConnectFlyout.Presentation.Scenes;
 namespace ConnectFlyout.App.Views.Settings;
 
 /// <summary>
-/// Picks a scene icon from <see cref="SceneIcon.All"/>, narrowed by a search box. Select is
-/// only enabled with an icon selected; the current one starts selected.
+/// Picks a scene icon from <see cref="SceneIcon.All"/>, narrowed by a search box. The current
+/// one starts selected and stays the answer until another is picked.
 /// </summary>
 public sealed partial class IconPickerDialog : ContentDialog
 {
-    private string? _selected;
+    private string _selected;
 
     public IconPickerDialog(string currentGlyph)
     {
@@ -20,9 +20,9 @@ public sealed partial class IconPickerDialog : ContentDialog
     }
 
     /// <summary>
-    /// The chosen glyph, or null when nothing is selected.
+    /// The chosen glyph; the current one until another is picked.
     /// </summary>
-    public string? SelectedGlyph => _selected;
+    public string SelectedGlyph => _selected;
 
     private void OnSearchChanged(object sender, TextChangedEventArgs e) => Filter(SearchBox.Text);
 
@@ -33,7 +33,6 @@ public sealed partial class IconPickerDialog : ContentDialog
         {
             _selected = icon.Glyph;
         }
-        IsPrimaryButtonEnabled = _selected is not null;
     }
 
     private void Filter(string query)
@@ -42,6 +41,5 @@ public sealed partial class IconPickerDialog : ContentDialog
         IconGrid.ItemsSource = icons;
         IconGrid.SelectedItem = icons.FirstOrDefault(icon => icon.Glyph == _selected);
         NoMatch.Visibility = icons.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
-        IsPrimaryButtonEnabled = _selected is not null;
     }
 }

@@ -53,6 +53,7 @@ public sealed class AppSettings
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = false };
 
     private readonly ISettingsStore _store;
+    private IReadOnlyList<Scene>? _scenes;
 
     public AppSettings(ISettingsStore store)
     {
@@ -175,10 +176,20 @@ public sealed class AppSettings
 
     /// <summary>
     /// Saved scenes, or <see cref="Scene.Defaults"/> when none are saved or the saved JSON is unreadable.
+    /// Parsed once and kept until set.
     /// </summary>
     public IReadOnlyList<Scene> Scenes
     {
-        get
+        get => _scenes ??= LoadScenes();
+        set
+        {
+            _store.SetString(ScenesKey, JsonSerializer.Serialize(value, JsonOptions));
+            _scenes = null;
+        }
+    }
+
+    private IReadOnlyList<Scene> LoadScenes()
+    {
         {
             var json = _store.GetString(ScenesKey);
             if (string.IsNullOrEmpty(json))
@@ -198,7 +209,7 @@ public sealed class AppSettings
                 // Scenes saved before IDs existed get theirs once and keep them, so shortcuts stay put
                 if (scenes.Any(scene => scene.Id is null))
                 {
-                    Scenes = loaded;
+                    _store.SetString(ScenesKey, JsonSerializer.Serialize(loaded, JsonOptions));
                 }
                 return loaded;
             }
@@ -207,7 +218,6 @@ public sealed class AppSettings
                 return Scene.Defaults;
             }
         }
-        set => _store.SetString(ScenesKey, JsonSerializer.Serialize(value, JsonOptions));
     }
 
     /// <summary>

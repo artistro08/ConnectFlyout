@@ -12,7 +12,7 @@ namespace ConnectFlyout.App.Views.Settings;
 public sealed partial class SceneShortcutRow : UserControl
 {
     public static readonly DependencyProperty SceneIdProperty =
-        DependencyProperty.Register(nameof(SceneId), typeof(string), typeof(SceneShortcutRow), new PropertyMetadata(null));
+        DependencyProperty.Register(nameof(SceneId), typeof(string), typeof(SceneShortcutRow), new PropertyMetadata(null, (sender, _) => ((SceneShortcutRow)sender).Rebind()));
 
     private ShortcutRow? _row;
 
@@ -29,19 +29,25 @@ public sealed partial class SceneShortcutRow : UserControl
         set => SetValue(SceneIdProperty, value);
     }
 
-    private void OnLoaded(object sender, RoutedEventArgs e)
-    {
-        if (_row is not null || SceneId is not { } id || PageAbove() is not { } page)
-        {
-            return;
-        }
-        _row = new ShortcutRow(page.Shortcuts, ShortcutTarget.ForScene(id), Picker, Warning);
-    }
+    private void OnLoaded(object sender, RoutedEventArgs e) => Rebind();
 
     private void OnUnloaded(object sender, RoutedEventArgs e)
     {
         _row?.Detach();
         _row = null;
+    }
+
+    // Wires the picker to the scene at hand. A card the repeater reuses for another scene
+    // comes through here again with the new ID, so the old wiring goes first.
+    private void Rebind()
+    {
+        _row?.Detach();
+        _row = null;
+        if (!IsLoaded || SceneId is not { } id || PageAbove() is not { } page)
+        {
+            return;
+        }
+        _row = new ShortcutRow(page.Shortcuts, ShortcutTarget.ForScene(id), Picker, Warning);
     }
 
     private SettingsPageBase? PageAbove()

@@ -153,11 +153,13 @@ public sealed class FlyoutViewModel : ObservableObject, IDisposable
     public void SwitchPlayback(HeadsetViewModel headset, bool toThisPc)
     {
         ArgumentNullException.ThrowIfNull(headset);
-        if (_localAddress is null)
+        var devices = headset.PlaybackDevices;
+        // Without this PC in the list the devices can't be told apart, so neither shortcut acts
+        if (!devices.Any(IsThisPc))
         {
             return;
         }
-        var device = headset.PlaybackDevices.FirstOrDefault(each => IsThisPc(each) == toThisPc);
+        var device = devices.FirstOrDefault(each => IsThisPc(each) == toThisPc);
         if (device is not null)
         {
             headset.SwitchPlaybackCommand.Execute(device);
@@ -165,21 +167,27 @@ public sealed class FlyoutViewModel : ObservableObject, IDisposable
     }
 
     /// <summary>
-    /// The name of the other device connected to the headphones a shortcut acts on (the ones
-    /// shown, else the first connected), for the shortcut's own name. Null when there's no such
-    /// device, or before this PC's address is known.
+    /// The headphones a shortcut acts on: the ones the flyout shows, or else the first connected.
+    /// </summary>
+    public HeadsetViewModel? ShortcutHeadset
+    {
+        get
+        {
+            var connected = ConnectedHeadsets;
+            return CurrentHeadset is { IsConnected: true } current ? current : connected.Count > 0 ? connected[0] : null;
+        }
+    }
+
+    /// <summary>
+    /// The name of the other device connected to <see cref="ShortcutHeadset"/>, for the
+    /// playback shortcut's own name. Null when there's no such device, or this PC isn't in the list.
     /// </summary>
     public string? OtherPlaybackDeviceName
     {
         get
         {
-            if (_localAddress is null)
-            {
-                return null;
-            }
-            var connected = ConnectedHeadsets;
-            var headset = CurrentHeadset is { IsConnected: true } current ? current : connected.Count > 0 ? connected[0] : null;
-            return headset?.PlaybackDevices.FirstOrDefault(each => !IsThisPc(each))?.Name;
+            var devices = ShortcutHeadset?.PlaybackDevices;
+            return devices is not null && devices.Any(IsThisPc) ? devices.FirstOrDefault(each => !IsThisPc(each))?.Name : null;
         }
     }
 
@@ -194,7 +202,6 @@ public sealed class FlyoutViewModel : ObservableObject, IDisposable
         }
         catch (Exception)
         {
-            _localAddress = null;
         }
     }
 
@@ -382,21 +389,9 @@ public sealed class FlyoutViewModel : ObservableObject, IDisposable
     {
         var order = _settings.HeadsetOrder.ToList();
         var rank = order.IndexOf(id);
-        if (rank < 0)
-        {
-            return Headsets.Count;
-        }
-        var index = 0;
-        while (index < Headsets.Count)
-        {
-            var other = order.IndexOf(Headsets[index].Id);
-            if (other < 0 || other > rank)
-            {
-                break;
-            }
-            index++;
-        }
-        return index;
+        return rank < 0
+            ? Headsets.Count
+            : Headsets.TakeWhile(each => order.IndexOf(each.Id) is var other && other >= 0 && other <= rank).Count();
     }
 
     private void Refresh()

@@ -1177,6 +1177,7 @@ public sealed class FlyoutViewModelTests
         });
 
         Assert.AreEqual("Pixel 9", _flyout.OtherPlaybackDeviceName);
+        Assert.AreSame(headset, _flyout.ShortcutHeadset);
 
         _flyout.SwitchPlayback(headset, toThisPc: false);
         Assert.IsTrue(await TestWait.UntilAsync(() => fake.Commands.Contains(("switchPlayback", "AA:BB:CC:DD:EE:02"))));
@@ -1186,6 +1187,35 @@ public sealed class FlyoutViewModelTests
         Assert.IsTrue(await TestWait.UntilAsync(() => fake.Commands.Contains(("switchPlayback", "AA:BB:CC:DD:EE:01"))));
         _flyout.SwitchPlayback(headset, toThisPc: true);
         Assert.AreEqual(1, fake.Commands.Count(command => command.Equals(("switchPlayback", "AA:BB:CC:DD:EE:01"))));
+    }
+
+    [TestMethod]
+    public async Task PlaybackShortcutsDoNothingWhenThisPcIsNotInTheList()
+    {
+        // A pairing made on another Bluetooth radio lists this PC under an address we don't have
+        _audio.LocalAddress = "AA:BB:CC:DD:EE:09";
+        var monitor = new LowBatteryMonitor(_settings, new FakeNotificationService());
+        using var flyout = new FlyoutViewModel(
+            _manager,
+            new FlyoutNavigator(_settings),
+            managed => new HeadsetViewModel(managed, _settings, monitor, _time, NullLogger.Instance),
+            _audio,
+            _time,
+            _settings);
+        _source.Report(Xm6);
+        var headset = flyout.Headsets.Single();
+        Assert.IsTrue(await TestWait.UntilAsync(() => headset.IsConnected));
+        var fake = _fakes["WF-1000XM6"];
+        fake.RaiseStateChanged(fake.State with
+        {
+            PlaybackDevices = [new PlaybackDevice("AA:BB:CC:DD:EE:01", "DESKTOP", true), new PlaybackDevice("AA:BB:CC:DD:EE:02", "Pixel 9", false)],
+        });
+
+        flyout.SwitchPlayback(headset, toThisPc: false);
+        flyout.SwitchPlayback(headset, toThisPc: true);
+
+        Assert.IsNull(flyout.OtherPlaybackDeviceName);
+        Assert.IsFalse(fake.Commands.Any(command => command is ("switchPlayback", _)));
     }
 
     [TestMethod]
@@ -1447,6 +1477,7 @@ public sealed class SettingsViewModelTests
     private readonly LogLevelSwitch _logLevel = new();
     private readonly List<AppTheme> _themes = [];
     private readonly List<bool> _nativeDebug = [];
+    private readonly FakeTimeProvider _time = new();
     private HeadsetManager _manager = null!;
     private FlyoutViewModel _flyout = null!;
     private SettingsViewModel _viewModel = null!;
@@ -1454,7 +1485,7 @@ public sealed class SettingsViewModelTests
     [TestInitialize]
     public void CreateViewModel()
     {
-        var time = new FakeTimeProvider();
+        var time = _time;
         _manager = new HeadsetManager(
             _source,
             name => new FakeHeadset(name, name == "WH-1000XM4" ? FakeHeadset.Xm4Features : null),
@@ -1469,9 +1500,12 @@ public sealed class SettingsViewModelTests
             new FakeBluetoothAudio(),
             time,
             _settings);
-        _viewModel = new SettingsViewModel(_flyout, _settings, _logLevel, _startup, _themes.Add, _nativeDebug.Add, _ => { }, "C:\\Logs", NullLogger.Instance);
+        _viewModel = new SettingsViewModel(_flyout, _settings, _logLevel, _startup, _themes.Add, _nativeDebug.Add, _ => { }, "C:\\Logs", NullLogger.Instance, time);
         _manager.Start();
     }
+
+    // Edits save a moment after the last one
+    private void LetEditsSave() => _time.Advance(TimeSpan.FromSeconds(1));
 
     [TestCleanup]
     public void Dispose()
@@ -1481,26 +1515,16 @@ public sealed class SettingsViewModelTests
     }
 
     [TestMethod]
-    public void SelectsFirstHeadsetWhenOneConnects()
+    public void NoHeadsetUntilOneIsFound()
     {
+        var raised = 0;
+        _viewModel.PropertyChanged += (_, e) => raised += e.PropertyName == nameof(SettingsViewModel.NoHeadset) ? 1 : 0;
         Assert.IsTrue(_viewModel.NoHeadset);
 
         _source.Report(new BluetoothDeviceInfo("device-xm6", "WF-1000XM6", "ac:80:0a:00:00:06", true));
 
-        Assert.AreEqual(0, _viewModel.SelectedHeadsetIndex);
-        Assert.AreEqual("WF-1000XM6", _viewModel.SelectedHeadset?.DeviceName);
-    }
-
-    [TestMethod]
-    public void OpeningSettingsSelectsTheHeadsetShownInTheFlyout()
-    {
-        _source.Report(new BluetoothDeviceInfo("device-xm6", "WF-1000XM6", "ac:80:0a:00:00:06", true));
-        _source.Report(new BluetoothDeviceInfo("device-xm4", "WH-1000XM4", "ac:80:0a:00:00:04", true));
-        _flyout.PickCommand.Execute(_flyout.Headsets.Single(headset => headset.DeviceName == "WH-1000XM4"));
-
-        _viewModel.SelectCurrentHeadset();
-
-        Assert.AreEqual("WH-1000XM4", _viewModel.SelectedHeadset?.DeviceName);
+        Assert.IsFalse(_viewModel.NoHeadset);
+        Assert.AreEqual(1, raised);
     }
 
     [TestMethod]
@@ -1522,123 +1546,6 @@ public sealed class SettingsViewModelTests
         Assert.AreEqual(2, raised.Count(name => name == nameof(HeadsetViewModel.ShowScenes)));
         Assert.AreEqual(2, raised.Count(name => name == nameof(HeadsetViewModel.ShowPopupSoundSeparator)));
         Assert.IsFalse(raised.Contains(nameof(HeadsetViewModel.ShowPlayback)));
-    }
-
-    [TestMethod]
-    public void OpenSettingsKeepTheirHeadsetWhenTheFlyoutSwitches()
-    {
-        _source.Report(new BluetoothDeviceInfo("device-xm6", "WF-1000XM6", "ac:80:0a:00:00:06", true));
-        _source.Report(new BluetoothDeviceInfo("device-xm4", "WH-1000XM4", "ac:80:0a:00:00:04", true));
-        _viewModel.SelectedHeadsetIndex = _flyout.Headsets.IndexOf(_flyout.Headsets.Single(headset => headset.DeviceName == "WF-1000XM6"));
-
-        _flyout.PickCommand.Execute(_flyout.Headsets.Single(headset => headset.DeviceName == "WH-1000XM4"));
-
-        Assert.AreEqual("WF-1000XM6", _viewModel.SelectedHeadset?.DeviceName);
-    }
-
-    [TestMethod]
-    public void SelectionChangesOnlyAfterEveryListenerSawTheNewHeadset()
-    {
-        // A ComboBox bound to Headsets subscribes after the view model. Setting
-        // SelectedIndex before it has the new item throws ArgumentException in WinUI.
-        var previous = SynchronizationContext.Current;
-        var context = new QueueingSynchronizationContext();
-        SynchronizationContext.SetSynchronizationContext(context);
-        try
-        {
-            var time = new FakeTimeProvider();
-            var settings = new AppSettings(new InMemorySettingsStore());
-            var source = new FakeDeviceSource();
-            using var manager = new HeadsetManager(source, name => new FakeHeadset(name), settings, time, NullLogger<HeadsetManager>.Instance);
-            var monitor = new LowBatteryMonitor(settings, new FakeNotificationService());
-            using var flyout = new FlyoutViewModel(
-                manager,
-                new FlyoutNavigator(settings),
-                managed => new HeadsetViewModel(managed, settings, monitor, time, NullLogger.Instance),
-                new FakeBluetoothAudio(),
-                time,
-                settings);
-            var viewModel = new SettingsViewModel(flyout, settings, new LogLevelSwitch(), new FakeStartupTaskService(), _ => { }, _ => { }, _ => { }, "C:\\Logs", NullLogger.Instance);
-            manager.Start();
-
-            var controlItems = 0;
-            flyout.Headsets.CollectionChanged += (_, _) => controlItems = flyout.Headsets.Count;
-            var itemsWhenSelected = -1;
-            viewModel.PropertyChanged += (_, e) =>
-            {
-                if (e.PropertyName == nameof(SettingsViewModel.SelectedHeadsetIndex))
-                {
-                    itemsWhenSelected = controlItems;
-                }
-            };
-
-            source.Report(new BluetoothDeviceInfo("device-xm6", "WF-1000XM6", "ac:80:0a:00:00:06", true));
-            context.RunPending();
-
-            Assert.AreEqual(0, viewModel.SelectedHeadsetIndex);
-            Assert.AreEqual(1, itemsWhenSelected, "SelectedHeadsetIndex changed before the list control had the headset");
-        }
-        finally
-        {
-            SynchronizationContext.SetSynchronizationContext(previous);
-        }
-    }
-
-    [TestMethod]
-    public void RemovingTheSelectedHeadsetClearsTheSelectionBeforeTheListControlSeesIt()
-    {
-        // A ComboBox bound to Headsets subscribes after the view model and throws if its selected
-        // item is removed from under it, so the selection must already be gone by then. The next
-        // selection waits for the UI queue, like the ComboBox's own update.
-        var previous = SynchronizationContext.Current;
-        var context = new QueueingSynchronizationContext();
-        SynchronizationContext.SetSynchronizationContext(context);
-        try
-        {
-            var time = new FakeTimeProvider();
-            var settings = new AppSettings(new InMemorySettingsStore());
-            var source = new FakeDeviceSource();
-            using var manager = new HeadsetManager(source, name => new FakeHeadset(name), settings, time, NullLogger<HeadsetManager>.Instance);
-            var monitor = new LowBatteryMonitor(settings, new FakeNotificationService());
-            using var flyout = new FlyoutViewModel(
-                manager,
-                new FlyoutNavigator(settings),
-                managed => new HeadsetViewModel(managed, settings, monitor, time, NullLogger.Instance),
-                new FakeBluetoothAudio(),
-                time,
-                settings);
-            var viewModel = new SettingsViewModel(flyout, settings, new LogLevelSwitch(), new FakeStartupTaskService(), _ => { }, _ => { }, _ => { }, "C:\\Logs", NullLogger.Instance);
-            manager.Start();
-            source.Report(new BluetoothDeviceInfo("device-xm6", "WF-1000XM6", "ac:80:0a:00:00:06", true));
-            source.Report(new BluetoothDeviceInfo("device-xm4", "WH-1000XM4", "ac:80:0a:00:00:04", true));
-            context.RunPending();
-            viewModel.SelectedHeadsetIndex = flyout.Headsets.IndexOf(flyout.Headsets.Single(headset => headset.DeviceName == "WH-1000XM4"));
-            var indexWhenControlSawRemoval = int.MinValue;
-            flyout.Headsets.CollectionChanged += (_, _) => indexWhenControlSawRemoval = viewModel.SelectedHeadsetIndex;
-
-            source.Remove("device-xm4");
-            context.RunPending();
-
-            Assert.AreEqual(-1, indexWhenControlSawRemoval);
-            Assert.AreEqual("WF-1000XM6", viewModel.SelectedHeadset?.DeviceName);
-        }
-        finally
-        {
-            SynchronizationContext.SetSynchronizationContext(previous);
-        }
-    }
-
-    [TestMethod]
-    public void RemovingAnEarlierHeadsetKeepsTheSameHeadsetSelected()
-    {
-        _source.Report(new BluetoothDeviceInfo("device-xm6", "WF-1000XM6", "ac:80:0a:00:00:06", true));
-        _source.Report(new BluetoothDeviceInfo("device-xm4", "WH-1000XM4", "ac:80:0a:00:00:04", true));
-        _viewModel.SelectedHeadsetIndex = _flyout.Headsets.IndexOf(_flyout.Headsets.Single(headset => headset.DeviceName == "WH-1000XM4"));
-
-        _source.Remove("device-xm6");
-
-        Assert.AreEqual(0, _viewModel.SelectedHeadsetIndex);
-        Assert.AreEqual("WH-1000XM4", _viewModel.SelectedHeadset?.DeviceName);
     }
 
     [TestMethod]
@@ -1677,6 +1584,8 @@ public sealed class SettingsViewModelTests
         _viewModel.Scenes[0].ModeIndex = (int)NoiseMode.Ambient;
         _viewModel.Scenes[0].AmbientLevel = 5;
         _viewModel.Scenes[0].Glyph = SceneIcon.All[3].Glyph;
+        Assert.AreEqual("Focus", _settings.Scenes[0].Name);
+        LetEditsSave();
 
         Assert.AreEqual(new Scene("Deep work", "\uE80F", new NoiseControlSetting(NoiseMode.Ambient, 5, false), Id: "focus"), _settings.Scenes[0]);
         Assert.AreEqual("Ambient sound · Level 5", _viewModel.Scenes[0].Summary);
@@ -1708,6 +1617,7 @@ public sealed class SettingsViewModelTests
 
         // The added scene saves its edits like the others
         _viewModel.Scenes[3].ShowInFlyout = false;
+        LetEditsSave();
         Assert.IsFalse(_settings.Scenes[3].ShowInFlyout);
     }
 
@@ -1725,6 +1635,8 @@ public sealed class SettingsViewModelTests
     [TestMethod]
     public void DeletingASceneSavesTheRestAndDropsItsShortcut()
     {
+        var announced = 0;
+        _viewModel.ScenesChanged += (_, _) => announced++;
         var office = _viewModel.Scenes[1];
         _settings.SetSceneShortcut(office.Id, "Win+F2");
         _settings.SetSceneShortcut(_viewModel.Scenes[0].Id, "Win+F3");
@@ -1734,6 +1646,26 @@ public sealed class SettingsViewModelTests
         CollectionAssert.AreEqual(new[] { "Focus", "Aware" }, _settings.Scenes.Select(scene => scene.Name).ToList());
         Assert.AreEqual("", _settings.GetSceneShortcut(office.Id));
         Assert.AreEqual("Win+F3", _settings.GetSceneShortcut(_viewModel.Scenes[0].Id));
+        Assert.AreEqual(1, announced);
+    }
+
+    [TestMethod]
+    public void ResetKeepsTheDefaultsShortcutsAndDropsTheRest()
+    {
+        var announced = 0;
+        _viewModel.ScenesChanged += (_, _) => announced++;
+        _viewModel.BeginNewScene();
+        _viewModel.NewScene!.Name = "Gym";
+        _viewModel.CommitNewScene();
+        var gym = _viewModel.Scenes[3];
+        _settings.SetSceneShortcut(gym.Id, "Win+F2");
+        _settings.SetSceneShortcut("focus", "Win+F3");
+
+        _viewModel.ResetScenesCommand.Execute(null);
+
+        Assert.AreEqual("", _settings.GetSceneShortcut(gym.Id));
+        Assert.AreEqual("Win+F3", _settings.GetSceneShortcut("focus"));
+        Assert.AreEqual(2, announced);
     }
 
     [TestMethod]

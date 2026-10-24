@@ -426,9 +426,7 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
     public bool MatchesScene(Scene scene)
     {
         ArgumentNullException.ThrowIfNull(scene);
-        var setting = scene.Setting;
-        return setting.Mode == _noiseMode
-            && (_noiseMode != NoiseMode.Ambient || (setting.AmbientLevel == (int)_ambientLevel && setting.FocusOnVoice == _focusOnVoice));
+        return scene.Matches(_noiseMode, (int)_ambientLevel, _focusOnVoice);
     }
 
     public NoiseMode NoiseMode => _noiseMode;
@@ -948,9 +946,6 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
     }
 
     /// <summary>
-    /// Whether the compact popup should offer the power-off action.
-    /// </summary>
-    /// <summary>
     /// Turn off stays in the footer, disabled, while disconnected, so the footer doesn't jump.
     /// </summary>
     public bool ShowPowerOff => Features.PowerOff;
@@ -1186,12 +1181,7 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(ShowBluetoothConnect));
         OnPropertyChanged(nameof(IsAvailable));
         OnPropertyChanged(nameof(ShowBattery));
-        OnPropertyChanged(nameof(ShowReconnect));
-        OnPropertyChanged(nameof(ShowDisconnect));
-        OnPropertyChanged(nameof(ShowStatus));
         OnPropertyChanged(nameof(ShowConnect));
-        OnPropertyChanged(nameof(StatusText));
-        OnPropertyChanged(nameof(PickerStatusText));
         OnPropertyChanged(nameof(DisconnectedMessage));
         if (IsBluetoothConnecting && IsWindowsConnected)
         {
@@ -1201,10 +1191,14 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
         {
             EndBluetoothConnect();
         }
-        if (!SetProperty(ref _connectionState, state, nameof(ConnectionState)))
-        {
-            return;
-        }
+        // Raised whether or not the state changed: ShowReconnect and friends also follow the
+        // Windows connection, which arrives on this same call
+        SetProperty(ref _connectionState, state, nameof(ConnectionState));
+        OnPropertyChanged(nameof(ShowReconnect));
+        OnPropertyChanged(nameof(ShowDisconnect));
+        OnPropertyChanged(nameof(ShowStatus));
+        OnPropertyChanged(nameof(StatusText));
+        OnPropertyChanged(nameof(PickerStatusText));
         OnPropertyChanged(nameof(IsConnected));
         OnPropertyChanged(nameof(CanChangeConnectionMode));
         OnPropertyChanged(nameof(CanEditHeadsetSound));
@@ -1213,14 +1207,9 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(ShowPopupSoundSection));
         OnPropertyChanged(nameof(ShowPopupConnectionSeparator));
         OnPropertyChanged(nameof(IsConnecting));
-        OnPropertyChanged(nameof(StatusText));
-        OnPropertyChanged(nameof(PickerStatusText));
-        OnPropertyChanged(nameof(ShowStatus));
         OnPropertyChanged(nameof(IsReloading));
         OnPropertyChanged(nameof(ShowAudioText));
         OnPropertyChanged(nameof(ShowDisconnectedWarning));
-        OnPropertyChanged(nameof(ShowReconnect));
-        OnPropertyChanged(nameof(ShowDisconnect));
         OnPropertyChanged(nameof(ShowPlayback));
         UpdateMissingEarbudPolling();
         if (state == HeadsetConnectionState.Connected)

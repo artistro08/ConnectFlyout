@@ -35,9 +35,4 @@ internal static partial class AppLog
     public static partial void ShortcutPressed(ILogger logger, string action, bool found);
 
     [LoggerMessage(EventId = 909, Level = LogLevel.Warning, Message = "Couldn't play the shortcut sound")]
-    public static partial void SoundFailed(ILogger logger, Exception exception);
-
-    // One line per teardown step, so a crash on the way out says where it got to
-    [LoggerMessage(EventId = 910, Level = LogLevel.Information, Message = "Quit: {Step}")]
-    public static partial void QuitStep(ILogger logger, string step);
-}
+    public static partial void SoundFailed(ILogger logger, Exception exception);}

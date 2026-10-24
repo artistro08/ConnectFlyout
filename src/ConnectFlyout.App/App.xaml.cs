@@ -132,8 +132,17 @@ public partial class App : Application, IDisposable
             HeadsetClient.SetDebugLogging,
             OpenFolder,
             logFolder,
-            _loggerFactory.CreateLogger<SettingsViewModel>());
+            _loggerFactory.CreateLogger<SettingsViewModel>(),
+            time);
         _settingsViewModel.ApplyLogLevel();
+        // A scene added, deleted or reset changes which hotkeys there are
+        _settingsViewModel.ScenesChanged += (_, _) =>
+        {
+            if (_shortcuts is not null)
+            {
+                _shortcuts.Apply(_settings);
+            }
+        };
 
         // Tray Icon and Flyout
         _flyoutWindow = new FlyoutWindow(_flyout);
@@ -338,7 +347,7 @@ public partial class App : Application, IDisposable
             return;
         }
 
-        var headset = ShortcutHeadset();
+        var headset = _flyout?.ShortcutHeadset;
         AppLog.ShortcutPressed(_logger, name, headset is not null);
         if (headset is null)
         {
@@ -368,7 +377,7 @@ public partial class App : Application, IDisposable
     private void OnSceneShortcutPressed(string sceneId)
     {
         var scene = _settings?.Scenes.FirstOrDefault(each => each.Id == sceneId);
-        var headset = ShortcutHeadset();
+        var headset = _flyout?.ShortcutHeadset;
         AppLog.ShortcutPressed(_logger, "Scene", scene is not null && headset is not null);
         if (scene is null || headset is null)
         {
@@ -380,15 +389,6 @@ public partial class App : Application, IDisposable
             _ = PlayModeAlreadyOnAsync(headset.Id);
         }
         headset.ApplySceneCommand.Execute(scene);
-    }
-
-    // The headphones a shortcut acts on: the ones the flyout shows, or else the first connected ones
-    private HeadsetViewModel? ShortcutHeadset()
-    {
-        var connected = _flyout?.ConnectedHeadsets ?? [];
-        return _flyout?.CurrentHeadset is { IsConnected: true } current
-            ? current
-            : connected.Count > 0 ? connected[0] : null;
     }
 
     private static readonly string ModeAlreadyOnSound = Path.Combine(AppContext.BaseDirectory, "Assets", "ModeAlreadyOn.wav");
@@ -496,9 +496,6 @@ public partial class App : Application, IDisposable
                     ScheduleMemoryTrim(IdleTrimDelay);
                 }
             };
-
-            // Open on the flyout's headphones; once open, the window keeps its own choice
-            _settingsViewModel.SelectCurrentHeadset();
         }
         _settingsWindow.Activate();
     }
@@ -529,25 +526,17 @@ public partial class App : Application, IDisposable
         _quitting = true;
         _trimTimer?.Stop();
         _shortcuts?.Suspend();
-        AppLog.QuitStep(_logger, "shortcuts off");
         _trayIcon?.Dispose();
-        AppLog.QuitStep(_logger, "tray icon gone");
         _trayMenu?.Close();
-        AppLog.QuitStep(_logger, "tray menu closed");
         _trayTooltip?.Close();
-        AppLog.QuitStep(_logger, "tray tooltip closed");
         _settingsWindow?.Close();
-        AppLog.QuitStep(_logger, "settings closed");
         _flyoutWindow?.Shutdown();
-        AppLog.QuitStep(_logger, "flyout shut down");
         _flyout?.Dispose();
         _manager?.Dispose();
-        AppLog.QuitStep(_logger, "headsets released");
         _notifications?.Dispose();
         _quitWait?.Unregister(null);
         _quitRequest?.Dispose();
         _showWait?.Unregister(null);
-        AppLog.QuitStep(_logger, "done");
         _loggerFactory?.Dispose();
         GC.SuppressFinalize(this);
     }

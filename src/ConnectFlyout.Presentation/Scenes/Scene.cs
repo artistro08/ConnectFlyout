@@ -20,6 +20,14 @@ public sealed record Scene(string Name, string Glyph, NoiseControlSetting Settin
     public static string NewId() => Guid.NewGuid().ToString("N");
 
     /// <summary>
+    /// Whether headphones in this state are in the scene: the same mode, and in Ambient sound
+    /// also the same level and Focus on voice (both only apply in Ambient).
+    /// </summary>
+    public bool Matches(NoiseMode mode, int ambientLevel, bool focusOnVoice) =>
+        Setting.Mode == mode
+        && (mode != NoiseMode.Ambient || (Setting.AmbientLevel == ambientLevel && Setting.FocusOnVoice == focusOnVoice));
+
+    /// <summary>
     /// Office scene icon: a briefcase.
     /// </summary>
     public const string OfficeGlyph = "";

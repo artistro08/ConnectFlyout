@@ -21,6 +21,9 @@ public sealed partial class SceneEditor : UserControl
         typeof(SceneEditor),
         new PropertyMetadata(new Thickness(58, 14, 44, 14)));
 
+    // Only one ContentDialog can be open at a time; a second Change click waits its turn
+    private bool _picking;
+
     public SceneEditor()
     {
         InitializeComponent();
@@ -43,14 +46,26 @@ public sealed partial class SceneEditor : UserControl
 
     private async void OnChangeIconClick(object sender, RoutedEventArgs e)
     {
-        if (Scene is null)
+        if (Scene is null || _picking)
         {
             return;
         }
-        var dialog = new IconPickerDialog(Scene.Glyph) { XamlRoot = XamlRoot };
-        if (await dialog.ShowAsync() == ContentDialogResult.Primary && dialog.SelectedGlyph is { } glyph)
+        _picking = true;
+        try
         {
-            Scene.Glyph = glyph;
+            var dialog = new IconPickerDialog(Scene.Glyph) { XamlRoot = XamlRoot };
+            if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+            {
+                Scene.Glyph = dialog.SelectedGlyph;
+            }
+        }
+        catch (Exception)
+        {
+            // Another dialog (the shortcut picker, say) is up; WinUI refuses a second one
+        }
+        finally
+        {
+            _picking = false;
         }
     }
 }

@@ -18,7 +18,6 @@ namespace ConnectFlyout.Presentation.ViewModels;
 public sealed class SceneEditorViewModel : ObservableObject
 {
     private readonly Action? _changed;
-    private readonly string _id;
     private string _name;
     private string _glyph;
     private int _modeIndex;
@@ -34,7 +33,7 @@ public sealed class SceneEditorViewModel : ObservableObject
         ArgumentNullException.ThrowIfNull(scene);
 
         _changed = changed;
-        _id = scene.Id ?? Scene.NewId();
+        Id = scene.Id ?? Scene.NewId();
         _name = scene.Name;
         _glyph = scene.Glyph;
         _modeIndex = (int)scene.Setting.Mode;
@@ -48,7 +47,7 @@ public sealed class SceneEditorViewModel : ObservableObject
     /// <summary>
     /// The scene's stable ID (see <see cref="Scene.Id"/>).
     /// </summary>
-    public string Id => _id;
+    public string Id { get; }
 
     public string Name
     {
@@ -146,7 +145,7 @@ public sealed class SceneEditorViewModel : ObservableObject
         var mode = (NoiseMode)Math.Clamp(_modeIndex, 0, 2);
         var level = mode == NoiseMode.Ambient ? (int)_ambientLevel : 0;
         var name = string.IsNullOrWhiteSpace(_name) ? "Scene" : _name.Trim();
-        return new Scene(name, _glyph, new NoiseControlSetting(mode, level, _focusOnVoice), _showInFlyout, _id);
+        return new Scene(name, _glyph, new NoiseControlSetting(mode, level, _focusOnVoice), _showInFlyout, Id);
     }
 
     // SetProperty, then the save callback
@@ -174,11 +173,15 @@ public sealed class SettingsViewModel : ObservableObject
     private readonly Action<bool> _applyNativeDebugLogging;
     private readonly Action<string> _openFolder;
     private readonly ILogger _logger;
+    private readonly TimeProvider _timeProvider;
     private readonly UiContext _ui = new();
 
-    private int _selectedHeadsetIndex;
+    // Edits save this long after the last one, so a slider drag is one save, not one per step
+    private static readonly TimeSpan SaveDelay = TimeSpan.FromMilliseconds(300);
+
     private bool _launchAtSignIn;
     private SceneEditorViewModel? _newScene;
+    private ITimer? _saveTimer;
 
     public SettingsViewModel(
         FlyoutViewModel flyout,
@@ -189,9 +192,11 @@ public sealed class SettingsViewModel : ObservableObject
         Action<bool> applyNativeDebugLogging,
         Action<string> openFolder,
         string logFolder,
-        ILogger logger)
+        ILogger logger,
+        TimeProvider timeProvider)
     {
         ArgumentNullException.ThrowIfNull(flyout);
+        ArgumentNullException.ThrowIfNull(timeProvider);
 
         _flyout = flyout;
         _settings = settings;
@@ -201,16 +206,14 @@ public sealed class SettingsViewModel : ObservableObject
         _applyNativeDebugLogging = applyNativeDebugLogging;
         _openFolder = openFolder;
         _logger = logger;
+        _timeProvider = timeProvider;
         LogFolder = logFolder;
 
-        Scenes = [.. settings.Scenes.Select(scene => new SceneEditorViewModel(scene, SaveScenes))];
+        Scenes = [.. settings.Scenes.Select(scene => new SceneEditorViewModel(scene, ScheduleSave))];
         ResetScenesCommand = new RelayCommand(ResetScenes);
         OpenLogFolderCommand = new RelayCommand(() => _openFolder(LogFolder));
 
-        // Deferred so a ComboBox bound to Headsets gets the change before SelectedHeadsetIndex moves.
-        // Except when the selected headset goes: the ComboBox crashes if its selected item is
-        // removed from under it, so the selection is cleared first, right away. One removed
-        // before it just shifts the index, so the same headset stays selected.
+        // Each headset's state lights or dims the scene switches
         foreach (var headset in Headsets)
         {
             headset.PropertyChanged += OnHeadsetChanged;
@@ -227,19 +230,14 @@ public sealed class SettingsViewModel : ObservableObject
                 headset.PropertyChanged += OnHeadsetChanged;
             }
             RefreshActiveScenes();
-            if (e.Action == NotifyCollectionChangedAction.Reset
-                || (e.Action == NotifyCollectionChangedAction.Remove && e.OldStartingIndex == _selectedHeadsetIndex))
-            {
-                SelectedHeadsetIndex = -1;
-            }
-            else if (e.Action == NotifyCollectionChangedAction.Remove && e.OldStartingIndex < _selectedHeadsetIndex)
-            {
-                SelectedHeadsetIndex = _selectedHeadsetIndex - 1;
-            }
-            _ui.Defer(OnHeadsetsChanged);
+            OnPropertyChanged(nameof(NoHeadset));
         };
-        _selectedHeadsetIndex = Headsets.Count > 0 ? 0 : -1;
     }
+
+    /// <summary>
+    /// A scene was added, deleted or reset, so the registered shortcuts need another look.
+    /// </summary>
+    public event EventHandler? ScenesChanged;
 
     // =========================================================================
     // HEADSETS
@@ -247,45 +245,15 @@ public sealed class SettingsViewModel : ObservableObject
 
     public ObservableCollection<HeadsetViewModel> Headsets => _flyout.Headsets;
 
-    public int SelectedHeadsetIndex
-    {
-        get => _selectedHeadsetIndex;
-        set
-        {
-            if (SetProperty(ref _selectedHeadsetIndex, value))
-            {
-                OnPropertyChanged(nameof(SelectedHeadset));
-                OnPropertyChanged(nameof(HasHeadset));
-                OnPropertyChanged(nameof(NoHeadset));
-            }
-        }
-    }
-
-    public HeadsetViewModel? SelectedHeadset =>
-        _selectedHeadsetIndex >= 0 && _selectedHeadsetIndex < Headsets.Count ? Headsets[_selectedHeadsetIndex] : null;
-
-    public bool HasHeadset => SelectedHeadset is not null;
-
-    public bool NoHeadset => SelectedHeadset is null;
+    /// <summary>
+    /// No paired Sony headphones yet; the Devices page says where to pair them.
+    /// </summary>
+    public bool NoHeadset => Headsets.Count == 0;
 
     /// <summary>
     /// Saves the headsets' current order (the Reorder headphones page dragged them).
     /// </summary>
     public void SaveHeadsetOrder() => _settings.HeadsetOrder = [.. Headsets.Select(headset => headset.Id)];
-
-    /// <summary>
-    /// Selects the headset the flyout is showing, so settings open on the same headphones.
-    /// Called when the settings window opens; after that the choice stays with the window.
-    /// </summary>
-    public void SelectCurrentHeadset()
-    {
-        var index = _flyout.CurrentHeadset is { } current ? Headsets.IndexOf(current) : -1;
-        if (index < 0)
-        {
-            return;
-        }
-        SelectedHeadsetIndex = index;
-    }
 
     // =========================================================================
     // SCENES
@@ -323,9 +291,10 @@ public sealed class SettingsViewModel : ObservableObject
         {
             return;
         }
-        Scenes.Add(new SceneEditorViewModel(NewScene.ToScene(), SaveScenes));
+        Scenes.Add(new SceneEditorViewModel(NewScene.ToScene(), ScheduleSave));
         NewScene = null;
         SaveScenes();
+        ScenesChanged?.Invoke(this, EventArgs.Empty);
     }
 
     public void CancelNewScene() => NewScene = null;
@@ -337,11 +306,13 @@ public sealed class SettingsViewModel : ObservableObject
     {
         ArgumentNullException.ThrowIfNull(scene);
         var applied = scene.ToScene();
-        foreach (var headset in Headsets.Where(headset => headset.IsConnected))
+        foreach (var headset in ConnectedHeadsets)
         {
             headset.ApplySceneCommand.Execute(applied);
         }
     }
+
+    private IEnumerable<HeadsetViewModel> ConnectedHeadsets => Headsets.Where(headset => headset.IsConnected);
 
     /// <summary>
     /// The card's switch: on applies the scene to the connected headphones, off turns their
@@ -361,7 +332,7 @@ public sealed class SettingsViewModel : ObservableObject
         }
         else
         {
-            foreach (var headset in Headsets.Where(headset => headset.IsConnected))
+            foreach (var headset in ConnectedHeadsets)
             {
                 headset.SetNoiseModeCommand.Execute(nameof(NoiseMode.Off));
             }
@@ -370,8 +341,15 @@ public sealed class SettingsViewModel : ObservableObject
         scene.NotifyActive();
     }
 
-    // Every headset change (connection, mode, level) can light or dim a scene
-    private void OnHeadsetChanged(object? sender, PropertyChangedEventArgs e) => RefreshActiveScenes();
+    // Only the parts of a headset's state a scene is judged by, not the dozens of others a snapshot raises
+    private void OnHeadsetChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(HeadsetViewModel.NoiseMode) or nameof(HeadsetViewModel.AmbientLevel)
+            or nameof(HeadsetViewModel.FocusOnVoice) or nameof(HeadsetViewModel.IsConnected))
+        {
+            RefreshActiveScenes();
+        }
+    }
 
     private void RefreshActiveScenes()
     {
@@ -389,6 +367,7 @@ public sealed class SettingsViewModel : ObservableObject
         {
             _settings.SetSceneShortcut(scene.Id, null);
             SaveScenes();
+            ScenesChanged?.Invoke(this, EventArgs.Empty);
         }
     }
 
@@ -639,25 +618,26 @@ public sealed class SettingsViewModel : ObservableObject
         RefreshActiveScenes();
     }
 
+    // The defaults keep their IDs, so their shortcuts survive a reset; the other scenes' shortcuts go with them
     private void ResetScenes()
     {
+        foreach (var scene in Scenes.Where(scene => Scene.Defaults.All(standard => standard.Id != scene.Id)))
+        {
+            _settings.SetSceneShortcut(scene.Id, null);
+        }
         Scenes.Clear();
         foreach (var scene in Scene.Defaults)
         {
-            Scenes.Add(new SceneEditorViewModel(scene, SaveScenes));
+            Scenes.Add(new SceneEditorViewModel(scene, ScheduleSave));
         }
         SaveScenes();
+        ScenesChanged?.Invoke(this, EventArgs.Empty);
     }
 
-    private void OnHeadsetsChanged()
+    // An edit's save, a moment after the last edit
+    private void ScheduleSave()
     {
-        if (_selectedHeadsetIndex >= Headsets.Count || (_selectedHeadsetIndex < 0 && Headsets.Count > 0))
-        {
-            SelectedHeadsetIndex = Headsets.Count > 0 ? 0 : -1;
-            return;
-        }
-        OnPropertyChanged(nameof(SelectedHeadset));
-        OnPropertyChanged(nameof(HasHeadset));
-        OnPropertyChanged(nameof(NoHeadset));
+        _saveTimer ??= _timeProvider.CreateTimer(_ => _ui.Post(SaveScenes), null, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
+        _saveTimer.Change(SaveDelay, Timeout.InfiniteTimeSpan);
     }
 }

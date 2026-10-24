@@ -29,14 +29,5 @@ public sealed class SceneItemViewModel : ObservableObject
         private set => SetProperty(ref _isActive, value);
     }
 
-    /// <summary>
-    /// A scene matches when the mode is the same; Ambient scenes also need the same level
-    /// and Focus on voice setting (both only apply in Ambient).
-    /// </summary>
-    internal void Update(NoiseMode mode, int ambientLevel, bool focusOnVoice)
-    {
-        var setting = Scene.Setting;
-        IsActive = setting.Mode == mode
-            && (mode != NoiseMode.Ambient || (setting.AmbientLevel == ambientLevel && setting.FocusOnVoice == focusOnVoice));
-    }
+    internal void Update(NoiseMode mode, int ambientLevel, bool focusOnVoice) => IsActive = Scene.Matches(mode, ambientLevel, focusOnVoice);
 }

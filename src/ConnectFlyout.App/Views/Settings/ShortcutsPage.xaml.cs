@@ -98,7 +98,7 @@ public sealed partial class ShortcutsPage : Page
 
         panel.Children.Add(new Border { Style = (Style)Application.Current.Resources["SettingsCardStyle"], Child = grid });
         panel.Children.Add(warning);
-        _rows.Add(new ShortcutRow(_context, target, control, warning));
+        _rows.Add(new ShortcutRow(_context, target, control, warning, title));
     }
 
     private void DetachRows()
