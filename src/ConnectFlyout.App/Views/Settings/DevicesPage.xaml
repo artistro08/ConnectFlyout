@@ -67,7 +67,7 @@
                             </views:SettingsExpander.Header>
                             <StackPanel>
                                 <!-- Device Name: typed here, applied with Save -->
-                                <Border Style="{StaticResource SettingsExpanderItemStyle}">
+                                <Border Style="{StaticResource DeviceExpanderItemStyle}">
                                     <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
                                         <StackPanel VerticalAlignment="Center">
                                             <TextBlock Text="Device name" />
@@ -97,7 +97,7 @@
                                         <!-- Equalizer Preset -->
                                         <StackPanel Visibility="{x:Bind Features.Equalizer}">
                                             <Border Style="{StaticResource SettingsExpanderDividerStyle}" />
-                                            <Border Style="{StaticResource SettingsExpanderItemStyle}">
+                                            <Border Style="{StaticResource DeviceExpanderItemStyle}">
                                                 <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
                                                     <StackPanel VerticalAlignment="Center">
                                                         <TextBlock Text="Equalizer preset" />
@@ -119,7 +119,7 @@
                                         <!-- Custom Equalizer (five-band models, which all have Clear Bass) -->
                                         <StackPanel Visibility="{x:Bind Features.ClearBass}">
                                             <Border Style="{StaticResource SettingsExpanderDividerStyle}" />
-                                            <Border Style="{StaticResource SettingsExpanderItemStyle}">
+                                            <Border Style="{StaticResource DeviceExpanderItemStyle}">
                                                 <StackPanel Spacing="12">
                                                     <TextBlock Text="Custom equalizer" />
                                                     <TextBlock Style="{StaticResource SettingSubtitleStyle}" Text="Each band has a range of -10 to +10. Apply sends the curve and sets the preset to Manual." />
@@ -153,7 +153,7 @@
                                         <!-- DSEE -->
                                         <StackPanel Visibility="{x:Bind Features.Dsee}">
                                             <Border Style="{StaticResource SettingsExpanderDividerStyle}" />
-                                            <Border Style="{StaticResource SettingsExpanderItemStyle}">
+                                            <Border Style="{StaticResource DeviceExpanderItemStyle}">
                                                 <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
                                                     <StackPanel VerticalAlignment="Center">
                                                         <TextBlock Text="{x:Bind DseeName}" />
@@ -174,7 +174,7 @@
                                         <!-- Legacy Spatial Controls -->
                                         <StackPanel Visibility="{x:Bind Features.Vpt}">
                                             <Border Style="{StaticResource SettingsExpanderDividerStyle}" />
-                                            <Border Style="{StaticResource SettingsExpanderItemStyle}">
+                                            <Border Style="{StaticResource DeviceExpanderItemStyle}">
                                                 <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
                                                     <StackPanel VerticalAlignment="Center">
                                                         <TextBlock Text="Surround (VPT)" />
@@ -194,7 +194,7 @@
 
                                         <StackPanel Visibility="{x:Bind Features.SoundPosition}">
                                             <Border Style="{StaticResource SettingsExpanderDividerStyle}" />
-                                            <Border Style="{StaticResource SettingsExpanderItemStyle}">
+                                            <Border Style="{StaticResource DeviceExpanderItemStyle}">
                                                 <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
                                                     <StackPanel VerticalAlignment="Center">
                                                         <TextBlock Text="Sound position" />
@@ -215,7 +215,7 @@
                                         <!-- Speak-to-Chat -->
                                         <StackPanel Visibility="{x:Bind Features.SpeakToChat}">
                                             <Border Style="{StaticResource SettingsExpanderDividerStyle}" />
-                                            <Border Style="{StaticResource SettingsExpanderItemStyle}">
+                                            <Border Style="{StaticResource DeviceExpanderItemStyle}">
                                                 <views:SettingToggleRow
                                                     VerticalAlignment="Center"
                                                     IsOn="{x:Bind SpeakToChat, Mode=TwoWay}"
@@ -227,7 +227,7 @@
                                         <!-- Auto Power-Off -->
                                         <StackPanel Visibility="{x:Bind Features.AutoPowerOff}">
                                             <Border Style="{StaticResource SettingsExpanderDividerStyle}" />
-                                            <Border Style="{StaticResource SettingsExpanderItemStyle}">
+                                            <Border Style="{StaticResource DeviceExpanderItemStyle}">
                                                 <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
                                                     <StackPanel VerticalAlignment="Center">
                                                         <TextBlock Text="Auto power-off" />
@@ -247,7 +247,7 @@
                                         <!-- Adaptive Volume -->
                                         <StackPanel Visibility="{x:Bind Features.AdaptiveVolume}">
                                             <Border Style="{StaticResource SettingsExpanderDividerStyle}" />
-                                            <Border Style="{StaticResource SettingsExpanderItemStyle}">
+                                            <Border Style="{StaticResource DeviceExpanderItemStyle}">
                                                 <views:SettingToggleRow
                                                     VerticalAlignment="Center"
                                                     IsOn="{x:Bind AdaptiveVolume, Mode=TwoWay}"
@@ -259,7 +259,7 @@
                                         <!-- Voice Guidance -->
                                         <StackPanel Visibility="{x:Bind HasVoiceGuidanceControl, Mode=OneWay}">
                                             <Border Style="{StaticResource SettingsExpanderDividerStyle}" />
-                                            <Border Style="{StaticResource SettingsExpanderItemStyle}">
+                                            <Border Style="{StaticResource DeviceExpanderItemStyle}">
                                                 <views:SettingToggleRow
                                                     VerticalAlignment="Center"
                                                     IsOn="{x:Bind VoiceGuidance, Mode=TwoWay}"
@@ -271,7 +271,7 @@
                                         <!-- Bluetooth Connection Quality -->
                                         <StackPanel Visibility="{x:Bind HasConnectionQualityControl}">
                                             <Border Style="{StaticResource SettingsExpanderDividerStyle}" />
-                                            <Border Style="{StaticResource SettingsExpanderItemStyle}">
+                                            <Border Style="{StaticResource DeviceExpanderItemStyle}">
                                                 <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
                                                     <StackPanel VerticalAlignment="Center">
                                                         <TextBlock Text="Connection mode" />
@@ -294,7 +294,7 @@
 
                                 <!-- Disconnect App Control: release the headphones for another device, or take them back -->
                                 <Border Style="{StaticResource SettingsExpanderDividerStyle}" />
-                                <Border Style="{StaticResource SettingsExpanderItemStyle}">
+                                <Border Style="{StaticResource DeviceExpanderItemStyle}">
                                     <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
                                         <StackPanel VerticalAlignment="Center">
                                             <TextBlock Text="Disconnect app control" />
@@ -333,10 +333,14 @@
 
             <!-- Reorder -->
             <Border Style="{StaticResource SettingsCardStyle}">
-                <Grid ColumnDefinitions="*,Auto">
-                    <TextBlock VerticalAlignment="Center" Text="Reorder headphones" />
-                    <Button
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="20">
+                    <FontIcon Glyph="&#xE8CB;" Style="{StaticResource SettingsCardIconStyle}" />
+                    <TextBlock
                         Grid.Column="1"
+                        VerticalAlignment="Center"
+                        Text="Reorder headphones" />
+                    <Button
+                        Grid.Column="2"
                         Click="OnReorderClick"
                         Content="Reorder" />
                 </Grid>
@@ -344,13 +348,14 @@
 
             <!-- Bluetooth Settings -->
             <Border Style="{StaticResource SettingsCardStyle}">
-                <Grid ColumnDefinitions="*,Auto">
-                    <StackPanel VerticalAlignment="Center">
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="20">
+                    <FontIcon Glyph="&#xE702;" Style="{StaticResource SettingsCardIconStyle}" />
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
                         <TextBlock Text="Pair or forget headphones" />
                         <TextBlock Style="{StaticResource SecondaryTextStyle}" Text="Pair the headphones in the Windows Bluetooth settings." />
                     </StackPanel>
                     <HyperlinkButton
-                        Grid.Column="1"
+                        Grid.Column="2"
                         Content="Open Bluetooth settings"
                         NavigateUri="ms-settings:bluetooth" />
                 </Grid>

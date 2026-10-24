@@ -19,7 +19,7 @@ public sealed partial class SceneEditor : UserControl
         nameof(RowPadding),
         typeof(Thickness),
         typeof(SceneEditor),
-        new PropertyMetadata(new Thickness(16, 14, 44, 14)));
+        new PropertyMetadata(new Thickness(58, 14, 44, 14)));
 
     public SceneEditor()
     {

@@ -29,11 +29,8 @@
                                     <Grid
                                         Margin="0,16"
                                         ColumnDefinitions="Auto,*,Auto"
-                                        ColumnSpacing="16">
-                                        <FontIcon
-                                            VerticalAlignment="Center"
-                                            FontSize="20"
-                                            Glyph="{x:Bind Glyph, Mode=OneWay}" />
+                                        ColumnSpacing="20">
+                                        <FontIcon Glyph="{x:Bind Glyph, Mode=OneWay}" Style="{StaticResource SettingsCardIconStyle}" />
                                         <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                             <TextBlock Text="{x:Bind Name, Mode=OneWay}" />
                                             <TextBlock Style="{StaticResource SettingSubtitleStyle}" Text="{x:Bind Summary, Mode=OneWay}" />
@@ -89,10 +86,14 @@
 
                 <!-- Reorder -->
                 <Border Style="{StaticResource SettingsCardStyle}">
-                    <Grid ColumnDefinitions="*,Auto">
-                        <TextBlock VerticalAlignment="Center" Text="Reorder scenes" />
-                        <Button
+                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="20">
+                        <FontIcon Glyph="&#xE8CB;" Style="{StaticResource SettingsCardIconStyle}" />
+                        <TextBlock
                             Grid.Column="1"
+                            VerticalAlignment="Center"
+                            Text="Reorder scenes" />
+                        <Button
+                            Grid.Column="2"
                             Click="OnReorderClick"
                             Content="Reorder" />
                     </Grid>

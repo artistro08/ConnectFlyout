@@ -173,11 +173,26 @@
         <Setter Property="Padding" Value="0" />
     </Style>
 
-    <!-- Settings Expander Item: a row inside an expander. The right padding ends where the
-         header's control does (chevron box plus its margins), so controls line up. -->
+    <!-- Card Icon: Windows Settings' header icon slot, 20 px with a 2 px lead-in. With the
+         header's 20 px column spacing the title lands 58 px in, where expander rows start. -->
+    <Style x:Key="SettingsCardIconStyle" TargetType="FontIcon">
+        <Setter Property="FontSize" Value="20" />
+        <Setter Property="Width" Value="20" />
+        <Setter Property="Margin" Value="2,0,0,0" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <!-- Settings Expander Item: a row inside an expander, its text starting under the header's
+         title (past the icon), like Windows Settings. The right padding ends where the header's
+         control does (chevron box plus its margins), so controls line up. -->
     <Style x:Key="SettingsExpanderItemStyle" TargetType="Border">
         <Setter Property="MinHeight" Value="60" />
-        <Setter Property="Padding" Value="16,14,44,14" />
+        <Setter Property="Padding" Value="58,14,44,14" />
+    </Style>
+
+    <!-- Device Expander Item: the same, under a header with the 48 px device picture -->
+    <Style x:Key="DeviceExpanderItemStyle" TargetType="Border" BasedOn="{StaticResource SettingsExpanderItemStyle}">
+        <Setter Property="Padding" Value="80,14,44,14" />
     </Style>
 
     <Style x:Key="SettingsExpanderDividerStyle" TargetType="Border">

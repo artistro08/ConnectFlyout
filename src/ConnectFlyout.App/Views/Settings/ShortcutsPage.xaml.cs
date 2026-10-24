@@ -52,7 +52,7 @@ public sealed partial class ShortcutsPage : Page
 
         foreach (var action in ShortcutActions.All)
         {
-            AddRow(Rows, ShortcutTarget.For(action), "");
+            AddRow(Rows, ShortcutTarget.For(action), GlyphFor(action));
         }
         foreach (var scene in _context.Settings.Scenes)
         {
@@ -64,18 +64,24 @@ public sealed partial class ShortcutsPage : Page
         NoScenes.Visibility = SceneRows.Children.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
     }
 
-    // A card with the icon (scenes), the name and the picker, and the warning under it
+    // Segoe Fluent Icons: headphones, speaker, muted speaker, a new window
+    private static string GlyphFor(ShortcutAction action) => action switch
+    {
+        ShortcutAction.Ambient    => "\uE767",
+        ShortcutAction.Off        => "\uE74F",
+        ShortcutAction.OpenFlyout => "\uE8A7",
+        _                         => "\uE7F6",
+    };
+
+    // A card with the icon, the name and the picker, and the warning under it
     private void AddRow(Panel panel, ShortcutTarget target, string glyph)
     {
-        var grid = new Grid { ColumnSpacing = 16 };
+        var grid = new Grid { ColumnSpacing = 20 };
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
-        if (glyph.Length > 0)
-        {
-            grid.Children.Add(new FontIcon { Glyph = glyph, FontSize = 16, VerticalAlignment = VerticalAlignment.Center });
-        }
+        grid.Children.Add(new FontIcon { Glyph = glyph, Style = (Style)Application.Current.Resources["SettingsCardIconStyle"] });
         var title = new TextBlock { Text = target.Name(_context.Settings), VerticalAlignment = VerticalAlignment.Center };
         Grid.SetColumn(title, 1);
         var control = new ShortcutControl();
