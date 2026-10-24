@@ -1011,9 +1011,10 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
     public IReadOnlyList<PlaybackDevice> PlaybackDevices { get; private set; } = [];
 
     /// <summary>
-    /// The Playback section shows while connected with at least two devices to choose from.
+    /// The Playback section shows with at least two devices to choose from. It stays through a
+    /// reload or a dropped link, disabled, so the flyout doesn't jump.
     /// </summary>
-    public bool ShowPlayback => !_settings.HidePlayback && IsConnected && PlaybackDevices.Count >= 2;
+    public bool ShowPlayback => !_settings.HidePlayback && PlaybackDevices.Count >= 2;
 
     /// <summary>
     /// Moves the audio to the given device; the one already playing is left alone.

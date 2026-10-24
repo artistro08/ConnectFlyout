@@ -116,6 +116,10 @@ namespace ConnectFlyout.Core
         static void SetDebugLogging(Boolean enabled);
         static EqualizerPresetInfo[] GetEqualizerPresets();
 
+        // This PC's Bluetooth address as the headset lists it ("AA:BB:CC:DD:EE:FF"), or "" with
+        // no Bluetooth adapter. Picks this PC out of the headset's playback devices.
+        static Windows.Foundation.IAsyncOperation<String> LocalBluetoothAddressAsync();
+
         // Asks Windows to connect this paired headset's audio (what Connect in Settings > Sound
         // does). True when Windows took the request; the headset still has to be on and near.
         static Windows.Foundation.IAsyncOperation<Boolean> ConnectAudioAsync(String bluetoothAddress);

@@ -13,6 +13,9 @@
 #include "sony/transport/Logger.h"
 #include "sony/transport/WindowsRfcommTransport.h"
 
+#include <winrt/Windows.Devices.Bluetooth.h>
+
+#include <cstdio>
 #include <mutex>
 #include <string>
 
@@ -184,6 +187,20 @@ void HeadsetClient::SetLogHandler(Core::NativeLogHandler const& handler) {
 void HeadsetClient::SetDebugLogging(bool enabled) {
     sony::Logger::setDeveloperMode(enabled);
     sony::Logger::setLogLevel(enabled ? sony::LogLevel::Debug : sony::LogLevel::Info);
+}
+
+IAsyncOperation<hstring> HeadsetClient::LocalBluetoothAddressAsync() {
+    const auto adapter = co_await winrt::Windows::Devices::Bluetooth::BluetoothAdapter::GetDefaultAsync();
+    if (!adapter) {
+        co_return hstring{};
+    }
+    const uint64_t address = adapter.BluetoothAddress();
+    wchar_t text[18];
+    swprintf_s(text, L"%02X:%02X:%02X:%02X:%02X:%02X",
+        static_cast<unsigned>((address >> 40) & 0xFF), static_cast<unsigned>((address >> 32) & 0xFF),
+        static_cast<unsigned>((address >> 24) & 0xFF), static_cast<unsigned>((address >> 16) & 0xFF),
+        static_cast<unsigned>((address >> 8) & 0xFF), static_cast<unsigned>(address & 0xFF));
+    co_return hstring{text};
 }
 
 IAsyncOperation<bool> HeadsetClient::ConnectAudioAsync(hstring bluetoothAddress) {

@@ -345,6 +345,13 @@ public partial class App : Application, IDisposable
             return;
         }
 
+        // Playback: move the audio to this PC or to the other connected device
+        if (ShortcutActions.IsPlayback(action))
+        {
+            _flyout?.SwitchPlayback(headset, toThisPc: action == ShortcutAction.PlaybackThisPc);
+            return;
+        }
+
         // Already On: the headphones stay silent for a repeat of the current mode, so the PC plays a
         // sound. Judged by the mode they last reported, so a second press of a new mode while the
         // first is still on its way doesn't also get the sound.

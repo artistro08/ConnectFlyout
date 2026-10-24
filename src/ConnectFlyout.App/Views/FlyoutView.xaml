@@ -311,9 +311,14 @@
                 <!-- /Noise Control -->
 
                 <!-- Playback: which connected device (multipoint) has the audio. Only with two or
-                     more to choose from, on headphones that can switch. -->
+                     more to choose from, on headphones that can switch; disabled, not hidden,
+                     while the link is down, so a reload doesn't move the flyout. -->
                 <MenuFlyoutSeparator Visibility="{x:Bind ViewModel.CurrentHeadset.ShowPlayback, Mode=OneWay, FallbackValue=Collapsed}" />
-                <StackPanel Spacing="12" Visibility="{x:Bind ViewModel.CurrentHeadset.ShowPlayback, Mode=OneWay, FallbackValue=Collapsed}">
+                <ContentControl
+                    IsEnabled="{x:Bind ViewModel.CurrentHeadset.IsConnected, Mode=OneWay, FallbackValue=False}"
+                    Style="{StaticResource SectionStyle}"
+                    Visibility="{x:Bind ViewModel.CurrentHeadset.ShowPlayback, Mode=OneWay, FallbackValue=Collapsed}">
+                <StackPanel Spacing="12">
                     <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="Playback" />
                     <ItemsRepeater ItemsSource="{x:Bind ViewModel.CurrentHeadset.PlaybackDevices, Mode=OneWay}">
                         <ItemsRepeater.Layout>
@@ -337,6 +342,7 @@
                         </ItemsRepeater.ItemTemplate>
                     </ItemsRepeater>
                 </StackPanel>
+                </ContentControl>
                 <!-- /Playback -->
 
                 <MenuFlyoutSeparator Visibility="{x:Bind ViewModel.CurrentHeadset.ShowPopupSoundSeparator, Mode=OneWay, FallbackValue=Collapsed}" />

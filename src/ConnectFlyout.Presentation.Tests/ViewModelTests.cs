@@ -620,6 +620,17 @@ public sealed class HeadsetViewModelTests
     }
 
     [TestMethod]
+    public void PlaybackStaysThroughAReload()
+    {
+        _headset.RaiseStateChanged(_headset.State with { PlaybackDevices = TwoDevices });
+
+        _viewModel.UpdateConnectionState(HeadsetConnectionState.Connecting);
+
+        Assert.IsTrue(_viewModel.ShowPlayback);
+        Assert.IsFalse(_viewModel.IsConnected);
+    }
+
+    [TestMethod]
     public void PlaybackHidesWithOneDeviceOrWithoutSupport()
     {
         Assert.IsFalse(_viewModel.ShowPlayback);
@@ -682,13 +693,15 @@ public sealed class HeadsetViewModelTests
     }
 
     [TestMethod]
-    public void PlaybackHidesWhileDisconnected()
+    public void PlaybackStaysWhileDisconnected()
     {
         _headset.RaiseStateChanged(_headset.State with { PlaybackDevices = TwoDevices });
 
         _viewModel.UpdateConnectionState(HeadsetConnectionState.Disconnected);
 
-        Assert.IsFalse(_viewModel.ShowPlayback);
+        // Still shown, so the flyout keeps its shape; the section is disabled through IsConnected
+        Assert.IsTrue(_viewModel.ShowPlayback);
+        Assert.IsFalse(_viewModel.IsConnected);
     }
 
     [TestMethod]
@@ -1149,6 +1162,28 @@ public sealed class FlyoutViewModelTests
         Assert.IsFalse(xm4.IsBluetoothConnecting);
         Assert.AreEqual("Connection failed. Make sure that the headphones are on and near the PC.", xm4.ErrorMessage);
         Assert.AreEqual(xm4.ErrorMessage, xm4.PickerStatusText); // the list row says so too
+    }
+
+    [TestMethod]
+    public async Task PlaybackShortcutsPickThisPcOrTheOtherDevice()
+    {
+        _source.Report(Xm6);
+        var headset = _flyout.Headsets.Single();
+        Assert.IsTrue(await TestWait.UntilAsync(() => headset.IsConnected));
+        var fake = _fakes["WF-1000XM6"];
+        fake.RaiseStateChanged(fake.State with
+        {
+            PlaybackDevices = [new PlaybackDevice("AA:BB:CC:DD:EE:01", "DESKTOP", true), new PlaybackDevice("AA:BB:CC:DD:EE:02", "Pixel 9", false)],
+        });
+
+        _flyout.SwitchPlayback(headset, toThisPc: false);
+        Assert.IsTrue(await TestWait.UntilAsync(() => fake.Commands.Contains(("switchPlayback", "AA:BB:CC:DD:EE:02"))));
+
+        // Back to this PC; the one already playing is left alone after that
+        _flyout.SwitchPlayback(headset, toThisPc: true);
+        Assert.IsTrue(await TestWait.UntilAsync(() => fake.Commands.Contains(("switchPlayback", "AA:BB:CC:DD:EE:01"))));
+        _flyout.SwitchPlayback(headset, toThisPc: true);
+        Assert.AreEqual(1, fake.Commands.Count(command => command.Equals(("switchPlayback", "AA:BB:CC:DD:EE:01"))));
     }
 
     [TestMethod]

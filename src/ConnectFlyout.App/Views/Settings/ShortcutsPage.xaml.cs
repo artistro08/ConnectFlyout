@@ -67,10 +67,14 @@ public sealed partial class ShortcutsPage : Page
 
     private static Style IconStyle => (Style)Application.Current.Resources["SettingsCardIconStyle"];
 
-    // The flyout's own noise mode icons for the mode rows; a new-window glyph for the flyout
-    private static FrameworkElement IconFor(ShortcutAction action) => action == ShortcutAction.OpenFlyout
-        ? new FontIcon { Glyph = "\uE8A7", Style = IconStyle }
-        : new NoiseModeIcon { Mode = ShortcutActions.NoiseModeFor(action), Margin = new Thickness(2, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center };
+    // The flyout's own noise mode icons for the mode rows; a new window, a laptop and a phone for the rest
+    private static FrameworkElement IconFor(ShortcutAction action) => action switch
+    {
+        ShortcutAction.OpenFlyout     => new FontIcon { Glyph = "\uE8A7", Style = IconStyle },
+        ShortcutAction.PlaybackThisPc => new FontIcon { Glyph = "\uE7F8", Style = IconStyle },
+        ShortcutAction.PlaybackOther  => new FontIcon { Glyph = "\uE717", Style = IconStyle },
+        _ => new NoiseModeIcon { Mode = ShortcutActions.NoiseModeFor(action), Margin = new Thickness(2, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center },
+    };
 
     // A card with the icon, the name and the picker, and the warning under it
     private void AddRow(Panel panel, ShortcutTarget target, FrameworkElement icon)

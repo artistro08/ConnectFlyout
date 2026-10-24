@@ -11,14 +11,17 @@ public sealed class ShortcutTests
     public void EveryDefaultParsesAndMapsToItsMode()
     {
         CollectionAssert.AreEqual(
-            new[] { "Win+F10", "Win+F11", "Win+F6", "Win+F9" },
+            new[] { "Win+F10", "Win+F11", "Win+F6", "Win+F9", "", "" },
             ShortcutActions.All.Select(ShortcutActions.DefaultFor).ToArray());
 
-        foreach (var action in ShortcutActions.All)
+        // The playback shortcuts start off, so they have no default to parse
+        foreach (var action in ShortcutActions.All.Where(each => !ShortcutActions.IsPlayback(each)))
         {
             Assert.IsTrue(Hotkey.TryParse(ShortcutActions.DefaultFor(action), out var hotkey), action.ToString());
             Assert.AreEqual(ShortcutActions.DefaultFor(action), hotkey.ToString());
         }
+        Assert.IsTrue(ShortcutActions.IsPlayback(ShortcutAction.PlaybackThisPc));
+        Assert.IsFalse(ShortcutActions.IsPlayback(ShortcutAction.Off));
 
         Assert.AreEqual(NoiseMode.NoiseCancelling, ShortcutActions.NoiseModeFor(ShortcutAction.NoiseCancelling));
         Assert.AreEqual(NoiseMode.Ambient, ShortcutActions.NoiseModeFor(ShortcutAction.Ambient));

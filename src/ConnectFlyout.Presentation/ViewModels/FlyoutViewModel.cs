@@ -28,6 +28,7 @@ public sealed class FlyoutViewModel : ObservableObject, IDisposable
 
     private FlyoutRoute _route = new(FlyoutPageKind.Empty, null, false);
     private HeadsetViewModel? _currentHeadset;
+    private string? _localAddress;
 
     public FlyoutViewModel(
         HeadsetManager manager,
@@ -62,6 +63,7 @@ public sealed class FlyoutViewModel : ObservableObject, IDisposable
             Add(headset);
         }
         Refresh();
+        _ = LoadLocalAddressAsync();
     }
 
     public event EventHandler? SettingsRequested;
@@ -139,6 +141,39 @@ public sealed class FlyoutViewModel : ObservableObject, IDisposable
         }
         Headsets.Clear();
         _lifetimeCancellation.Dispose();
+    }
+
+    /// <summary>
+    /// The playback shortcuts: moves the headset's audio to this PC, or to the other connected
+    /// device. Nothing happens without that device in the headset's list, or before this PC's
+    /// address is known.
+    /// </summary>
+    public void SwitchPlayback(HeadsetViewModel headset, bool toThisPc)
+    {
+        ArgumentNullException.ThrowIfNull(headset);
+        if (_localAddress is null)
+        {
+            return;
+        }
+        var device = headset.PlaybackDevices.FirstOrDefault(each =>
+            string.Equals(each.Address, _localAddress, StringComparison.OrdinalIgnoreCase) == toThisPc);
+        if (device is not null)
+        {
+            headset.SwitchPlaybackCommand.Execute(device);
+        }
+    }
+
+    // Read once; a PC without Bluetooth leaves it null and the playback shortcuts do nothing
+    private async Task LoadLocalAddressAsync()
+    {
+        try
+        {
+            _localAddress = await _bluetoothAudio.GetLocalAddressAsync().ConfigureAwait(true);
+        }
+        catch (Exception)
+        {
+            _localAddress = null;
+        }
     }
 
     private void Pick(HeadsetViewModel? headset)

@@ -86,4 +86,11 @@ internal sealed class FakeBluetoothAudio : IBluetoothAudio
         SoundRequests.Add(bluetoothAddress);
         return Task.FromResult(Accept);
     }
+
+    /// <summary>
+    /// What <see cref="GetLocalAddressAsync"/> answers; the test PC is "DESKTOP" in the fake headset's list.
+    /// </summary>
+    public string? LocalAddress { get; set; } = "AA:BB:CC:DD:EE:01";
+
+    public Task<string?> GetLocalAddressAsync() => Task.FromResult(LocalAddress);
 }
