@@ -140,7 +140,8 @@ public sealed class FlyoutViewModel : ObservableObject, IDisposable
             headset.ConnectRequested -= OnConnectRequested;
             headset.Dispose();
         }
-        Headsets.Clear();
+        // The list is left as it is: Dispose runs on quit after the windows have closed, and a
+        // Reset reaching their bindings then took the app down inside the XAML dispatcher
         _lifetimeCancellation.Dispose();
     }
 
