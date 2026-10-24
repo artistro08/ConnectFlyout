@@ -3,6 +3,7 @@ using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
 using ConnectFlyout.App.Interop;
+using ConnectFlyout.App.Views;
 using ConnectFlyout.Presentation.Settings;
 using ConnectFlyout.Presentation.Shortcuts;
 
@@ -52,36 +53,34 @@ public sealed partial class ShortcutsPage : Page
 
         foreach (var action in ShortcutActions.All)
         {
-            AddRow(Rows, ShortcutTarget.For(action), GlyphFor(action));
+            AddRow(Rows, ShortcutTarget.For(action), IconFor(action));
         }
         foreach (var scene in _context.Settings.Scenes)
         {
             if (scene.Id is { } id)
             {
-                AddRow(SceneRows, ShortcutTarget.ForScene(id), scene.Glyph);
+                AddRow(SceneRows, ShortcutTarget.ForScene(id), new FontIcon { Glyph = scene.Glyph, Style = IconStyle });
             }
         }
         NoScenes.Visibility = SceneRows.Children.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
     }
 
-    // Segoe Fluent Icons: headphones, speaker, muted speaker, a new window
-    private static string GlyphFor(ShortcutAction action) => action switch
-    {
-        ShortcutAction.Ambient    => "\uE767",
-        ShortcutAction.Off        => "\uE74F",
-        ShortcutAction.OpenFlyout => "\uE8A7",
-        _                         => "\uE7F6",
-    };
+    private static Style IconStyle => (Style)Application.Current.Resources["SettingsCardIconStyle"];
+
+    // The flyout's own noise mode icons for the mode rows; a new-window glyph for the flyout
+    private static FrameworkElement IconFor(ShortcutAction action) => action == ShortcutAction.OpenFlyout
+        ? new FontIcon { Glyph = "\uE8A7", Style = IconStyle }
+        : new NoiseModeIcon { Mode = ShortcutActions.NoiseModeFor(action), Margin = new Thickness(2, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center };
 
     // A card with the icon, the name and the picker, and the warning under it
-    private void AddRow(Panel panel, ShortcutTarget target, string glyph)
+    private void AddRow(Panel panel, ShortcutTarget target, FrameworkElement icon)
     {
         var grid = new Grid { ColumnSpacing = 20 };
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
-        grid.Children.Add(new FontIcon { Glyph = glyph, Style = (Style)Application.Current.Resources["SettingsCardIconStyle"] });
+        grid.Children.Add(icon);
         var title = new TextBlock { Text = target.Name(_context.Settings), VerticalAlignment = VerticalAlignment.Center };
         Grid.SetColumn(title, 1);
         var control = new ShortcutControl();

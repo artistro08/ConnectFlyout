@@ -33,7 +33,7 @@
                         Margin="0,16"
                         ColumnDefinitions="Auto,*"
                         ColumnSpacing="20">
-                        <FontIcon Glyph="&#xE718;" Style="{StaticResource SettingsCardIconStyle}" />
+                        <FontIcon Glyph="&#xE890;" Style="{StaticResource SettingsCardIconStyle}" />
                         <views:SettingToggleRow
                             Grid.Column="1"
                             IsOn="{x:Bind ViewModel.HideTray, Mode=TwoWay}"
@@ -76,7 +76,7 @@
             <!-- Low Battery -->
             <Border Style="{StaticResource SettingsCardStyle}">
                 <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="20">
-                    <FontIcon Glyph="&#xE7ED;" Style="{StaticResource SettingsCardIconStyle}" />
+                    <FontIcon Glyph="&#xE851;" Style="{StaticResource SettingsCardIconStyle}" />
                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
                         <TextBlock Text="Low battery notifications" />
                         <TextBlock Style="{StaticResource SecondaryTextStyle}" Text="Sends one notification when the battery is below 20%." />
@@ -96,7 +96,7 @@
                         Margin="0,16"
                         ColumnDefinitions="Auto,*"
                         ColumnSpacing="20">
-                        <FontIcon Glyph="&#xE71D;" Style="{StaticResource SettingsCardIconStyle}" />
+                        <FontIcon Glyph="&#xE9D5;" Style="{StaticResource SettingsCardIconStyle}" />
                         <StackPanel Grid.Column="1" VerticalAlignment="Center">
                             <TextBlock Text="Flyout controls" />
                             <TextBlock Style="{StaticResource SettingSubtitleStyle}" Text="Select the controls that the flyout shows. A hidden control stays on its Settings page." />
