@@ -98,7 +98,7 @@
                 </Grid>
             </Border>
 
-            <!-- Flyout Controls: which sections the flyout shows; the switches inside are off by default -->
+            <!-- Flyout Controls: which sections the flyout shows; the switches inside are on by default -->
             <views:SettingsExpander x:Name="FlyoutControlsExpander" Style="{StaticResource SettingsExpanderStyle}">
                 <views:SettingsExpander.Header>
                     <Grid
@@ -108,7 +108,7 @@
                         <FontIcon Glyph="&#xE9D5;" Style="{StaticResource SettingsCardIconStyle}" />
                         <StackPanel Grid.Column="1" VerticalAlignment="Center">
                             <TextBlock Text="Flyout controls" />
-                            <TextBlock Style="{StaticResource SettingSubtitleStyle}" Text="Select the controls that the flyout shows. A hidden control stays on its Settings page." />
+                            <TextBlock Style="{StaticResource SettingSubtitleStyle}" Text="Select the controls that the flyout shows. A control that is off stays on its Settings page." />
                         </StackPanel>
                     </Grid>
                 </views:SettingsExpander.Header>
@@ -116,33 +116,33 @@
                     <Border Style="{StaticResource SettingsExpanderItemStyle}">
                         <views:SettingToggleRow
                             VerticalAlignment="Center"
-                            IsOn="{x:Bind ViewModel.HideAmbientControls, Mode=TwoWay}"
+                            IsOn="{x:Bind ViewModel.EnableAmbientControls, Mode=TwoWay}"
                             Subtitle="The Ambient sound slider and Focus on voice."
-                            Title="Hide ambient sound controls" />
+                            Title="Enable ambient sound controls" />
                     </Border>
                     <Border Style="{StaticResource SettingsExpanderDividerStyle}" />
                     <Border Style="{StaticResource SettingsExpanderItemStyle}">
                         <views:SettingToggleRow
                             VerticalAlignment="Center"
-                            IsOn="{x:Bind ViewModel.HideScenes, Mode=TwoWay}"
-                            Subtitle="The scene tiles below Noise control."
-                            Title="Hide scenes" />
+                            IsOn="{x:Bind ViewModel.EnableScenes, Mode=TwoWay}"
+                            Subtitle="The scene buttons below Noise control."
+                            Title="Enable scenes" />
                     </Border>
                     <Border Style="{StaticResource SettingsExpanderDividerStyle}" />
                     <Border Style="{StaticResource SettingsExpanderItemStyle}">
                         <views:SettingToggleRow
                             VerticalAlignment="Center"
-                            IsOn="{x:Bind ViewModel.HidePlayback, Mode=TwoWay}"
-                            Subtitle="The device that has the audio, on headphones that can change device. Not in Settings."
-                            Title="Hide playback" />
+                            IsOn="{x:Bind ViewModel.EnablePlayback, Mode=TwoWay}"
+                            Subtitle="The device that has the audio, on headphones that can change device. Playback is not in Settings."
+                            Title="Enable playback" />
                     </Border>
                     <Border Style="{StaticResource SettingsExpanderDividerStyle}" />
                     <Border Style="{StaticResource SettingsExpanderItemStyle}">
                         <views:SettingToggleRow
                             VerticalAlignment="Center"
-                            IsOn="{x:Bind ViewModel.HideSoundControls, Mode=TwoWay}"
+                            IsOn="{x:Bind ViewModel.EnableSoundControls, Mode=TwoWay}"
                             Subtitle="The Equalizer and DSEE rows. Also in Settings &gt; Devices."
-                            Title="Hide sound controls" />
+                            Title="Enable sound controls" />
                     </Border>
                 </StackPanel>
             </views:SettingsExpander>

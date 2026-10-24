@@ -457,62 +457,63 @@ public sealed class SettingsViewModel : ObservableObject
         }
     }
 
-    // Hide Flyout Controls: each switch saves, then tells every headset page which sections to redraw
-    public bool HideAmbientControls
+    // Flyout Controls: each switch is on by default and saves at once, then tells every headset
+    // page which sections to redraw. The settings keep the older "hide" keys, inverted here.
+    public bool EnableAmbientControls
     {
-        get => _settings.HideAmbientControls;
+        get => !_settings.HideAmbientControls;
         set
         {
-            if (value == _settings.HideAmbientControls)
+            if (value == EnableAmbientControls)
             {
                 return;
             }
-            _settings.HideAmbientControls = value;
+            _settings.HideAmbientControls = !value;
             OnPropertyChanged();
             RefreshFlyoutSections(nameof(HeadsetViewModel.ShowAmbientControls));
         }
     }
 
-    public bool HideScenes
+    public bool EnableScenes
     {
-        get => _settings.HideScenes;
+        get => !_settings.HideScenes;
         set
         {
-            if (value == _settings.HideScenes)
+            if (value == EnableScenes)
             {
                 return;
             }
-            _settings.HideScenes = value;
+            _settings.HideScenes = !value;
             OnPropertyChanged();
             RefreshFlyoutSections(nameof(HeadsetViewModel.ShowScenes));
         }
     }
 
-    public bool HidePlayback
+    public bool EnablePlayback
     {
-        get => _settings.HidePlayback;
+        get => !_settings.HidePlayback;
         set
         {
-            if (value == _settings.HidePlayback)
+            if (value == EnablePlayback)
             {
                 return;
             }
-            _settings.HidePlayback = value;
+            _settings.HidePlayback = !value;
             OnPropertyChanged();
             RefreshFlyoutSections(nameof(HeadsetViewModel.ShowPlayback));
         }
     }
 
-    public bool HideSoundControls
+    public bool EnableSoundControls
     {
-        get => _settings.HideSoundControls;
+        get => !_settings.HideSoundControls;
         set
         {
-            if (value == _settings.HideSoundControls)
+            if (value == EnableSoundControls)
             {
                 return;
             }
-            _settings.HideSoundControls = value;
+            _settings.HideSoundControls = !value;
             OnPropertyChanged();
             RefreshFlyoutSections(
                 nameof(HeadsetViewModel.ShowPopupSoundSection),

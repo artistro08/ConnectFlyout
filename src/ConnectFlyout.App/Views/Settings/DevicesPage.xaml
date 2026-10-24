@@ -71,7 +71,7 @@
                                     <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
                                         <StackPanel VerticalAlignment="Center">
                                             <TextBlock Text="Device name" />
-                                            <TextBlock Style="{StaticResource SettingSubtitleStyle}" Text="Shown in this app only. Clear the box and select Save to use the name from Windows." />
+                                            <TextBlock Style="{StaticResource SettingSubtitleStyle}" Text="This name shows in this app only. To use the name from Windows, clear the box and select Save." />
                                         </StackPanel>
                                         <StackPanel
                                             Grid.Column="1"
@@ -298,7 +298,7 @@
                                     <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
                                         <StackPanel VerticalAlignment="Center">
                                             <TextBlock Text="Disconnect app control" />
-                                            <TextBlock Style="{StaticResource SettingSubtitleStyle}" Text="Lets a different device, such as the Sony app on a phone, control the headphones. The audio continues on this PC. The app stays disconnected until you select Reconnect." />
+                                            <TextBlock Style="{StaticResource SettingSubtitleStyle}" Text="Gives control of the headphones to a different device, such as the Sony app on a phone. The audio continues on this PC. The app stays disconnected until you select Reconnect." />
                                         </StackPanel>
                                         <Grid Grid.Column="1" VerticalAlignment="Center">
                                             <Button

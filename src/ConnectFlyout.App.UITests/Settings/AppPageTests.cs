@@ -46,24 +46,25 @@ public sealed class AppPageTests
     });
 
     [TestMethod]
-    public Task FlyoutControlSwitchesHideAndShowTheFlyoutSections() => UiHost.RunAsync(async () =>
+    public Task FlyoutControlSwitchesStartOnAndHideTheFlyoutSectionsWhenOff() => UiHost.RunAsync(async () =>
     {
         _rig = new TestRig();
         var headset = await _rig.ConnectXm6Async();
         var (_, page) = await Pages.OpenAsync<AppPage>(_rig.Context);
         var expander = VisualTree.FindByName<SettingsExpander>(page, "FlyoutControlsExpander");
         await Pages.ExpandAsync(expander);
+        Assert.IsTrue(Switch(expander, "Enable scenes").IsOn && Switch(expander, "Enable playback").IsOn && Switch(expander, "Enable ambient sound controls").IsOn && Switch(expander, "Enable sound controls").IsOn);
 
-        Switch(expander, "Hide scenes").IsOn = true;
-        Switch(expander, "Hide playback").IsOn = true;
-        Switch(expander, "Hide ambient sound controls").IsOn = true;
+        Switch(expander, "Enable scenes").IsOn = false;
+        Switch(expander, "Enable playback").IsOn = false;
+        Switch(expander, "Enable ambient sound controls").IsOn = false;
         await UiHost.IdleAsync();
         Assert.IsTrue(_rig.Settings.HideScenes && _rig.Settings.HidePlayback && _rig.Settings.HideAmbientControls);
         Assert.IsFalse(headset.ShowScenes);
         Assert.IsFalse(headset.ShowPlayback);
         Assert.IsFalse(headset.ShowAmbientControls);
 
-        Switch(expander, "Hide scenes").IsOn = false;
+        Switch(expander, "Enable scenes").IsOn = true;
         await UiHost.IdleAsync();
         Assert.IsFalse(_rig.Settings.HideScenes);
         Assert.IsTrue(headset.ShowScenes);

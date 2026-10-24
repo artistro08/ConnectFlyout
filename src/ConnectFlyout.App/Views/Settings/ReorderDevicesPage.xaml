@@ -15,7 +15,7 @@
                 <TextBlock
                     Margin="0,0,0,8"
                     Style="{StaticResource SecondaryTextStyle}"
-                    Text="Drag the headphones into the order you want. The flyout and the Devices page use it." />
+                    Text="Drag the headphones into the order you want. The flyout and the Devices page use this order." />
 
                 <!-- Drag List: the list's own scrolling is off so the page scrolls as one. The
                      order is saved when a drag ends. -->

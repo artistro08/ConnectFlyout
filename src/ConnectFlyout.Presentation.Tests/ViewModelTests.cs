@@ -1528,7 +1528,7 @@ public sealed class SettingsViewModelTests
     }
 
     [TestMethod]
-    public void HideSwitchesRefreshEveryHeadsetPage()
+    public void FlyoutControlSwitchesRefreshEveryHeadsetPage()
     {
         _source.Report(new BluetoothDeviceInfo("device-xm6", "WF-1000XM6", "ac:80:0a:00:00:06", true));
         _source.Report(new BluetoothDeviceInfo("device-xm4", "WH-1000XM4", "ac:80:0a:00:00:04", true));
@@ -1537,11 +1537,13 @@ public sealed class SettingsViewModelTests
         {
             headset.PropertyChanged += (_, e) => raised.Add(e.PropertyName ?? "");
         }
+        Assert.IsTrue(_viewModel.EnableScenes && _viewModel.EnablePlayback && _viewModel.EnableAmbientControls && _viewModel.EnableSoundControls);
 
-        _viewModel.HideScenes = true;
-        _viewModel.HideSoundControls = true;
+        _viewModel.EnableScenes = false;
+        _viewModel.EnableSoundControls = false;
 
-        Assert.IsTrue(_viewModel.HideScenes);
+        Assert.IsFalse(_viewModel.EnableScenes);
+        Assert.IsTrue(_settings.HideScenes);
         Assert.IsTrue(_flyout.Headsets.All(headset => !headset.ShowScenes && !headset.ShowPopupSoundSection));
         Assert.AreEqual(2, raised.Count(name => name == nameof(HeadsetViewModel.ShowScenes)));
         Assert.AreEqual(2, raised.Count(name => name == nameof(HeadsetViewModel.ShowPopupSoundSeparator)));
