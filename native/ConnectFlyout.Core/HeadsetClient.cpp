@@ -203,6 +203,16 @@ IAsyncOperation<bool> HeadsetClient::DisconnectAudioAsync(hstring bluetoothAddre
     }
     co_return sony::audio::requestAudioDisconnect(*address);
 }
+
+IAsyncOperation<bool> HeadsetClient::PlaySoundAsync(hstring bluetoothAddress, hstring path) {
+    const auto address = sony::transport::parseBluetoothAddress(to_string(bluetoothAddress));
+    const std::wstring file{path};
+    co_await resume_background();
+    if (!address) {
+        co_return false;
+    }
+    co_return sony::audio::playToHeadset(*address, file);
+}
 com_array<Core::EqualizerPresetInfo> HeadsetClient::GetEqualizerPresets() {
     const auto& presets = sony::protocol::equalizerPresets();
 

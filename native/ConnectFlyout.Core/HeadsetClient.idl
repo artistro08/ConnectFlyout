@@ -121,6 +121,10 @@ namespace ConnectFlyout.Core
         static Windows.Foundation.IAsyncOperation<Boolean> ConnectAudioAsync(String bluetoothAddress);
         static Windows.Foundation.IAsyncOperation<Boolean> DisconnectAudioAsync(String bluetoothAddress);
 
+        // Plays a PCM .wav on this headset's stereo output only, whatever Windows' default
+        // device is. The output is kept awake for 30 s afterwards. True once the clip is queued.
+        static Windows.Foundation.IAsyncOperation<Boolean> PlaySoundAsync(String bluetoothAddress, String path);
+
         String DeviceName { get; };
         String ModelName { get; };
         Boolean IsKnownModel { get; };

@@ -18,6 +18,7 @@ struct HeadsetClient : HeadsetClientT<HeadsetClient> {
     static com_array<Core::EqualizerPresetInfo> GetEqualizerPresets();
     static Windows::Foundation::IAsyncOperation<bool> ConnectAudioAsync(hstring bluetoothAddress);
     static Windows::Foundation::IAsyncOperation<bool> DisconnectAudioAsync(hstring bluetoothAddress);
+    static Windows::Foundation::IAsyncOperation<bool> PlaySoundAsync(hstring bluetoothAddress, hstring path);
 
     hstring DeviceName() const;
     hstring ModelName() const;

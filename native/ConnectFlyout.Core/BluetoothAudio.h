@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <string>
 
 namespace sony::audio {
 
@@ -16,4 +17,12 @@ namespace sony::audio {
 // Asks Windows to disconnect the paired headset's full Bluetooth link.
 // Used immediately before reconnecting so Windows performs a fresh A2DP negotiation.
 [[nodiscard]] bool requestAudioDisconnect(uint64_t bluetoothAddress);
+
+// Plays a PCM .wav on the headset's stereo output only, whatever Windows' default device is.
+// Renders through WASAPI, so Windows sees no media session. The hands-free endpoint is
+// skipped: a stream on it would switch the headset into call mode. The stream stays open with
+// near-silence for 30 s after each sound, so the headset's link doesn't go idle between
+// presses; a cold start leads with 750 ms of silence while the link wakes. Returns once the
+// clip is queued. False when the file, the headset or its output isn't usable.
+[[nodiscard]] bool playToHeadset(uint64_t bluetoothAddress, const std::wstring& path);
 } // namespace sony::audio

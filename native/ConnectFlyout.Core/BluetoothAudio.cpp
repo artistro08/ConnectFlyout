@@ -10,6 +10,7 @@
 #include "sony/transport/Logger.h"
 
 #include <Windows.h>
+#include <audioclient.h>
 #include <ks.h>
 #include <ksmedia.h>
 #include <mmdeviceapi.h>
@@ -19,9 +20,19 @@
 #include <winrt/Windows.Devices.Bluetooth.h>
 #include <winrt/Windows.Devices.Enumeration.h>
 
+#include <algorithm>
+#include <chrono>
+#include <condition_variable>
+#include <cstring>
+#include <fstream>
+#include <memory>
+#include <mutex>
+#include <thread>
+#include <iterator>
 #include <optional>
 #include <set>
 #include <string>
+#include <vector>
 
 namespace sony::audio {
 
@@ -33,6 +44,9 @@ constexpr std::string_view kCategory = "sony.audio";
 // values come from the Windows driver kit (bthhfpddi.h) and are what Settings > Sound uses.
 constexpr GUID kPropSetBtAudio = {0x7fa06c40, 0xb8f6, 0x4c7e, {0x85, 0x56, 0xe8, 0xc3, 0x3a, 0x12, 0xe5, 0x4d}};
 constexpr ULONG kOneShotReconnect = 0;
+
+// PKEY_AudioEndpoint_FormFactor: mmdeviceapi.h only declares it and no import library defines it
+constexpr PROPERTYKEY kFormFactorKey = {{0x1da5d803, 0xd492, 0x4edd, {0x8c, 0x23, 0xe0, 0xc0, 0xff, 0xee, 0x7f, 0x0e}}, 0};
 
 // The headset's container ID: every Windows device node it owns (Bluetooth, audio
 // endpoints, hands-free) shares it
@@ -98,7 +112,252 @@ bool sameContainer(IMMDevice* endpoint, const winrt::guid& containerId) {
     return same;
 }
 
+// A 16-bit PCM .wav's format and samples, read by walking the RIFF chunks for "fmt " and "data"
+struct WavClip {
+    WAVEFORMATEX format{};
+    std::vector<uint8_t> samples;
+};
+
+std::shared_ptr<const WavClip> readWav(const std::wstring& path) {
+    std::ifstream file(path, std::ios::binary);
+    if (!file) {
+        Logger::warn(kCategory, "Couldn't open the sound file " + winrt::to_string(path));
+        return nullptr;
+    }
+    const std::vector<uint8_t> bytes((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    if (bytes.size() < 12 || std::memcmp(bytes.data(), "RIFF", 4) != 0 || std::memcmp(bytes.data() + 8, "WAVE", 4) != 0) {
+        Logger::warn(kCategory, "The sound file isn't a .wav");
+        return nullptr;
+    }
+
+    WavClip clip;
+    bool haveFormat = false;
+    size_t offset = 12;
+    while (offset + 8 <= bytes.size()) {
+        uint32_t size = 0;
+        std::memcpy(&size, bytes.data() + offset + 4, sizeof(size));
+        if (offset + 8 + size > bytes.size()) {
+            break;
+        }
+        const uint8_t* body = bytes.data() + offset + 8;
+        if (std::memcmp(bytes.data() + offset, "fmt ", 4) == 0 && size >= 16) {
+            std::memcpy(&clip.format, body, 16);
+            clip.format.cbSize = 0;
+            haveFormat = true;
+        } else if (std::memcmp(bytes.data() + offset, "data", 4) == 0) {
+            clip.samples.assign(body, body + size);
+        }
+        offset += 8 + size + (size & 1);
+    }
+
+    // 16-bit only: zero bytes are silence there, which the lead-in and keep-awake rely on
+    if (!haveFormat || clip.format.wFormatTag != WAVE_FORMAT_PCM || clip.format.wBitsPerSample != 16 || clip.format.nBlockAlign == 0) {
+        Logger::warn(kCategory, "The sound file isn't 16-bit PCM");
+        return nullptr;
+    }
+    clip.samples.resize(clip.samples.size() / clip.format.nBlockAlign * clip.format.nBlockAlign);  // whole frames only
+    if (clip.samples.empty()) {
+        Logger::warn(kCategory, "The sound file has no samples");
+        return nullptr;
+    }
+    return std::make_shared<const WavClip>(std::move(clip));
+}
+
+// The headset's stereo output. Its hands-free endpoint shares the container but reports the
+// Headset form factor.
+winrt::com_ptr<IMMDevice> stereoOutputOf(const winrt::guid& containerId) {
+    const auto enumerator = winrt::create_instance<IMMDeviceEnumerator>(__uuidof(MMDeviceEnumerator));
+    winrt::com_ptr<IMMDeviceCollection> endpoints;
+    winrt::check_hresult(enumerator->EnumAudioEndpoints(eRender, DEVICE_STATE_ACTIVE, endpoints.put()));
+    UINT count = 0;
+    winrt::check_hresult(endpoints->GetCount(&count));
+
+    for (UINT i = 0; i < count; ++i) {
+        winrt::com_ptr<IMMDevice> endpoint;
+        if (FAILED(endpoints->Item(i, endpoint.put())) || !sameContainer(endpoint.get(), containerId)) {
+            continue;
+        }
+        winrt::com_ptr<IPropertyStore> properties;
+        if (FAILED(endpoint->OpenPropertyStore(STGM_READ, properties.put()))) {
+            continue;
+        }
+        PROPVARIANT value;
+        PropVariantInit(&value);
+        const bool handsFree = SUCCEEDED(properties->GetValue(kFormFactorKey, &value)) &&
+            value.vt == VT_UI4 && value.ulVal == Headset;
+        PropVariantClear(&value);
+        if (!handsFree) {
+            return endpoint;
+        }
+    }
+    return nullptr;
+}
+
+// Keep Awake: one render stream per process to the headset's stereo output. Bluetooth
+// headphones drop the first second or so of audio after their link has gone idle, so the stream
+// stays open after each sound, fed with near-silence, for kKeepAwakeMs (NVDA's default). A sound
+// that opens the stream cold gets kColdLeadInMs of silence in front, so its audible part lands
+// after the link has woken up. The near-silence is zeros with a one-LSB blip kBlipsPerSecond
+// times a second (Sound Keeper's "Fluctuate"): some devices treat pure zeros as nothing playing.
+constexpr ULONGLONG kKeepAwakeMs = 30'000;
+constexpr uint32_t kColdLeadInMs = 750;
+constexpr uint32_t kBlipsPerSecond = 50;
+constexpr REFERENCE_TIME kBufferDuration = 2'000'000; // 200 ms
+
+struct Stream {
+    uint64_t bluetoothAddress = 0;
+    winrt::com_ptr<IAudioClient> client;
+    winrt::com_ptr<IAudioRenderClient> render;
+    WAVEFORMATEX format{};
+    UINT32 bufferFrames = 0;
+    std::vector<uint8_t> queue;   // bytes still to play, lead-in included
+    ULONGLONG lastSoundTick = 0;  // when the queue last had sound in it
+    bool closing = false;
+};
+
+std::mutex gMutex;                      // guards gStream, gClip and gClipPath
+std::condition_variable gWake;
+std::shared_ptr<Stream> gStream;
+std::shared_ptr<const WavClip> gClip;
+std::wstring gClipPath;
+
+// Queues the clip on the stream; the caller holds gMutex
+void enqueue(Stream& stream, const WavClip& clip) {
+    stream.queue.insert(stream.queue.end(), clip.samples.begin(), clip.samples.end());
+    stream.lastSoundTick = GetTickCount64();
+    gWake.notify_all();
+}
+
+// Fills frames with near-silence: zeros, plus a one-LSB blip on the first channel every so often
+void fillNearSilence(BYTE* buffer, UINT32 frames, const WAVEFORMATEX& format, UINT32& frameCounter) {
+    std::memset(buffer, 0, static_cast<size_t>(frames) * format.nBlockAlign);
+    const UINT32 blipEvery = std::max<UINT32>(1, format.nSamplesPerSec / kBlipsPerSecond);
+    for (UINT32 f = 0; f < frames; ++f, ++frameCounter) {
+        if (frameCounter % blipEvery == 0) {
+            buffer[static_cast<size_t>(f) * format.nBlockAlign] = 1;  // little-endian PCM: the low byte of channel 0
+        }
+    }
+}
+
+// The feeder: tops the buffer up every 10 ms from the queue, then with near-silence, and closes
+// the stream once it has been quiet for kKeepAwakeMs or the device stops answering. Holds the
+// module lock, so the component can't be unloaded under it.
+void feedStream(std::shared_ptr<Stream> stream) {
+    ++winrt::get_module_lock();
+    winrt::init_apartment(winrt::apartment_type::multi_threaded);
+    UINT32 frameCounter = 0;
+    {
+        std::unique_lock lock(gMutex);
+        while (!stream->closing) {
+            UINT32 padding = 0;
+            if (FAILED(stream->client->GetCurrentPadding(&padding))) {
+                Logger::info(kCategory, "The headset's output went away, closing the keep-awake stream");
+                break;
+            }
+            const UINT32 frames = padding < stream->bufferFrames ? stream->bufferFrames - padding : 0;
+            if (frames > 0) {
+                BYTE* buffer = nullptr;
+                if (FAILED(stream->render->GetBuffer(frames, &buffer))) {
+                    break;
+                }
+                const size_t frameBytes = stream->format.nBlockAlign;
+                const size_t wanted = static_cast<size_t>(frames) * frameBytes;
+                const size_t fromQueue = std::min(stream->queue.size(), wanted) / frameBytes * frameBytes;
+                std::memcpy(buffer, stream->queue.data(), fromQueue);
+                stream->queue.erase(stream->queue.begin(), stream->queue.begin() + static_cast<std::ptrdiff_t>(fromQueue));
+                fillNearSilence(buffer + fromQueue, static_cast<UINT32>((wanted - fromQueue) / frameBytes), stream->format, frameCounter);
+                stream->render->ReleaseBuffer(frames, 0);
+                if (fromQueue > 0) {
+                    stream->lastSoundTick = GetTickCount64();
+                }
+            }
+            if (stream->queue.empty() && GetTickCount64() - stream->lastSoundTick > kKeepAwakeMs) {
+                Logger::debug(kCategory, "Quiet for a while, closing the keep-awake stream");
+                break;
+            }
+            gWake.wait_for(lock, std::chrono::milliseconds(10));
+        }
+        stream->closing = true;
+        if (stream->client) {
+            stream->client->Stop();
+        }
+        stream->render = nullptr;
+        stream->client = nullptr;
+        if (gStream == stream) {
+            gStream.reset();
+        }
+    }
+    winrt::uninit_apartment();
+    --winrt::get_module_lock();
+}
+
+// Opens the stream on the endpoint in the clip's format; the engine converts to the mix format
+std::shared_ptr<Stream> openStream(uint64_t bluetoothAddress, IMMDevice* endpoint, const WAVEFORMATEX& format) {
+    auto stream = std::make_shared<Stream>();
+    stream->bluetoothAddress = bluetoothAddress;
+    stream->format = format;
+    winrt::check_hresult(endpoint->Activate(__uuidof(IAudioClient), CLSCTX_ALL, nullptr, stream->client.put_void()));
+    winrt::check_hresult(stream->client->Initialize(
+        AUDCLNT_SHAREMODE_SHARED,
+        AUDCLNT_STREAMFLAGS_AUTOCONVERTPCM | AUDCLNT_STREAMFLAGS_SRC_DEFAULT_QUALITY,
+        kBufferDuration, 0, &format, nullptr));
+    winrt::check_hresult(stream->client->GetBufferSize(&stream->bufferFrames));
+    winrt::check_hresult(stream->client->GetService(__uuidof(IAudioRenderClient), stream->render.put_void()));
+    winrt::check_hresult(stream->client->Start());
+    stream->lastSoundTick = GetTickCount64();
+    return stream;
+}
+
 } // namespace
+
+bool playToHeadset(uint64_t bluetoothAddress, const std::wstring& path) {
+    std::unique_lock lock(gMutex);
+    if (!gClip || gClipPath != path) {
+        gClip = readWav(path);
+        gClipPath = path;
+        if (!gClip) {
+            return false;
+        }
+    }
+    const auto clip = gClip;
+
+    // Warm: the stream is still open on this headset, so skip the Windows lookups
+    if (gStream && !gStream->closing && gStream->bluetoothAddress == bluetoothAddress) {
+        enqueue(*gStream, *clip);
+        return true;
+    }
+    lock.unlock();
+
+    try {
+        const auto containerId = containerIdOf(bluetoothAddress);
+        if (!containerId) {
+            Logger::warn(kCategory, "Couldn't find the headset's container to play a sound on it");
+            return false;
+        }
+        const auto endpoint = stereoOutputOf(*containerId);
+        if (!endpoint) {
+            Logger::info(kCategory, "The headset has no active stereo output, so no sound was played");
+            return false;
+        }
+
+        lock.lock();
+        if (gStream) {
+            gStream->closing = true;
+            gWake.notify_all();
+        }
+        auto stream = openStream(bluetoothAddress, endpoint.get(), clip->format);
+        gStream = stream;
+        // Cold start: the link is waking up, so lead with silence
+        stream->queue.assign(static_cast<size_t>(clip->format.nSamplesPerSec) * kColdLeadInMs / 1000 * clip->format.nBlockAlign, 0);
+        std::thread(feedStream, stream).detach();
+        Logger::debug(kCategory, "Opened the keep-awake stream on the headset's output");
+        enqueue(*stream, *clip);
+        return true;
+    } catch (const winrt::hresult_error& error) {
+        Logger::warn(kCategory, "Couldn't play a sound on the headset: " + winrt::to_string(error.message()));
+        return false;
+    }
+}
 
 bool requestAudioConnect(uint64_t bluetoothAddress) {
     const auto containerId = containerIdOf(bluetoothAddress);

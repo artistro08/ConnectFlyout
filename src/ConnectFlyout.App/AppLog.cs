@@ -33,4 +33,7 @@ internal static partial class AppLog
 
     [LoggerMessage(EventId = 908, Level = LogLevel.Debug, Message = "Shortcut {Action} pressed; headphones found: {Found}")]
     public static partial void ShortcutPressed(ILogger logger, string action, bool found);
+
+    [LoggerMessage(EventId = 909, Level = LogLevel.Warning, Message = "Couldn't play the shortcut sound")]
+    public static partial void SoundFailed(ILogger logger, Exception exception);
 }

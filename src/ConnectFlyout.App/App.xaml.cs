@@ -28,6 +28,7 @@ public partial class App : Application, IDisposable
     private AppNotificationService? _notifications;
     private HeadsetManager? _manager;
     private FlyoutViewModel? _flyout;
+    private readonly WindowsBluetoothAudio _bluetoothAudio = new();
     private SettingsViewModel? _settingsViewModel;
     private FlyoutWindow? _flyoutWindow;
     private SettingsWindow? _settingsWindow;
@@ -111,7 +112,7 @@ public partial class App : Application, IDisposable
             _manager,
             new FlyoutNavigator(_settings),
             managed => new HeadsetViewModel(managed, _settings, lowBattery, time, headsetLogger),
-            new WindowsBluetoothAudio(),
+            _bluetoothAudio,
             time);
         _flyout.SettingsRequested += (_, _) => ShowSettings();
         _flyout.QuitRequested += (_, _) => Quit();
@@ -341,7 +342,35 @@ public partial class App : Application, IDisposable
             ? current
             : connected.Count > 0 ? connected[0] : null;
         AppLog.ShortcutPressed(_logger, name, headset is not null);
-        headset?.SelectNoiseMode(ShortcutActions.NoiseModeFor(action), resend: true);
+        if (headset is null)
+        {
+            return;
+        }
+
+        // Already On: the headphones stay silent for a repeat of the current mode, so the PC plays a
+        // sound. Judged by the mode they last reported, so a second press of a new mode while the
+        // first is still on its way doesn't also get the sound.
+        var mode = ShortcutActions.NoiseModeFor(action);
+        if (headset.ConfirmedNoiseMode == mode)
+        {
+            _ = PlayModeAlreadyOnAsync(headset.Id);
+        }
+        headset.SelectNoiseMode(mode, resend: true);
+    }
+
+    private static readonly string ModeAlreadyOnSound = Path.Combine(AppContext.BaseDirectory, "Assets", "ModeAlreadyOn.wav");
+
+    // Plays straight to the headphones' stereo output, whatever Windows' default device is
+    private async Task PlayModeAlreadyOnAsync(string bluetoothAddress)
+    {
+        try
+        {
+            await _bluetoothAudio.PlaySoundAsync(bluetoothAddress, ModeAlreadyOnSound);
+        }
+        catch (Exception ex)
+        {
+            AppLog.SoundFailed(_logger, ex);
+        }
     }
 
     // The right-click menu's window is made on first use, since most sessions never open it

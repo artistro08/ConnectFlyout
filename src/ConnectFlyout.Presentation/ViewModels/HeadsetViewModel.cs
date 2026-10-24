@@ -353,6 +353,13 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
 
     public NoiseMode NoiseMode => _noiseMode;
 
+    /// <summary>
+    /// The mode the headphones last reported, unlike <see cref="NoiseMode"/>, which moves as soon
+    /// as the user picks one. A shortcut compares against this to tell a real repeat from a
+    /// second press while the first is still on its way.
+    /// </summary>
+    public NoiseMode ConfirmedNoiseMode => _snapshot.NoiseControl.Mode;
+
     public bool IsNoiseOff => _noiseMode == NoiseMode.Off;
 
     public bool IsNoiseCancelling => _noiseMode == NoiseMode.NoiseCancelling;
@@ -1014,7 +1021,8 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
 
     /// <summary>
     /// Switches to <paramref name="mode"/>. With <paramref name="resend"/> (a global shortcut),
-    /// the mode that's already on is sent again, so the headphones play its tone either way.
+    /// the mode that's already on is sent again. The headphones stay silent for a repeat, so the
+    /// caller plays a sound of its own when it wants feedback.
     /// </summary>
     public void SelectNoiseMode(NoiseMode mode, bool resend = false)
     {

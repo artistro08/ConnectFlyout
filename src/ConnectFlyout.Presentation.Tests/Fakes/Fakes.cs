@@ -78,4 +78,12 @@ internal sealed class FakeBluetoothAudio : IBluetoothAudio
         DisconnectRequests.Add(bluetoothAddress);
         return Task.FromResult(Accept);
     }
+
+    public List<string> SoundRequests { get; } = [];
+
+    public Task<bool> PlaySoundAsync(string bluetoothAddress, string path)
+    {
+        SoundRequests.Add(bluetoothAddress);
+        return Task.FromResult(Accept);
+    }
 }

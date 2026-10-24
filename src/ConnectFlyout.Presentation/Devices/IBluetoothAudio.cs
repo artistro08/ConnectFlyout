@@ -20,6 +20,13 @@ public interface IBluetoothAudio
     /// Asks Windows to disconnect the headset's full Bluetooth link.
     /// </summary>
     Task<bool> DisconnectAsync(string bluetoothAddress);
+
+    /// <summary>
+    /// Plays a 16-bit PCM .wav on the headset's stereo output only, whatever Windows' default
+    /// device is. The output is kept awake for a while afterwards, so a quick follow-up sound
+    /// plays at once. True once the clip is queued.
+    /// </summary>
+    Task<bool> PlaySoundAsync(string bluetoothAddress, string path);
 }
 
 /// <summary>
@@ -31,4 +38,7 @@ public sealed class WindowsBluetoothAudio : IBluetoothAudio
 
     public Task<bool> DisconnectAsync(string bluetoothAddress) =>
         Core.HeadsetClient.DisconnectAudioAsync(bluetoothAddress).AsTask();
+
+    public Task<bool> PlaySoundAsync(string bluetoothAddress, string path) =>
+        Core.HeadsetClient.PlaySoundAsync(bluetoothAddress, path).AsTask();
 }
