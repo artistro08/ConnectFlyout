@@ -27,13 +27,6 @@
 
             <!-- Tray Icon: the main switch in the header, "until my headphones connect" inside -->
             <Expander Style="{StaticResource SettingsExpanderStyle}">
-                <!-- No hover box behind the arrow -->
-                <Expander.Resources>
-                    <SolidColorBrush x:Key="ExpanderChevronPointerOverBackground" Color="Transparent" />
-                    <SolidColorBrush x:Key="ExpanderChevronPressedBackground" Color="Transparent" />
-                    <SolidColorBrush x:Key="ExpanderChevronBorderPointerOverBrush" Color="Transparent" />
-                    <SolidColorBrush x:Key="ExpanderChevronBorderPressedBrush" Color="Transparent" />
-                </Expander.Resources>
                 <Expander.Header>
                     <views:SettingToggleRow
                         Margin="0,16"
@@ -82,10 +75,15 @@
                 </Grid>
             </Border>
 
-            <!-- Hide Flyout Controls: a stack of switches, off by default -->
-            <Border Style="{StaticResource SettingsCardStyle}">
+            <!-- Flyout Controls: which sections the flyout shows; the switches inside are off by default -->
+            <Expander Style="{StaticResource SettingsExpanderStyle}">
+                <Expander.Header>
+                    <StackPanel Margin="0,16" VerticalAlignment="Center">
+                        <TextBlock Text="Flyout controls" />
+                        <TextBlock Style="{StaticResource SettingSubtitleStyle}" Text="Select the controls that the flyout shows. A hidden control stays on its Settings page." />
+                    </StackPanel>
+                </Expander.Header>
                 <StackPanel Spacing="16">
-                    <TextBlock Text="Hide flyout controls" />
                     <views:SettingToggleRow
                         IsOn="{x:Bind ViewModel.HideAmbientControls, Mode=TwoWay}"
                         Subtitle="The Ambient sound slider and Focus on voice. Also in Settings &gt; Noise &amp; scenes."
@@ -103,7 +101,8 @@
                         Subtitle="The Equalizer and DSEE rows. Also in Settings &gt; Sound."
                         Title="Hide sound controls" />
                 </StackPanel>
-            </Border>
+            </Expander>
+            <!-- /Flyout Controls -->
 
             <!-- Theme -->
             <Border Style="{StaticResource SettingsCardStyle}">
@@ -119,33 +118,32 @@
                 </Grid>
             </Border>
 
-            <!-- Logging -->
-            <Border Style="{StaticResource SettingsCardStyle}">
-                <StackPanel Spacing="12">
-                    <Grid ColumnDefinitions="*,Auto">
-                        <StackPanel VerticalAlignment="Center">
-                            <TextBlock Text="Debug logging" />
-                            <TextBlock Style="{StaticResource SecondaryTextStyle}" Text="Also writes all data sent to and from the headphones to the log. Turn on only to find a fault." />
-                        </StackPanel>
-                        <ToggleSwitch
-                            Grid.Column="1"
-                            AutomationProperties.Name="Debug logging"
-                            IsOn="{x:Bind ViewModel.DebugLogging, Mode=TwoWay}"
-                            Style="{StaticResource CardToggleSwitchStyle}" />
-                    </Grid>
-                    <Grid ColumnDefinitions="*,Auto">
+            <!-- Logging: the switch in the header, the log folder inside -->
+            <Expander Style="{StaticResource SettingsExpanderStyle}">
+                <Expander.Header>
+                    <views:SettingToggleRow
+                        Margin="0,16"
+                        IsOn="{x:Bind ViewModel.DebugLogging, Mode=TwoWay}"
+                        Subtitle="Also writes all data sent to and from the headphones to the log. Turn on only to find a fault."
+                        Title="Debug logging" />
+                </Expander.Header>
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="Log folder" />
                         <TextBlock
-                            VerticalAlignment="Center"
-                            Style="{StaticResource SecondaryTextStyle}"
+                            Style="{StaticResource SettingSubtitleStyle}"
                             Text="{x:Bind ViewModel.LogFolder}"
-                            TextTrimming="CharacterEllipsis" />
-                        <Button
-                            Grid.Column="1"
-                            Command="{x:Bind ViewModel.OpenLogFolderCommand}"
-                            Content="Open log folder" />
-                    </Grid>
-                </StackPanel>
-            </Border>
+                            TextTrimming="CharacterEllipsis"
+                            TextWrapping="NoWrap" />
+                    </StackPanel>
+                    <Button
+                        Grid.Column="1"
+                        VerticalAlignment="Center"
+                        Command="{x:Bind ViewModel.OpenLogFolderCommand}"
+                        Content="Open log folder" />
+                </Grid>
+            </Expander>
+            <!-- /Logging -->
         </StackPanel>
     </ContentControl>
 </local:SettingsPageBase>

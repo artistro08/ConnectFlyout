@@ -152,6 +152,14 @@
         <Setter Property="MinHeight" Value="68" />
     </Style>
 
+    <!-- Expander Chevron: right after the header's control, like Windows Settings (WinUI
+         leaves 20 px), and no hover box behind the arrow -->
+    <Thickness x:Key="ExpanderChevronMargin">0,0,8,0</Thickness>
+    <SolidColorBrush x:Key="ExpanderChevronPointerOverBackground" Color="Transparent" />
+    <SolidColorBrush x:Key="ExpanderChevronPressedBackground" Color="Transparent" />
+    <SolidColorBrush x:Key="ExpanderChevronBorderPointerOverBrush" Color="Transparent" />
+    <SolidColorBrush x:Key="ExpanderChevronBorderPressedBrush" Color="Transparent" />
+
     <!-- Settings Expander: a card whose header holds a setting and whose content holds the
          settings that go with it -->
     <Style x:Key="SettingsExpanderStyle" TargetType="Expander">
