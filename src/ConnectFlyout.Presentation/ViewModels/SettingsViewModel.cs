@@ -173,7 +173,6 @@ public sealed class SettingsViewModel : ObservableObject
                 OnPropertyChanged(nameof(SelectedHeadset));
                 OnPropertyChanged(nameof(HasHeadset));
                 OnPropertyChanged(nameof(NoHeadset));
-                OnPropertyChanged(nameof(NoSystemOptions));
             }
         }
     }
@@ -184,16 +183,6 @@ public sealed class SettingsViewModel : ObservableObject
     public bool HasHeadset => SelectedHeadset is not null;
 
     public bool NoHeadset => SelectedHeadset is null;
-
-    /// <summary>
-    /// The selected headset has nothing for the System page.
-    /// </summary>
-    public bool NoSystemOptions =>
-        SelectedHeadset is { } headset &&
-        !headset.Features.AutoPowerOff &&
-        !headset.Features.AdaptiveVolume &&
-        !headset.HasVoiceGuidanceControl &&
-        !headset.HasConnectionQualityControl;
 
     /// <summary>
     /// Selects the headset the flyout is showing, so settings open on the same headphones.
@@ -481,6 +470,5 @@ public sealed class SettingsViewModel : ObservableObject
         OnPropertyChanged(nameof(SelectedHeadset));
         OnPropertyChanged(nameof(HasHeadset));
         OnPropertyChanged(nameof(NoHeadset));
-        OnPropertyChanged(nameof(NoSystemOptions));
     }
 }

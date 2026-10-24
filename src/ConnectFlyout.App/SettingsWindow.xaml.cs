@@ -16,7 +16,6 @@ public sealed partial class SettingsWindow : Window
     {
         ["Devices"] = typeof(DevicesPage),
         ["NoiseScenes"] = typeof(NoiseScenesPage),
-        ["System"] = typeof(SystemPage),
         ["Shortcuts"] = typeof(ShortcutsPage),
         ["General"] = typeof(AppPage),
         ["About"] = typeof(AboutPage),

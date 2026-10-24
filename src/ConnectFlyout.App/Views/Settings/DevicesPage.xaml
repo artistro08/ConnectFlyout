@@ -91,7 +91,7 @@
                                     </Grid>
                                 </Border>
 
-                                <!-- Sound and Speak-to-Chat (disabled while the headphones are disconnected) -->
+                                <!-- Sound, Speak-to-Chat and System (disabled while the headphones are disconnected) -->
                                 <ContentControl IsEnabled="{x:Bind IsConnected, Mode=OneWay}" Style="{StaticResource SectionStyle}">
                                     <StackPanel>
                                         <!-- Equalizer Preset -->
@@ -223,9 +223,74 @@
                                                     Title="Speak-to-Chat" />
                                             </Border>
                                         </StackPanel>
+
+                                        <!-- Auto Power-Off -->
+                                        <StackPanel Visibility="{x:Bind Features.AutoPowerOff}">
+                                            <Border Style="{StaticResource SettingsExpanderDividerStyle}" />
+                                            <Border Style="{StaticResource SettingsExpanderItemStyle}">
+                                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                                    <StackPanel VerticalAlignment="Center">
+                                                        <TextBlock Text="Auto power-off" />
+                                                        <TextBlock Style="{StaticResource SettingSubtitleStyle}" Text="Turns the headphones off after a set time without use." />
+                                                    </StackPanel>
+                                                    <ComboBox
+                                                        Grid.Column="1"
+                                                        MinWidth="180"
+                                                        VerticalAlignment="Center"
+                                                        AutomationProperties.Name="Auto power-off"
+                                                        ItemsSource="{x:Bind DisplayedAutoPowerOffOptions, Mode=OneWay}"
+                                                        SelectedIndex="{x:Bind AutoPowerOffIndex, Mode=TwoWay}" />
+                                                </Grid>
+                                            </Border>
+                                        </StackPanel>
+
+                                        <!-- Adaptive Volume -->
+                                        <StackPanel Visibility="{x:Bind Features.AdaptiveVolume}">
+                                            <Border Style="{StaticResource SettingsExpanderDividerStyle}" />
+                                            <Border Style="{StaticResource SettingsExpanderItemStyle}">
+                                                <views:SettingToggleRow
+                                                    VerticalAlignment="Center"
+                                                    IsOn="{x:Bind AdaptiveVolume, Mode=TwoWay}"
+                                                    Subtitle="Adjusts the volume to the noise around you."
+                                                    Title="Adaptive volume" />
+                                            </Border>
+                                        </StackPanel>
+
+                                        <!-- Voice Guidance -->
+                                        <StackPanel Visibility="{x:Bind HasVoiceGuidanceControl, Mode=OneWay}">
+                                            <Border Style="{StaticResource SettingsExpanderDividerStyle}" />
+                                            <Border Style="{StaticResource SettingsExpanderItemStyle}">
+                                                <views:SettingToggleRow
+                                                    VerticalAlignment="Center"
+                                                    IsOn="{x:Bind VoiceGuidance, Mode=TwoWay}"
+                                                    Subtitle="Speaks the status and the setting changes."
+                                                    Title="Voice guidance" />
+                                            </Border>
+                                        </StackPanel>
+
+                                        <!-- Bluetooth Connection Quality -->
+                                        <StackPanel Visibility="{x:Bind HasConnectionQualityControl}">
+                                            <Border Style="{StaticResource SettingsExpanderDividerStyle}" />
+                                            <Border Style="{StaticResource SettingsExpanderItemStyle}">
+                                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                                    <StackPanel VerticalAlignment="Center">
+                                                        <TextBlock Text="Connection mode" />
+                                                        <TextBlock Style="{StaticResource SettingSubtitleStyle}" Text="Selects SBC, AAC, or High Quality for Bluetooth audio." />
+                                                    </StackPanel>
+                                                    <ComboBox
+                                                        Grid.Column="1"
+                                                        MinWidth="180"
+                                                        VerticalAlignment="Center"
+                                                        AutomationProperties.Name="Connection mode"
+                                                        IsEnabled="{x:Bind CanChangeConnectionMode, Mode=OneWay}"
+                                                        ItemsSource="{x:Bind vm:HeadsetViewModel.ConnectionQualityOptions}"
+                                                        SelectedIndex="{x:Bind ConnectionQualityIndex, Mode=TwoWay}" />
+                                                </Grid>
+                                            </Border>
+                                        </StackPanel>
                                     </StackPanel>
                                 </ContentControl>
-                                <!-- /Sound and Speak-to-Chat -->
+                                <!-- /Sound, Speak-to-Chat and System -->
 
                                 <!-- Disconnect App Control: release the headphones for another device, or take them back -->
                                 <Border Style="{StaticResource SettingsExpanderDividerStyle}" />

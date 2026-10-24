@@ -1471,18 +1471,6 @@ public sealed class SettingsViewModelTests
     }
 
     [TestMethod]
-    public void SystemPageSaysSoWhenAHeadsetHasNoSystemOptions()
-    {
-        _source.Report(new BluetoothDeviceInfo("device-xm6", "WF-1000XM6", "ac:80:0a:00:00:06", true));
-        _source.Report(new BluetoothDeviceInfo("device-xm4", "WH-1000XM4", "ac:80:0a:00:00:04", true));
-        Assert.IsFalse(_viewModel.NoSystemOptions);
-
-        _viewModel.SelectedHeadsetIndex = _flyout.Headsets.IndexOf(_flyout.Headsets.Single(headset => headset.DeviceName == "WH-1000XM4"));
-
-        Assert.IsTrue(_viewModel.NoSystemOptions);
-    }
-
-    [TestMethod]
     public void SelectionChangesOnlyAfterEveryListenerSawTheNewHeadset()
     {
         // A ComboBox bound to Headsets subscribes after the view model. Setting

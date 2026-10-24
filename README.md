@@ -35,7 +35,7 @@ Switch noise modes from anywhere in Windows. Win+F10 is Noise canceling, Win+F11
 
 ## Renaming Headphones
 
-Settings > Devices has a card per pair of headphones. Expand it to name them (shown in the app only; type a name and select Save, or clear the box and save to go back to the Windows name), set the equalizer, DSEE and the other sound options, turn Speak-to-Chat on or off, and use Disconnect app control, which lets another device, like the Sony app on a phone, control them. The Connect button in the card header asks Windows to connect the headphones while they're paired but not connected.
+Settings > Devices has a card per pair of headphones. Expand it to name them (shown in the app only; type a name and select Save, or clear the box and save to go back to the Windows name), set the equalizer, DSEE and the other sound options, turn Speak-to-Chat, Adaptive volume and Voice guidance on or off, set Auto power-off and the Connection mode, and use Disconnect app control, which lets another device, like the Sony app on a phone, control them. The Connect button in the card header asks Windows to connect the headphones while they're paired but not connected.
 
 ## Hiding Flyout Controls
 

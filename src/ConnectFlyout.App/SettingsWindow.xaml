@@ -40,11 +40,6 @@
                         <FontIcon Glyph="&#xF61F;" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
-                <NavigationViewItem Content="System" Tag="System">
-                    <NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xE770;" />
-                    </NavigationViewItem.Icon>
-                </NavigationViewItem>
                 <NavigationViewItem Content="Shortcuts" Tag="Shortcuts">
                     <NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xE765;" />
