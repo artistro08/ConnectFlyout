@@ -33,6 +33,10 @@ In theory, since we're using [sony-device-center](https://github.com/marconvcm/s
 
 Switch noise modes from anywhere in Windows. Win+F10 is Noise canceling, Win+F11 Ambient sound, Win+F6 Noise control off and Win+F9 opens the flyout. Change or clear each one in Settings > Shortcuts. If the mode is already on, the PC plays a short sound in the headphones.
 
+## Renaming Headphones
+
+Settings > Devices lets you give each pair of headphones a name that's shown in the app only. Clear the box to go back to the name from Windows. The same card holds the Connect button (while Windows isn't connected to the headphones) and Disconnect app control, which lets another device, like the Sony app on a phone, control them.
+
 ## Hiding Flyout Controls
 
 Settings > General can hide the Ambient sound slider and Focus on voice, the scene tiles (Focus, Office, Aware), the Playback section, and the Equalizer and DSEE rows from the flyout. The ambient, scene and sound settings stay on their Settings pages. Playback has no Settings page, so hide it only if you don't switch devices from the flyout.

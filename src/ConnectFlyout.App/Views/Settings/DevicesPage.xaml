@@ -16,49 +16,99 @@
                 Message="Pair the Sony headphones in the Windows Bluetooth settings."
                 Severity="Informational" />
 
-            <!-- Headset Cards -->
+            <!-- Headset Cards: the headphones in the header, their name and app control inside -->
             <ItemsRepeater ItemsSource="{x:Bind ViewModel.Headsets}">
                 <ItemsRepeater.Layout>
                     <StackLayout Spacing="8" />
                 </ItemsRepeater.Layout>
                 <ItemsRepeater.ItemTemplate>
                     <DataTemplate x:DataType="vm:HeadsetViewModel">
-                        <Border Style="{StaticResource SettingsCardStyle}">
-                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="16">
-                                <!-- Model picture, or the headphone icon when there's no picture -->
-                                <views:DevicePicture VerticalAlignment="Center" ModelName="{x:Bind ModelName}" />
-                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                    <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="{x:Bind DeviceName}" />
-                                    <TextBlock Style="{StaticResource SecondaryTextStyle}" Text="{x:Bind StatusText, Mode=OneWay}" />
-                                    <TextBlock Style="{StaticResource SecondaryTextStyle}">
-                                        <Run Text="Model " /><Run Text="{x:Bind ModelName}" />
-                                        <Run Text=" · Firmware " /><Run Text="{x:Bind Firmware, Mode=OneWay}" />
-                                        <Run Text=" · Codec " /><Run Text="{x:Bind Codec, Mode=OneWay}" />
-                                    </TextBlock>
-                                </StackPanel>
-                                <!-- Release the headphones for another device, or take them back -->
-                                <Grid Grid.Column="2" VerticalAlignment="Center">
-                                    <Button
-                                        AutomationProperties.Name="Disconnect"
-                                        Command="{x:Bind DisconnectCommand}"
-                                        Visibility="{x:Bind IsConnected, Mode=OneWay}">
-                                        <StackPanel Orientation="Horizontal" Spacing="8">
-                                            <views:PlugIcon VerticalAlignment="Center" />
-                                            <TextBlock Text="Disconnect" />
+                        <Expander Style="{StaticResource SettingsExpanderStyle}">
+                            <Expander.Header>
+                                <Grid
+                                    Margin="0,16"
+                                    ColumnDefinitions="Auto,*,Auto"
+                                    ColumnSpacing="16">
+                                    <!-- Model picture, or the headphone icon when there's no picture -->
+                                    <views:DevicePicture VerticalAlignment="Center" ModelName="{x:Bind ModelName}" />
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="{x:Bind DeviceName, Mode=OneWay}" />
+                                        <TextBlock Style="{StaticResource SecondaryTextStyle}" Text="{x:Bind StatusText, Mode=OneWay}" />
+                                        <!-- Firmware and codec only once the app has read them -->
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Style="{StaticResource SecondaryTextStyle}">
+                                                <Run Text="Model " /><Run Text="{x:Bind ModelName}" />
+                                            </TextBlock>
+                                            <TextBlock Style="{StaticResource SecondaryTextStyle}" Visibility="{x:Bind IsConnected, Mode=OneWay}">
+                                                <Run Text=" · Firmware " /><Run Text="{x:Bind Firmware, Mode=OneWay}" />
+                                                <Run Text=" · Codec " /><Run Text="{x:Bind Codec, Mode=OneWay}" />
+                                            </TextBlock>
                                         </StackPanel>
-                                    </Button>
+                                    </StackPanel>
+
+                                    <!-- Connect: asks Windows to connect the headphones over Bluetooth. Reads
+                                         "Connecting…" meanwhile and goes once Windows has them. -->
                                     <Button
-                                        AutomationProperties.Name="Reconnect"
-                                        Command="{x:Bind ReconnectCommand}"
-                                        Visibility="{x:Bind ShowReconnect, Mode=OneWay}">
+                                        Grid.Column="2"
+                                        VerticalAlignment="Center"
+                                        AutomationProperties.Name="Connect over Bluetooth"
+                                        Command="{x:Bind ConnectCommand}"
+                                        IsEnabled="{x:Bind ShowConnect, Mode=OneWay}"
+                                        ToolTipService.ToolTip="Connects the headphones through Bluetooth. A different device can lose the audio."
+                                        Visibility="{x:Bind ShowBluetoothConnect, Mode=OneWay}">
                                         <StackPanel Orientation="Horizontal" Spacing="8">
-                                            <views:PlugIcon VerticalAlignment="Center" IsConnected="True" />
-                                            <TextBlock Text="Reconnect" />
+                                            <FontIcon FontSize="14" Glyph="&#xE702;" />
+                                            <TextBlock Text="{x:Bind BluetoothConnectText, Mode=OneWay}" />
                                         </StackPanel>
                                     </Button>
                                 </Grid>
-                            </Grid>
-                        </Border>
+                            </Expander.Header>
+                            <StackPanel Spacing="16">
+                                <!-- Name: saved when the box loses focus -->
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="Name" />
+                                        <TextBlock Style="{StaticResource SettingSubtitleStyle}" Text="Shown in this app only. Clear the box to use the name from Windows." />
+                                    </StackPanel>
+                                    <TextBox
+                                        Grid.Column="1"
+                                        MinWidth="240"
+                                        VerticalAlignment="Center"
+                                        AutomationProperties.Name="Name"
+                                        PlaceholderText="{x:Bind WindowsName, Mode=OneWay}"
+                                        Text="{x:Bind CustomName, Mode=TwoWay}" />
+                                </Grid>
+
+                                <!-- Disconnect App Control: release the headphones for another device, or take them back -->
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="Disconnect app control" />
+                                        <TextBlock Style="{StaticResource SettingSubtitleStyle}" Text="Lets a different device, such as the Sony app on a phone, control the headphones. The audio continues on this PC. The app stays disconnected until you select Reconnect." />
+                                    </StackPanel>
+                                    <Grid Grid.Column="1" VerticalAlignment="Center">
+                                        <Button
+                                            AutomationProperties.Name="Disconnect app control"
+                                            Command="{x:Bind DisconnectCommand}"
+                                            ToolTipService.ToolTip="Disconnect app control"
+                                            Visibility="{x:Bind IsConnected, Mode=OneWay}">
+                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                <views:PlugIcon VerticalAlignment="Center" />
+                                                <TextBlock Text="Disconnect" />
+                                            </StackPanel>
+                                        </Button>
+                                        <Button
+                                            AutomationProperties.Name="Reconnect"
+                                            Command="{x:Bind ReconnectCommand}"
+                                            Visibility="{x:Bind ShowReconnect, Mode=OneWay}">
+                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                <views:PlugIcon VerticalAlignment="Center" IsConnected="True" />
+                                                <TextBlock Text="Reconnect" />
+                                            </StackPanel>
+                                        </Button>
+                                    </Grid>
+                                </Grid>
+                            </StackPanel>
+                        </Expander>
                     </DataTemplate>
                 </ItemsRepeater.ItemTemplate>
             </ItemsRepeater>

@@ -25,6 +25,7 @@ public sealed class AppSettingsTests
         Assert.IsFalse(settings.HidePlayback);
         Assert.IsFalse(settings.HideSoundControls);
         Assert.IsTrue(settings.IsAutoConnectEnabled("AC:80:0A:12:34:56"));
+        Assert.IsNull(settings.GetDisplayName("AC:80:0A:12:34:56"));
         CollectionAssert.AreEqual(Scene.Defaults.ToList(), settings.Scenes.ToList());
     }
 
@@ -47,6 +48,7 @@ public sealed class AppSettingsTests
             HideSoundControls = true,
         };
         settings.SetAutoConnectEnabled("AC:80:0A:12:34:56", false);
+        settings.SetDisplayName("AC:80:0A:12:34:56", "Desk buds");
 
         var reloaded = new AppSettings(store);
         Assert.AreEqual("AC:80:0A:12:34:56", reloaded.RememberedHeadsetId);
@@ -61,6 +63,7 @@ public sealed class AppSettingsTests
         Assert.IsTrue(reloaded.HidePlayback);
         Assert.IsTrue(reloaded.HideSoundControls);
         Assert.IsFalse(reloaded.IsAutoConnectEnabled("AC:80:0A:12:34:56"));
+        Assert.AreEqual("Desk buds", reloaded.GetDisplayName("AC:80:0A:12:34:56"));
     }
 
     [TestMethod]

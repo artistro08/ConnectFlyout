@@ -146,7 +146,34 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
 
     public string Id => _managed.Id;
 
-    public string DeviceName => _managed.Name;
+    /// <summary>
+    /// The name the app shows: <see cref="CustomName"/> when one is set, else the name in Windows.
+    /// </summary>
+    public string DeviceName => _settings.GetDisplayName(Id) is { Length: > 0 } custom ? custom : _managed.Name;
+
+    /// <summary>
+    /// Name in Windows. Follows renames there.
+    /// </summary>
+    public string WindowsName => _managed.Name;
+
+    /// <summary>
+    /// The name entered in Settings > Devices; empty means the name in Windows.
+    /// </summary>
+    public string CustomName
+    {
+        get => _settings.GetDisplayName(Id) ?? "";
+        set
+        {
+            var trimmed = value?.Trim() ?? "";
+            if (trimmed == CustomName)
+            {
+                return;
+            }
+            _settings.SetDisplayName(Id, trimmed.Length == 0 ? null : trimmed);
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(DeviceName));
+        }
+    }
 
     public string ModelName => _headset.ModelName;
 
@@ -202,6 +229,14 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
     public bool ShowConnect => !IsWindowsConnected && !IsBluetoothConnecting;
 
     /// <summary>
+    /// The Devices page's Connect button stays through the connect, reading "Connecting…", and
+    /// goes once Windows has the headset.
+    /// </summary>
+    public bool ShowBluetoothConnect => !IsWindowsConnected;
+
+    public string BluetoothConnectText => IsBluetoothConnecting ? "Connecting…" : "Connect";
+
+    /// <summary>
     /// Windows has been asked to connect the headset and hasn't yet.
     /// </summary>
     public bool IsBluetoothConnecting
@@ -214,6 +249,7 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
                 return;
             }
             OnPropertyChanged(nameof(ShowConnect));
+            OnPropertyChanged(nameof(BluetoothConnectText));
             OnPropertyChanged(nameof(StatusText));
             OnPropertyChanged(nameof(PickerStatusText));
         }
@@ -1112,7 +1148,9 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
     {
         // Windows connection and name changes arrive on the same event
         OnPropertyChanged(nameof(DeviceName));
+        OnPropertyChanged(nameof(WindowsName));
         OnPropertyChanged(nameof(IsWindowsConnected));
+        OnPropertyChanged(nameof(ShowBluetoothConnect));
         OnPropertyChanged(nameof(IsAvailable));
         OnPropertyChanged(nameof(ShowBattery));
         OnPropertyChanged(nameof(ShowReconnect));

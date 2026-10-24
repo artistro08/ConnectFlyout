@@ -499,6 +499,40 @@ public sealed class HeadsetViewModelTests
     }
 
     [TestMethod]
+    public void RenamingShowsTheCustomNameUntilCleared()
+    {
+        var changed = new List<string?>();
+        _viewModel.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+
+        _viewModel.CustomName = " Desk buds ";
+        Assert.AreEqual("Desk buds", _viewModel.DeviceName);
+        Assert.AreEqual("Desk buds", _viewModel.CustomName);
+        Assert.AreEqual("WF-1000XM6", _viewModel.WindowsName);
+        CollectionAssert.Contains(changed, nameof(HeadsetViewModel.DeviceName));
+
+        _viewModel.CustomName = "";
+        Assert.AreEqual("WF-1000XM6", _viewModel.DeviceName);
+        Assert.IsNull(_settings.GetDisplayName(_viewModel.Id));
+    }
+
+    [TestMethod]
+    public void ConnectButtonReadsConnectingWhileWindowsConnects()
+    {
+        _managed.IsWindowsConnected = false;
+        _viewModel.UpdateConnectionState(HeadsetConnectionState.Disconnected);
+        Assert.IsTrue(_viewModel.ShowBluetoothConnect);
+        Assert.AreEqual("Connect", _viewModel.BluetoothConnectText);
+
+        _viewModel.StartBluetoothConnect();
+        Assert.AreEqual("Connecting\u2026", _viewModel.BluetoothConnectText);
+        Assert.IsFalse(_viewModel.ShowConnect);
+
+        _managed.IsWindowsConnected = true;
+        _viewModel.UpdateConnectionState(HeadsetConnectionState.Connected);
+        Assert.IsFalse(_viewModel.ShowBluetoothConnect);
+    }
+
+    [TestMethod]
     public void NoiseModeTileSendsCommand()
     {
         _viewModel.SetNoiseModeCommand.Execute("NoiseCancelling");

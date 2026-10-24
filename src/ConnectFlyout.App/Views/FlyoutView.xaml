@@ -77,7 +77,7 @@
                 <ListView.ItemTemplate>
                     <DataTemplate x:DataType="vm:HeadsetViewModel">
                         <Grid
-                            AutomationProperties.Name="{x:Bind DeviceName}"
+                            AutomationProperties.Name="{x:Bind DeviceName, Mode=OneWay}"
                             ColumnDefinitions="Auto,*,Auto"
                             ColumnSpacing="12"
                             PointerCanceled="OnPickerRowRest"
@@ -98,7 +98,7 @@
                             <!-- Model picture, or the headphone icon when there's no picture -->
                             <local:DevicePicture ModelName="{x:Bind ModelName}" />
                             <StackPanel Grid.Column="1" Spacing="4">
-                                <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="{x:Bind DeviceName}" />
+                                <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="{x:Bind DeviceName, Mode=OneWay}" />
                                 <!-- Status, or a failed connect in the caution color (the list has no warning bar) -->
                                 <TextBlock Style="{x:Bind app:TileStyles.PickStatus(HasError), Mode=OneWay}" Text="{x:Bind PickerStatusText, Mode=OneWay}" />
                                 <local:BatteryRow Headset="{x:Bind}" Visibility="{x:Bind IsConnected, Mode=OneWay}" />

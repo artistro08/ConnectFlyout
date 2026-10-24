@@ -44,6 +44,7 @@ public sealed class AppSettings
     private const string HideAmbientControlsKey       = "HideAmbientControls";
     private const string AutoConnectKeyPrefix         = "AutoConnect.";
     private const string KnownHeadsetKeyPrefix        = "KnownHeadset.";
+    private const string DisplayNameKeyPrefix         = "DisplayName.";
     private const string LastCaseBatteryKeyPrefix     = "LastCaseBattery.";
     private const string ShortcutKeyPrefix            = "Shortcut.";
 
@@ -198,6 +199,14 @@ public sealed class AppSettings
     public string? GetKnownHeadsetName(string headsetId) => _store.GetString(KnownHeadsetKeyPrefix + headsetId);
 
     public void SetKnownHeadsetName(string headsetId, string name) => _store.SetString(KnownHeadsetKeyPrefix + headsetId, name);
+
+    /// <summary>
+    /// The name entered in Settings > Devices, shown in the app instead of the name in Windows.
+    /// Null when none is set.
+    /// </summary>
+    public string? GetDisplayName(string headsetId) => _store.GetString(DisplayNameKeyPrefix + headsetId);
+
+    public void SetDisplayName(string headsetId, string? name) => _store.SetString(DisplayNameKeyPrefix + headsetId, name);
 
     /// <summary>
     /// Last charging case level the headset reported. The case only reports while an earbud
