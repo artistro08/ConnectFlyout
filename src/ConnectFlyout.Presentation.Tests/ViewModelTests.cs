@@ -468,10 +468,34 @@ public sealed class HeadsetViewModelTests
     public void StatusLineShowsOnlyWhenNotConnected()
     {
         Assert.IsFalse(_viewModel.ShowStatus);
+        Assert.IsTrue(_viewModel.ShowAudioText);
 
+        // A reload keeps the audio line, so the header doesn't jump
         _viewModel.UpdateConnectionState(HeadsetConnectionState.Connecting);
+        Assert.IsTrue(_viewModel.IsReloading);
+        Assert.IsFalse(_viewModel.ShowStatus);
+        Assert.IsTrue(_viewModel.ShowAudioText);
 
+        // A first connect has no codec yet, so "Connecting…" shows
+        _headset.RaiseStateChanged(_headset.State with { Codec = "" });
+        Assert.IsFalse(_viewModel.IsReloading);
         Assert.IsTrue(_viewModel.ShowStatus);
+        Assert.IsFalse(_viewModel.ShowAudioText);
+    }
+
+    [TestMethod]
+    public void ReconnectLinkReplacesTheAppDisconnectedLine()
+    {
+        _viewModel.UpdateConnectionState(HeadsetConnectionState.Disconnected);
+        Assert.IsTrue(_viewModel.ShowReconnect);
+        Assert.IsFalse(_viewModel.ShowStatus);
+
+        // Off Windows there's nothing to reconnect to, so the line says "Disconnected"
+        _managed.IsWindowsConnected = false;
+        _viewModel.UpdateConnectionState(HeadsetConnectionState.Disconnected);
+        Assert.IsFalse(_viewModel.ShowReconnect);
+        Assert.IsTrue(_viewModel.ShowStatus);
+        Assert.AreEqual("Disconnected", _viewModel.StatusText);
     }
 
     [TestMethod]

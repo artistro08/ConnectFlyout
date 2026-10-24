@@ -25,6 +25,15 @@
         <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
     </Style>
 
+    <!-- Text Link: a link that stands in for a line of secondary text at the same size, so
+         swapping the two doesn't move the layout; hover shows the link color -->
+    <Style x:Key="TextLinkStyle" TargetType="HyperlinkButton" BasedOn="{StaticResource DefaultHyperlinkButtonStyle}">
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+    </Style>
+
     <!-- Setting Row Subtitle: the line under a setting's name -->
     <Style x:Key="SettingSubtitleStyle" TargetType="TextBlock" BasedOn="{StaticResource SecondaryTextStyle}">
         <Setter Property="TextWrapping" Value="Wrap" />

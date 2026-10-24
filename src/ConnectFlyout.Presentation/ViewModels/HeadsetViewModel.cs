@@ -252,10 +252,22 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
     public string DisconnectedMessage => IsWindowsConnected ? "App disconnected" : "The device is disconnected.";
 
     /// <summary>
-    /// The status line only shows while not connected; once connected the header shows the
-    /// battery and <see cref="AudioText"/> instead, like Sony's app.
+    /// A reload (Refresh, or the link coming back on its own) keeps the header as it was: the
+    /// ring in the corner shows the work. True while connecting with the codec still known.
     /// </summary>
-    public bool ShowStatus => !IsConnected;
+    public bool IsReloading => IsConnecting && !string.IsNullOrEmpty(_snapshot.Codec);
+
+    /// <summary>
+    /// The status line only shows while not connected, and not during a reload; once connected
+    /// the header shows the battery and <see cref="AudioText"/> instead, like Sony's app. The
+    /// Reconnect link stands in for it while it would say "App disconnected".
+    /// </summary>
+    public bool ShowStatus => !IsConnected && !IsReloading && !ShowReconnect;
+
+    /// <summary>
+    /// The audio line stays through a reload, so the header keeps its size.
+    /// </summary>
+    public bool ShowAudioText => IsConnected || IsReloading;
 
     /// <summary>
     /// DSEE branding advertised by the headset's feature profile.
@@ -870,6 +882,11 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
     /// <summary>
     /// Whether the compact popup should offer the power-off action.
     /// </summary>
+    /// <summary>
+    /// Turn off stays in the footer, disabled, while disconnected, so the footer doesn't jump.
+    /// </summary>
+    public bool ShowPowerOff => Features.PowerOff;
+
     public bool CanPowerOffFromPopup => IsConnected && Features.PowerOff;
 
     public double ClearBass
@@ -1099,6 +1116,7 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(IsAvailable));
         OnPropertyChanged(nameof(ShowBattery));
         OnPropertyChanged(nameof(ShowReconnect));
+        OnPropertyChanged(nameof(ShowStatus));
         OnPropertyChanged(nameof(ShowConnect));
         OnPropertyChanged(nameof(StatusText));
         OnPropertyChanged(nameof(PickerStatusText));
@@ -1126,6 +1144,8 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(StatusText));
         OnPropertyChanged(nameof(PickerStatusText));
         OnPropertyChanged(nameof(ShowStatus));
+        OnPropertyChanged(nameof(IsReloading));
+        OnPropertyChanged(nameof(ShowAudioText));
         OnPropertyChanged(nameof(ShowDisconnectedWarning));
         OnPropertyChanged(nameof(ShowReconnect));
         OnPropertyChanged(nameof(ShowPlayback));
@@ -1278,6 +1298,9 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(ShowPopupSoundSection));
         OnPropertyChanged(nameof(ShowPopupConnectionSeparator));
         OnPropertyChanged(nameof(AudioText));
+        OnPropertyChanged(nameof(IsReloading));
+        OnPropertyChanged(nameof(ShowAudioText));
+        OnPropertyChanged(nameof(ShowStatus));
         OnPropertyChanged(nameof(StatusText));
         OnPropertyChanged(nameof(PickerStatusText));
 
