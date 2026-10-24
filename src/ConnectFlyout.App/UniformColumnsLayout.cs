@@ -5,8 +5,8 @@ using Windows.Foundation;
 namespace ConnectFlyout.App;
 
 /// <summary>
-/// Lays items out in equal-width columns, up to <see cref="Columns"/> per row, wrapping to new
-/// rows. Fewer items than columns share the full width. Every item is always realized.
+/// Lays items out in rows of up to <see cref="Columns"/>, each row's items sharing its full
+/// width (so a lone item on the last row spans it). Every item is always realized.
 /// </summary>
 /// <remarks>
 /// Used for the flyout's scene buttons instead of <see cref="UniformGridLayout"/>, which
@@ -32,38 +32,40 @@ public sealed partial class UniformColumnsLayout : NonVirtualizingLayout
             return new Size(0, 0);
         }
 
-        var columns = ColumnsFor(children.Count);
-        var itemWidth = ItemWidth(availableSize.Width, columns);
         var rowHeight = 0.0;
-        foreach (var child in children)
+        foreach (var (child, width, _, _) in Cells(children, availableSize.Width))
         {
-            child.Measure(new Size(itemWidth, double.PositiveInfinity));
+            child.Measure(new Size(width, double.PositiveInfinity));
             rowHeight = Math.Max(rowHeight, child.DesiredSize.Height);
         }
 
-        var rows = (children.Count + columns - 1) / columns;
+        var rows = (children.Count + Columns - 1) / Columns;
         return new Size(availableSize.Width, (rows * rowHeight) + ((rows - 1) * RowSpacing));
     }
 
     protected override Size ArrangeOverride(NonVirtualizingLayoutContext context, Size finalSize)
     {
         var children = context.Children;
-        var columns = ColumnsFor(children.Count);
-        var itemWidth = ItemWidth(finalSize.Width, columns);
         var rowHeight = children.Count == 0 ? 0 : children.Max(child => child.DesiredSize.Height);
 
-        for (var i = 0; i < children.Count; i++)
+        foreach (var (child, width, x, row) in Cells(children, finalSize.Width))
         {
-            var x = (i % columns) * (itemWidth + ColumnSpacing);
-            var y = (i / columns) * (rowHeight + RowSpacing);
-            children[i].Arrange(new Rect(x, y, itemWidth, rowHeight));
+            child.Arrange(new Rect(x, row * (rowHeight + RowSpacing), width, rowHeight));
         }
         return finalSize;
     }
 
-    // Fewer items than Columns spread across the width; never fewer than one column
-    private int ColumnsFor(int count) => Math.Clamp(count, 1, Math.Max(1, Columns));
-
-    private double ItemWidth(double width, int columns) =>
-        Math.Max(0, (width - ((columns - 1) * ColumnSpacing)) / columns);
+    // Each child's width, left edge and row. A row holds up to Columns children, and the ones
+    // it has share its full width, so a short last row spreads out instead of leaving a gap.
+    private IEnumerable<(UIElement Child, double Width, double X, int Row)> Cells(IReadOnlyList<UIElement> children, double width)
+    {
+        var columns = Math.Max(1, Columns);
+        for (var i = 0; i < children.Count; i++)
+        {
+            var row = i / columns;
+            var inRow = Math.Min(columns, children.Count - (row * columns));
+            var itemWidth = Math.Max(0, (width - ((inRow - 1) * ColumnSpacing)) / inRow);
+            yield return (children[i], itemWidth, (i % columns) * (itemWidth + ColumnSpacing), row);
+        }
+    }
 }
