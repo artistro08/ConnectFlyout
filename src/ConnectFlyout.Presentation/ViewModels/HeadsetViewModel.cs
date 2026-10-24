@@ -419,6 +419,18 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
 
     public IReadOnlyList<SceneItemViewModel> SceneItems { get; private set; } = [];
 
+    /// <summary>
+    /// Whether the headphones are in this scene's setting right now, by the flyout's rule: the
+    /// same mode, and in Ambient sound the same level and Focus on voice.
+    /// </summary>
+    public bool MatchesScene(Scene scene)
+    {
+        ArgumentNullException.ThrowIfNull(scene);
+        var setting = scene.Setting;
+        return setting.Mode == _noiseMode
+            && (_noiseMode != NoiseMode.Ambient || (setting.AmbientLevel == (int)_ambientLevel && setting.FocusOnVoice == _focusOnVoice));
+    }
+
     public NoiseMode NoiseMode => _noiseMode;
 
     /// <summary>

@@ -1621,11 +1621,18 @@ public sealed class SettingsViewModelTests
         _viewModel.Scenes[0].Name = "Deep work";
         _viewModel.Scenes[0].ModeIndex = (int)NoiseMode.Ambient;
         _viewModel.Scenes[0].AmbientLevel = 5;
-        _viewModel.Scenes[0].IconIndex = 3;
+        _viewModel.Scenes[0].Glyph = SceneIcon.All[3].Glyph;
 
         Assert.AreEqual(new Scene("Deep work", "\uE80F", new NoiseControlSetting(NoiseMode.Ambient, 5, false)), _settings.Scenes[0]);
         Assert.AreEqual("Ambient sound · Level 5", _viewModel.Scenes[0].Summary);
-        Assert.AreEqual(3, _viewModel.Scenes[0].IconIndex);
+    }
+
+    [TestMethod]
+    public void IconSearchMatchesNamesInAnyCase()
+    {
+        Assert.AreEqual(SceneIcon.All.Count, SceneIcon.Search(" ").Count);
+        Assert.AreEqual("Home", SceneIcon.Search("HOME").Single().Name);
+        Assert.AreEqual(0, SceneIcon.Search("zzz").Count);
     }
 
     [TestMethod]
@@ -1633,14 +1640,14 @@ public sealed class SettingsViewModelTests
     {
         _viewModel.BeginNewScene();
         _viewModel.NewScene!.Name = "Gym";
-        _viewModel.NewScene.IconIndex = 4;
+        _viewModel.NewScene.Glyph = SceneIcon.All[4].Glyph;
         Assert.AreEqual(3, _settings.Scenes.Count);
 
         _viewModel.CommitNewScene();
 
         Assert.IsNull(_viewModel.NewScene);
         Assert.AreEqual(4, _viewModel.Scenes.Count);
-        Assert.AreEqual(new Scene("Gym", SceneEditorViewModel.IconOptions[4], new NoiseControlSetting(NoiseMode.NoiseCancelling, 0, false)), _settings.Scenes[3]);
+        Assert.AreEqual(new Scene("Gym", SceneIcon.All[4].Glyph, new NoiseControlSetting(NoiseMode.NoiseCancelling, 0, false)), _settings.Scenes[3]);
 
         // The added scene saves its edits like the others
         _viewModel.Scenes[3].ShowInFlyout = false;
@@ -1667,16 +1674,38 @@ public sealed class SettingsViewModelTests
     }
 
     [TestMethod]
-    public async Task ActivateAppliesTheSceneToTheConnectedHeadphones()
+    public async Task SceneSwitchFollowsAndDrivesTheConnectedHeadphones()
     {
+        var aware = _viewModel.Scenes.Single(scene => scene.Name == "Aware");
+        Assert.IsFalse(aware.IsActive);
+
         _source.Report(new BluetoothDeviceInfo("device-xm6", "WF-1000XM6", "ac:80:0a:00:00:06", true));
         var headset = _flyout.Headsets.Single();
         Assert.IsTrue(await TestWait.UntilAsync(() => headset.IsConnected));
-        Assert.IsFalse(headset.SceneItems.Single(item => item.Name == "Aware").IsActive);
+        Assert.IsFalse(aware.IsActive);
 
-        _viewModel.ActivateScene(_viewModel.Scenes.Single(scene => scene.Name == "Aware"));
+        // On applies the scene; the switch lights as the headphones take it
+        _viewModel.ToggleScene(aware, true);
+        Assert.IsTrue(await TestWait.UntilAsync(() => aware.IsActive));
+        Assert.IsTrue(headset.SceneItems.Single(item => item.Name == "Aware").IsActive);
 
-        Assert.IsTrue(await TestWait.UntilAsync(() => headset.SceneItems.Single(item => item.Name == "Aware").IsActive));
+        // Off turns noise control off
+        _viewModel.ToggleScene(aware, false);
+        Assert.IsTrue(await TestWait.UntilAsync(() => headset.IsNoiseOff));
+        Assert.IsFalse(aware.IsActive);
+    }
+
+    [TestMethod]
+    public void SceneSwitchSnapsBackWithNothingConnected()
+    {
+        var raised = 0;
+        var focus = _viewModel.Scenes[0];
+        focus.PropertyChanged += (_, e) => raised += e.PropertyName == nameof(SceneEditorViewModel.IsActive) ? 1 : 0;
+
+        _viewModel.ToggleScene(focus, true);
+
+        Assert.IsFalse(focus.IsActive);
+        Assert.AreEqual(1, raised);
     }
 
     [TestMethod]

@@ -25,4 +25,17 @@ public sealed partial class SceneEditor : UserControl
         get => (SceneEditorViewModel?)GetValue(SceneProperty);
         set => SetValue(SceneProperty, value);
     }
+
+    private async void OnChangeIconClick(object sender, RoutedEventArgs e)
+    {
+        if (Scene is null)
+        {
+            return;
+        }
+        var dialog = new IconPickerDialog(Scene.Glyph) { XamlRoot = XamlRoot };
+        if (await dialog.ShowAsync() == ContentDialogResult.Primary && dialog.SelectedGlyph is { } glyph)
+        {
+            Scene.Glyph = glyph;
+        }
+    }
 }

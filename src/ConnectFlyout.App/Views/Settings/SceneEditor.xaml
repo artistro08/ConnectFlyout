@@ -24,24 +24,24 @@
             </Grid>
         </Border>
 
-        <!-- Icon -->
+        <!-- Icon: the current one on the button; Change opens the searchable picker -->
         <Border Style="{StaticResource SettingsExpanderDividerStyle}" />
         <Border Style="{StaticResource SettingsExpanderItemStyle}">
             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
-                <TextBlock VerticalAlignment="Center" Text="Icon" />
-                <ComboBox
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="Icon" />
+                    <TextBlock Style="{StaticResource SettingSubtitleStyle}" Text="Shown beside the name on the button." />
+                </StackPanel>
+                <Button
                     Grid.Column="1"
-                    MinWidth="80"
                     VerticalAlignment="Center"
-                    AutomationProperties.Name="Icon"
-                    ItemsSource="{x:Bind vm:SceneEditorViewModel.IconOptions}"
-                    SelectedIndex="{x:Bind Scene.IconIndex, Mode=TwoWay}">
-                    <ComboBox.ItemTemplate>
-                        <DataTemplate x:DataType="x:String">
-                            <FontIcon FontSize="16" Glyph="{x:Bind}" />
-                        </DataTemplate>
-                    </ComboBox.ItemTemplate>
-                </ComboBox>
+                    AutomationProperties.Name="Change the icon"
+                    Click="OnChangeIconClick">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon FontSize="16" Glyph="{x:Bind Scene.Glyph, Mode=OneWay}" />
+                        <TextBlock Text="Change" />
+                    </StackPanel>
+                </Button>
             </Grid>
         </Border>
 

@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
@@ -16,14 +17,6 @@ namespace ConnectFlyout.Presentation.ViewModels;
 /// </summary>
 public sealed class SceneEditorViewModel : ObservableObject
 {
-    // Segoe Fluent Icons: moon, briefcase, walking, home, music, headphones, game, airplane,
-    // people, video, microphone, phone, calendar, star, settings, power
-    private static readonly string[] Icons =
-    [
-        "\uE708", "\uE821", "\uE805", "\uE80F", "\uE8D6", "\uE7F6", "\uE7FC", "\uE709",
-        "\uE716", "\uE714", "\uE720", "\uE717", "\uE787", "\uE734", "\uE713", "\uE7E8",
-    ];
-
     private readonly Action? _changed;
     private string _name;
     private string _glyph;
@@ -31,6 +24,7 @@ public sealed class SceneEditorViewModel : ObservableObject
     private double _ambientLevel;
     private bool _focusOnVoice;
     private bool _showInFlyout;
+    private bool _isActive;
 
     /// <param name="scene">The scene to start from.</param>
     /// <param name="changed">Called after every edit; the settings page saves on it. Null for a draft.</param>
@@ -49,43 +43,19 @@ public sealed class SceneEditorViewModel : ObservableObject
 
     public static IReadOnlyList<string> ModeOptions { get; } = ["Off", "Noise canceling", "Ambient sound"];
 
-    /// <summary>
-    /// The icons to pick from, as Segoe Fluent Icons glyphs.
-    /// </summary>
-    public static IReadOnlyList<string> IconOptions { get; } = Icons;
-
     public string Name
     {
         get => _name;
         set => Set(ref _name, value);
     }
 
+    /// <summary>
+    /// A Segoe Fluent Icons glyph, picked from <see cref="SceneIcon.All"/>.
+    /// </summary>
     public string Glyph
     {
         get => _glyph;
-        set
-        {
-            if (Set(ref _glyph, value))
-            {
-                OnPropertyChanged(nameof(IconIndex));
-            }
-        }
-    }
-
-    /// <summary>
-    /// Index into <see cref="IconOptions"/>; -1 for a glyph not in the list, which an older
-    /// saved scene keeps until another icon is picked.
-    /// </summary>
-    public int IconIndex
-    {
-        get => Array.IndexOf(Icons, _glyph);
-        set
-        {
-            if (value >= 0 && value < Icons.Length)
-            {
-                Glyph = Icons[value];
-            }
-        }
+        set => Set(ref _glyph, value);
     }
 
     /// <summary>
@@ -144,6 +114,18 @@ public sealed class SceneEditorViewModel : ObservableObject
         get => _showInFlyout;
         set => Set(ref _showInFlyout, value);
     }
+
+    /// <summary>
+    /// Whether connected headphones are in this scene right now; the card's switch shows it.
+    /// </summary>
+    public bool IsActive => _isActive;
+
+    internal void SetActive(bool value) => SetProperty(ref _isActive, value, nameof(IsActive));
+
+    /// <summary>
+    /// Re-announces <see cref="IsActive"/> so a switch that was flipped without effect snaps back.
+    /// </summary>
+    internal void NotifyActive() => OnPropertyChanged(nameof(IsActive));
 
     /// <summary>
     /// The card header's second line: the mode, plus the level and Focus on voice in Ambient sound.
@@ -222,8 +204,22 @@ public sealed class SettingsViewModel : ObservableObject
         // Except when the selected headset goes: the ComboBox crashes if its selected item is
         // removed from under it, so the selection is cleared first, right away. One removed
         // before it just shifts the index, so the same headset stays selected.
+        foreach (var headset in Headsets)
+        {
+            headset.PropertyChanged += OnHeadsetChanged;
+        }
+        RefreshActiveScenes();
         _flyout.Headsets.CollectionChanged += (_, e) =>
         {
+            foreach (var headset in e.OldItems?.OfType<HeadsetViewModel>() ?? [])
+            {
+                headset.PropertyChanged -= OnHeadsetChanged;
+            }
+            foreach (var headset in e.NewItems?.OfType<HeadsetViewModel>() ?? [])
+            {
+                headset.PropertyChanged += OnHeadsetChanged;
+            }
+            RefreshActiveScenes();
             if (e.Action == NotifyCollectionChangedAction.Reset
                 || (e.Action == NotifyCollectionChangedAction.Remove && e.OldStartingIndex == _selectedHeadsetIndex))
             {
@@ -304,7 +300,7 @@ public sealed class SettingsViewModel : ObservableObject
     /// Starts a draft for the New scene page: Noise canceling, the first icon, shown in the flyout.
     /// </summary>
     public void BeginNewScene() =>
-        NewScene = new SceneEditorViewModel(new Scene("", SceneEditorViewModel.IconOptions[0], new NoiseControlSetting(NoiseMode.NoiseCancelling, 10, false)));
+        NewScene = new SceneEditorViewModel(new Scene("", SceneIcon.All[0].Glyph, new NoiseControlSetting(NoiseMode.NoiseCancelling, 10, false)));
 
     /// <summary>
     /// Adds the draft to the scenes and saves. Does nothing without a draft.
@@ -332,6 +328,45 @@ public sealed class SettingsViewModel : ObservableObject
         foreach (var headset in Headsets.Where(headset => headset.IsConnected))
         {
             headset.ApplySceneCommand.Execute(applied);
+        }
+    }
+
+    /// <summary>
+    /// The card's switch: on applies the scene to the connected headphones, off turns their
+    /// noise control off. A switch that already matches does nothing, which is how its own
+    /// binding updates arrive. With nothing connected the switch snaps back.
+    /// </summary>
+    public void ToggleScene(SceneEditorViewModel scene, bool on)
+    {
+        ArgumentNullException.ThrowIfNull(scene);
+        if (on == scene.IsActive)
+        {
+            return;
+        }
+        if (on)
+        {
+            ActivateScene(scene);
+        }
+        else
+        {
+            foreach (var headset in Headsets.Where(headset => headset.IsConnected))
+            {
+                headset.SetNoiseModeCommand.Execute(nameof(NoiseMode.Off));
+            }
+        }
+        RefreshActiveScenes();
+        scene.NotifyActive();
+    }
+
+    // Every headset change (connection, mode, level) can light or dim a scene
+    private void OnHeadsetChanged(object? sender, PropertyChangedEventArgs e) => RefreshActiveScenes();
+
+    private void RefreshActiveScenes()
+    {
+        foreach (var scene in Scenes)
+        {
+            var applied = scene.ToScene();
+            scene.SetActive(Headsets.Any(headset => headset.IsConnected && headset.MatchesScene(applied)));
         }
     }
 
@@ -583,6 +618,7 @@ public sealed class SettingsViewModel : ObservableObject
         {
             headset.RefreshScenes();
         }
+        RefreshActiveScenes();
     }
 
     private void ResetScenes()

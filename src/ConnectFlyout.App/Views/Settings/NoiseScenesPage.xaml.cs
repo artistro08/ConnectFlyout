@@ -1,4 +1,5 @@
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
 using ConnectFlyout.Presentation.ViewModels;
 
 namespace ConnectFlyout.App.Views.Settings;
@@ -19,12 +20,12 @@ public sealed partial class NoiseScenesPage : SettingsPageBase
         Frame.Navigate(typeof(SceneEditorPage), ViewModel);
     }
 
-    // The scene rides on Tag: ItemsRepeater doesn't reliably set the button's DataContext
-    private void OnActivateSceneClick(object sender, RoutedEventArgs e)
+    // The scene rides on Tag: ItemsRepeater doesn't reliably set the control's DataContext
+    private void OnSceneToggled(object sender, RoutedEventArgs e)
     {
-        if (sender is FrameworkElement { Tag: SceneEditorViewModel scene })
+        if (sender is ToggleSwitch { Tag: SceneEditorViewModel scene } toggle)
         {
-            ViewModel.ActivateScene(scene);
+            ViewModel.ToggleScene(scene, toggle.IsOn);
         }
     }
 

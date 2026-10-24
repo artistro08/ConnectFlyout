@@ -1,0 +1,49 @@
+<ContentDialog
+    x:Class="ConnectFlyout.App.Views.Settings.IconPickerDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:scenes="using:ConnectFlyout.Presentation.Scenes"
+    Title="Select an icon"
+    CloseButtonText="Cancel"
+    DefaultButton="Primary"
+    PrimaryButtonText="Select">
+
+    <!-- Search box over a grid of icons; the grid scrolls on its own -->
+    <StackPanel MinWidth="440" Spacing="12">
+        <TextBox
+            x:Name="SearchBox"
+            AutomationProperties.Name="Search icons"
+            PlaceholderText="Search icons"
+            TextChanged="OnSearchChanged" />
+        <GridView
+            x:Name="IconGrid"
+            MaxHeight="320"
+            AutomationProperties.Name="Icons"
+            SelectionChanged="OnSelectionChanged"
+            SelectionMode="Single">
+            <GridView.ItemTemplate>
+                <DataTemplate x:DataType="scenes:SceneIcon">
+                    <StackPanel
+                        Width="88"
+                        Padding="4,10"
+                        AutomationProperties.Name="{x:Bind Name}"
+                        Spacing="6"
+                        ToolTipService.ToolTip="{x:Bind Name}">
+                        <FontIcon FontSize="20" Glyph="{x:Bind Glyph}" />
+                        <TextBlock
+                            HorizontalAlignment="Center"
+                            Style="{StaticResource CaptionTextBlockStyle}"
+                            Text="{x:Bind Name}"
+                            TextAlignment="Center"
+                            TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                </DataTemplate>
+            </GridView.ItemTemplate>
+        </GridView>
+        <TextBlock
+            x:Name="NoMatch"
+            Style="{StaticResource SecondaryTextStyle}"
+            Text="No icon has that name."
+            Visibility="Collapsed" />
+    </StackPanel>
+</ContentDialog>

@@ -39,19 +39,17 @@
                                             <TextBlock Style="{StaticResource SettingSubtitleStyle}" Text="{x:Bind Summary, Mode=OneWay}" />
                                         </StackPanel>
 
-                                        <!-- Activate: applies the scene to the connected headphones, like its flyout button -->
-                                        <Button
+                                        <!-- On/Off: on while the connected headphones are in this scene. Turning it
+                                             on applies the scene; off turns noise control off. -->
+                                        <ToggleSwitch
                                             Grid.Column="2"
                                             VerticalAlignment="Center"
-                                            AutomationProperties.Name="Activate scene"
-                                            Click="OnActivateSceneClick"
+                                            AutomationProperties.Name="Scene on"
+                                            IsOn="{x:Bind IsActive, Mode=OneWay}"
+                                            Style="{StaticResource CardToggleSwitchStyle}"
                                             Tag="{x:Bind}"
-                                            ToolTipService.ToolTip="Applies the scene to the connected headphones">
-                                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                                <FontIcon FontSize="14" Glyph="&#xE768;" />
-                                                <TextBlock Text="Activate" />
-                                            </StackPanel>
-                                        </Button>
+                                            Toggled="OnSceneToggled"
+                                            ToolTipService.ToolTip="Turns the scene on or off" />
                                     </Grid>
                                 </views:SettingsExpander.Header>
                                 <StackPanel>
