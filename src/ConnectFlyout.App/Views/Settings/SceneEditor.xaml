@@ -39,12 +39,15 @@
                     Spacing="12">
                     <!-- Current Icon: a labeled box, a shade off the card -->
                     <Border Style="{StaticResource CurrentIconBoxStyle}">
-                        <StackPanel Spacing="8">
+                        <StackPanel Orientation="Horizontal" Spacing="12">
                             <TextBlock
-                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
                                 Style="{StaticResource SecondaryTextStyle}"
                                 Text="Current icon" />
-                            <FontIcon FontSize="20" Glyph="{x:Bind Scene.Glyph, Mode=OneWay}" />
+                            <FontIcon
+                                VerticalAlignment="Center"
+                                FontSize="20"
+                                Glyph="{x:Bind Scene.Glyph, Mode=OneWay}" />
                         </StackPanel>
                     </Border>
                     <Button
