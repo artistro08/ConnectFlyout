@@ -182,7 +182,7 @@
 
     <Style x:Key="SettingsExpanderDividerStyle" TargetType="Border">
         <Setter Property="Height" Value="2" />
-        <Setter Property="Background" Value="{ThemeResource DividerStrokeColorDefaultBrush}" />
+        <Setter Property="Background" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
     </Style>
 
     <!-- Settings Footer: a bar that stays put under a page's scroll area; its content is limited
