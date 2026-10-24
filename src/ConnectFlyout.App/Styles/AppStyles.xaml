@@ -186,14 +186,12 @@
     </Style>
 
     <!-- Current Icon Box: a scene's icon beside its label, in the card's secondary fill so it
-         sits a touch off the card behind it -->
+         sits a touch off the card behind it; no stroke, and as tall as the Change button -->
     <Style x:Key="CurrentIconBoxStyle" TargetType="Border">
         <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorSecondaryBrush}" />
-        <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
-        <Setter Property="BorderThickness" Value="1" />
         <Setter Property="CornerRadius" Value="{StaticResource ControlCornerRadius}" />
         <Setter Property="Padding" Value="12,0" />
-        <Setter Property="MinHeight" Value="32" />
+        <Setter Property="Height" Value="32" />
     </Style>
 
     <!-- Settings Footer: a bar over the bottom of a page's scroll area, in-app acrylic so the
