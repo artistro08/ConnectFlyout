@@ -89,6 +89,7 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
     private bool _connectRetried;
     private bool _applying;
     private int _noiseCommandsInFlight;
+    private string _pendingName;
 
     public HeadsetViewModel(
         ManagedHeadset managed,
@@ -107,6 +108,7 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
         _logger = logger;
         _noiseThrottler = new Throttler(SliderInterval, timeProvider);
         _connectionState = managed.ConnectionState;
+        _pendingName = CustomName;
 
         SetNoiseModeCommand = new RelayCommand<string>(mode =>
         {
@@ -134,6 +136,7 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
         DisconnectCommand = new RelayCommand(() => AutoConnect = false);
         ReconnectCommand = new RelayCommand(() => ReconnectRequested?.Invoke(this, EventArgs.Empty));
         ConnectCommand = new RelayCommand(() => ConnectRequested?.Invoke(this, EventArgs.Empty));
+        SaveNameCommand = new RelayCommand(() => CustomName = PendingName);
 
         _headset.StateChanged += OnHeadsetStateChanged;
         SceneItems = [.. settings.Scenes.Select(scene => new SceneItemViewModel(scene))];
@@ -157,7 +160,7 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
     public string WindowsName => _managed.Name;
 
     /// <summary>
-    /// The name entered in Settings > Devices; empty means the name in Windows.
+    /// The saved name from Settings > Devices; empty means the name in Windows.
     /// </summary>
     public string CustomName
     {
@@ -165,6 +168,7 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
         set
         {
             var trimmed = value?.Trim() ?? "";
+            PendingName = trimmed;
             if (trimmed == CustomName)
             {
                 return;
@@ -174,6 +178,17 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
             OnPropertyChanged(nameof(DeviceName));
         }
     }
+
+    /// <summary>
+    /// What's in the Device name box; <see cref="SaveNameCommand"/> makes it the <see cref="CustomName"/>.
+    /// </summary>
+    public string PendingName
+    {
+        get => _pendingName;
+        set => SetProperty(ref _pendingName, value ?? "");
+    }
+
+    public IRelayCommand SaveNameCommand { get; }
 
     public string ModelName => _headset.ModelName;
 
@@ -221,6 +236,11 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
     /// has the headset; without that there's nothing to reconnect to.
     /// </summary>
     public bool ShowReconnect => _connectionState == HeadsetConnectionState.Disconnected && IsWindowsConnected;
+
+    /// <summary>
+    /// The footer's Disconnect button; Reconnect takes its place while <see cref="ShowReconnect"/>.
+    /// </summary>
+    public bool ShowDisconnect => !ShowReconnect;
 
     /// <summary>
     /// Connect (Bluetooth) shows while the headset is paired but Windows isn't connected to it,
@@ -1154,6 +1174,7 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(IsAvailable));
         OnPropertyChanged(nameof(ShowBattery));
         OnPropertyChanged(nameof(ShowReconnect));
+        OnPropertyChanged(nameof(ShowDisconnect));
         OnPropertyChanged(nameof(ShowStatus));
         OnPropertyChanged(nameof(ShowConnect));
         OnPropertyChanged(nameof(StatusText));
@@ -1186,6 +1207,7 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(ShowAudioText));
         OnPropertyChanged(nameof(ShowDisconnectedWarning));
         OnPropertyChanged(nameof(ShowReconnect));
+        OnPropertyChanged(nameof(ShowDisconnect));
         OnPropertyChanged(nameof(ShowPlayback));
         UpdateMissingEarbudPolling();
         if (state == HeadsetConnectionState.Connected)

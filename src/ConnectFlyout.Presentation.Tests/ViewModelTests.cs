@@ -499,18 +499,23 @@ public sealed class HeadsetViewModelTests
     }
 
     [TestMethod]
-    public void RenamingShowsTheCustomNameUntilCleared()
+    public void SaveAppliesTheTypedNameUntilCleared()
     {
         var changed = new List<string?>();
         _viewModel.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
 
-        _viewModel.CustomName = " Desk buds ";
+        // Typing alone changes nothing; Save does
+        _viewModel.PendingName = " Desk buds ";
+        Assert.AreEqual("WF-1000XM6", _viewModel.DeviceName);
+        _viewModel.SaveNameCommand.Execute(null);
         Assert.AreEqual("Desk buds", _viewModel.DeviceName);
         Assert.AreEqual("Desk buds", _viewModel.CustomName);
+        Assert.AreEqual("Desk buds", _viewModel.PendingName);
         Assert.AreEqual("WF-1000XM6", _viewModel.WindowsName);
         CollectionAssert.Contains(changed, nameof(HeadsetViewModel.DeviceName));
 
-        _viewModel.CustomName = "";
+        _viewModel.PendingName = "";
+        _viewModel.SaveNameCommand.Execute(null);
         Assert.AreEqual("WF-1000XM6", _viewModel.DeviceName);
         Assert.IsNull(_settings.GetDisplayName(_viewModel.Id));
     }
@@ -886,6 +891,7 @@ public sealed class HeadsetViewModelTests
         Assert.IsFalse(_viewModel.IsConnected);
         Assert.IsTrue(_viewModel.ShowDisconnectedWarning);
         Assert.IsTrue(_viewModel.ShowReconnect);
+        Assert.IsFalse(_viewModel.ShowDisconnect);
     }
 
     [TestMethod]
@@ -914,6 +920,7 @@ public sealed class HeadsetViewModelTests
         Assert.IsTrue(_viewModel.IsConnected);
         Assert.IsFalse(_viewModel.ShowDisconnectedWarning);
         Assert.IsFalse(_viewModel.ShowReconnect);
+        Assert.IsTrue(_viewModel.ShowDisconnect);
     }
 
     [TestMethod]

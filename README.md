@@ -35,7 +35,7 @@ Switch noise modes from anywhere in Windows. Win+F10 is Noise canceling, Win+F11
 
 ## Renaming Headphones
 
-Settings > Devices lets you give each pair of headphones a name that's shown in the app only. Clear the box to go back to the name from Windows. The same card holds the Connect button (while Windows isn't connected to the headphones) and Disconnect app control, which lets another device, like the Sony app on a phone, control them.
+Settings > Devices lets you give each pair of headphones a name that's shown in the app only. Type it and select Save; clear the box and save to go back to the name from Windows. The same card holds the Connect button (while Windows isn't connected to the headphones) and Disconnect app control, which lets another device, like the Sony app on a phone, control them.
 
 ## Hiding Flyout Controls
 

@@ -167,7 +167,11 @@
                             Command="{x:Bind ViewModel.CurrentHeadset.ReconnectCommand, Mode=OneWay}"
                             Style="{StaticResource TextLinkStyle}"
                             Visibility="{x:Bind ViewModel.CurrentHeadset.ShowReconnect, Mode=OneWay, FallbackValue=Collapsed}">
-                            <TextBlock Style="{StaticResource CaptionTextBlockStyle}" Text="Reconnect device" />
+                            <!-- The icon is as tall as the caption's line, so the link is no taller than the text it replaces -->
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <local:PlugIcon VerticalAlignment="Center" IsConnected="True" />
+                                <TextBlock Style="{StaticResource CaptionTextBlockStyle}" Text="Reconnect device" />
+                            </StackPanel>
                         </HyperlinkButton>
 
                         <TextBlock
@@ -435,15 +439,26 @@
                 </Button>
 
                 <!-- Disconnect: lets another device (like the phone app) take over; disabled until
-                     connected. Reconnect is the link in the header. -->
-                <Button
-                    Style="{StaticResource FooterIconButtonStyle}"
-                    AutomationProperties.Name="Disconnect app control"
-                    Command="{x:Bind ViewModel.CurrentHeadset.DisconnectCommand, Mode=OneWay}"
-                    IsEnabled="{x:Bind ViewModel.CurrentHeadset.IsConnected, Mode=OneWay, FallbackValue=False}"
-                    ToolTipService.ToolTip="Disconnect app control">
-                    <local:PlugIcon Size="20" />
-                </Button>
+                     connected. Reconnect takes the same slot while the app has let go. -->
+                <Grid>
+                    <Button
+                        Style="{StaticResource FooterIconButtonStyle}"
+                        AutomationProperties.Name="Disconnect app control"
+                        Command="{x:Bind ViewModel.CurrentHeadset.DisconnectCommand, Mode=OneWay}"
+                        IsEnabled="{x:Bind ViewModel.CurrentHeadset.IsConnected, Mode=OneWay, FallbackValue=False}"
+                        ToolTipService.ToolTip="Disconnect app control"
+                        Visibility="{x:Bind ViewModel.CurrentHeadset.ShowDisconnect, Mode=OneWay, FallbackValue=Visible}">
+                        <local:PlugIcon Size="20" />
+                    </Button>
+                    <Button
+                        Style="{StaticResource FooterIconButtonStyle}"
+                        AutomationProperties.Name="Reconnect"
+                        Command="{x:Bind ViewModel.CurrentHeadset.ReconnectCommand, Mode=OneWay}"
+                        ToolTipService.ToolTip="Reconnect"
+                        Visibility="{x:Bind ViewModel.CurrentHeadset.ShowReconnect, Mode=OneWay, FallbackValue=Collapsed}">
+                        <local:PlugIcon IsConnected="True" Size="20" />
+                    </Button>
+                </Grid>
 
                 <Button
                     Style="{StaticResource FooterIconButtonStyle}"

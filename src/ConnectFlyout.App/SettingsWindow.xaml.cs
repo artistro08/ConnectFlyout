@@ -34,7 +34,7 @@ public sealed partial class SettingsWindow : Window
 
         ExtendsContentIntoTitleBar = true;
         SetTitleBar(AppTitleBar);
-        AppWindow.Resize(new Windows.Graphics.SizeInt32(1000, 720));
+        AppWindow.Resize(new Windows.Graphics.SizeInt32(1180, 780));
 
         // Opening size is also the smallest it can get
         if (AppWindow.Presenter is OverlappedPresenter presenter)

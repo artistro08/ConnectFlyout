@@ -134,10 +134,12 @@
     </Style>
 
     <!-- Card Switch: no On/Off text beside it, so the switch sits flush right like the other
-         controls on a card -->
+         controls on a card. The template keeps a 12 px column for that text even when empty,
+         so the margin takes it back. -->
     <Style x:Key="CardToggleSwitchStyle" TargetType="ToggleSwitch" BasedOn="{StaticResource DefaultToggleSwitchStyle}">
         <Setter Property="MinWidth" Value="0" />
         <Setter Property="HorizontalAlignment" Value="Right" />
+        <Setter Property="Margin" Value="0,0,-12,0" />
         <Setter Property="OnContent" Value="" />
         <Setter Property="OffContent" Value="" />
     </Style>
@@ -152,21 +154,35 @@
         <Setter Property="MinHeight" Value="68" />
     </Style>
 
-    <!-- Expander Chevron: right after the header's control, like Windows Settings (WinUI
-         leaves 20 px), and no hover box behind the arrow -->
-    <Thickness x:Key="ExpanderChevronMargin">0,0,8,0</Thickness>
+    <!-- Expander Chevron: Windows Settings' metrics (the Community Toolkit's SettingsExpander):
+         a 32 px box 8 px from the edge, 12 px from the header's control to the 16 px glyph, no
+         hover box behind the arrow. The glyph size itself is set by SettingsExpander, since
+         WinUI reads it through a StaticResource an app can't override. -->
+    <Thickness x:Key="ExpanderChevronMargin">4,0,8,0</Thickness>
     <SolidColorBrush x:Key="ExpanderChevronPointerOverBackground" Color="Transparent" />
     <SolidColorBrush x:Key="ExpanderChevronPressedBackground" Color="Transparent" />
     <SolidColorBrush x:Key="ExpanderChevronBorderPointerOverBrush" Color="Transparent" />
     <SolidColorBrush x:Key="ExpanderChevronBorderPressedBrush" Color="Transparent" />
 
     <!-- Settings Expander: a card whose header holds a setting and whose content holds the
-         settings that go with it -->
+         settings that go with it, one SettingsExpanderItem each with a divider between -->
     <Style x:Key="SettingsExpanderStyle" TargetType="Expander">
         <Setter Property="HorizontalAlignment" Value="Stretch" />
         <Setter Property="HorizontalContentAlignment" Value="Stretch" />
         <Setter Property="MinHeight" Value="68" />
-        <Setter Property="Padding" Value="16" />
+        <Setter Property="Padding" Value="0" />
+    </Style>
+
+    <!-- Settings Expander Item: a row inside an expander. The right padding ends where the
+         header's control does (chevron box plus its margins), so controls line up. -->
+    <Style x:Key="SettingsExpanderItemStyle" TargetType="Border">
+        <Setter Property="MinHeight" Value="52" />
+        <Setter Property="Padding" Value="16,8,44,8" />
+    </Style>
+
+    <Style x:Key="SettingsExpanderDividerStyle" TargetType="Border">
+        <Setter Property="Height" Value="1" />
+        <Setter Property="Background" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
     </Style>
 
     <!-- Settings Page: scrolls, pads, and centers the content at up to 900 wide. The padded Grid
