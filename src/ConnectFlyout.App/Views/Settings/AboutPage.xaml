@@ -27,11 +27,11 @@
                 <Grid ColumnDefinitions="*,Auto">
                     <TextBlock
                         VerticalAlignment="Center"
-                        Text="Protocol code based on sony-device-center (MIT)."
+                        Text="The protocol code is based on sony-device-center (MIT)."
                         TextWrapping="Wrap" />
                     <HyperlinkButton
                         Grid.Column="1"
-                        Content="View on GitHub"
+                        Content="Open on GitHub"
                         NavigateUri="https://github.com/marconvcm/sony-device-center" />
                 </Grid>
             </Border>

@@ -496,7 +496,7 @@ public sealed partial class ShortcutControl : UserControl, IDisposable
                     XamlRoot = root,
                     RequestedTheme = ActualTheme,
                     Title = DialogTitle,
-                    Content = "ConnectFlyout couldn't listen to the keyboard, so the shortcut can't be changed right now. Try again.",
+                    Content = "ConnectFlyout cannot read the keyboard. Try again.",
                     CloseButtonText = "OK",
                 }.ShowAsync();
             }

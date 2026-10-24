@@ -13,7 +13,7 @@
             <InfoBar
                 IsClosable="False"
                 IsOpen="{x:Bind ViewModel.NoHeadset, Mode=OneWay}"
-                Message="Pair your Sony headphones in Bluetooth settings and they'll show up here."
+                Message="Pair the Sony headphones in the Windows Bluetooth settings."
                 Severity="Informational" />
 
             <!-- Headset Cards -->
@@ -69,7 +69,7 @@
                 <Grid ColumnDefinitions="*,Auto">
                     <StackPanel VerticalAlignment="Center">
                         <TextBlock Text="Pair or forget headphones" />
-                        <TextBlock Style="{StaticResource SecondaryTextStyle}" Text="Pairing is handled in Windows Bluetooth settings." />
+                        <TextBlock Style="{StaticResource SecondaryTextStyle}" Text="Pair the headphones in the Windows Bluetooth settings." />
                     </StackPanel>
                     <HyperlinkButton
                         Grid.Column="1"

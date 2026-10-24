@@ -17,7 +17,7 @@
         <InfoBar
             IsClosable="False"
             IsOpen="{x:Bind ViewModel.NoHeadset, Mode=OneWay}"
-            Message="Pair your Sony headphones in Bluetooth settings to change these settings."
+            Message="Pair the Sony headphones in the Windows Bluetooth settings."
             Severity="Informational"
             Visibility="{x:Bind ViewModel.NoHeadset, Mode=OneWay}" />
 

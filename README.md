@@ -33,6 +33,10 @@ In theory, since we're using [sony-device-center](https://github.com/marconvcm/s
 
 Switch noise modes from anywhere in Windows. Win+F10 is Noise canceling, Win+F11 Ambient sound, Win+F6 Noise control off and Win+F9 opens the flyout. Change or clear each one in Settings > Shortcuts.
 
+## Hiding Flyout Controls
+
+Settings > General can hide the Ambient sound slider and Focus on voice, the scene tiles (Focus, Office, Aware), the Playback section, and the Equalizer and DSEE rows from the flyout. The ambient, scene and sound settings stay on their Settings pages. Playback has no Settings page, so hide it only if you don't switch devices from the flyout.
+
 ## Hiding The Tray Icon
 
 Settings > General can hide the tray icon, always or until your headphones connect. The app keeps running. Opening ConnectFlyout from the Start menu while the icon is hidden opens Settings or the flyout, whichever you pick there, so you can always get back in.

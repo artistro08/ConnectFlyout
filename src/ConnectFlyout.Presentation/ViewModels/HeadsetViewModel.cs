@@ -238,18 +238,18 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
     {
         _ when IsBluetoothConnecting => "Connecting…",
         HeadsetConnectionState.Connected when !string.IsNullOrEmpty(_snapshot.Codec) => $"Connected · {_snapshot.Codec}",
-        HeadsetConnectionState.Connected when !IsKnownModel => "Connected · Unverified model",
+        HeadsetConnectionState.Connected when !IsKnownModel => "Connected · Model not verified",
         HeadsetConnectionState.Connected => "Connected",
         HeadsetConnectionState.Connecting => "Connecting…",
         // Windows still has them but the app doesn't (let go, or the control link is down)
-        _ when IsWindowsConnected => "App Disconnected",
+        _ when IsWindowsConnected => "App disconnected",
         _ => "Disconnected",
     };
 
     /// <summary>
     /// The settings pages' warning bar: the app's side or the whole device.
     /// </summary>
-    public string DisconnectedMessage => IsWindowsConnected ? "App Disconnected" : "Device is disconnected.";
+    public string DisconnectedMessage => IsWindowsConnected ? "App disconnected" : "The device is disconnected.";
 
     /// <summary>
     /// The status line only shows while not connected; once connected the header shows the
@@ -358,6 +358,11 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
     public bool IsNoiseCancelling => _noiseMode == NoiseMode.NoiseCancelling;
 
     public bool IsAmbient => _noiseMode == NoiseMode.Ambient;
+
+    /// <summary>
+    /// The Ambient sound slider and Focus on voice: only in Ambient, and unless Settings hides them.
+    /// </summary>
+    public bool ShowAmbientControls => IsAmbient && !_settings.HideAmbientControls;
 
     public double AmbientLevel
     {
@@ -693,19 +698,31 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
     /// </summary>
     /// <remarks>
     /// Connection-quality headsets hide these controls after reporting a codec other than
-    /// SBC or AAC.
+    /// SBC or AAC. "Hide sound controls" in Settings > General hides them on every headset.
     /// </remarks>
     public bool ShowPopupSoundSection =>
-        !HasConnectionQualityControl ||
-        ((ShowPopupEqualizer || ShowPopupDsee) &&
-         (string.IsNullOrEmpty(_snapshot.Codec) ||
-          _snapshot.Codec is "SBC" or "AAC"));
+        !_settings.HideSoundControls &&
+        (!HasConnectionQualityControl ||
+         ((ShowPopupEqualizer || ShowPopupDsee) &&
+          (string.IsNullOrEmpty(_snapshot.Codec) ||
+           _snapshot.Codec is "SBC" or "AAC")));
 
     /// <summary>
     /// Whether the compact popup should separate connection mode from sound controls.
     /// </summary>
     public bool ShowPopupConnectionSeparator =>
         HasConnectionQualityControl && ShowPopupSoundSection;
+
+    /// <summary>
+    /// Whether anything follows Noise Control in the popup, so the separator above it shows:
+    /// the sound rows unless Settings hides them, or the Connection mode row.
+    /// </summary>
+    public bool ShowPopupSoundSeparator => !_settings.HideSoundControls || HasConnectionQualityControl;
+
+    /// <summary>
+    /// The scene tiles show unless Settings hides them.
+    /// </summary>
+    public bool ShowScenes => !_settings.HideScenes;
 
     /// <summary>
     /// VPT surround presets exposed by the legacy spatial control.
@@ -904,7 +921,7 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
     /// <summary>
     /// The Playback section shows while connected with at least two devices to choose from.
     /// </summary>
-    public bool ShowPlayback => IsConnected && PlaybackDevices.Count >= 2;
+    public bool ShowPlayback => !_settings.HidePlayback && IsConnected && PlaybackDevices.Count >= 2;
 
     /// <summary>
     /// Moves the audio to the given device; the one already playing is left alone.
@@ -955,7 +972,7 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
     }
 
     public static IReadOnlyList<string> AutoPowerOffOptions { get; } =
-        ["Off", "After 5 minutes", "After 30 minutes", "After 1 hour", "After 3 hours", "When taken off"];
+        ["Off", "After 5 minutes", "After 30 minutes", "After 1 hour", "After 3 hours", "When removed"];
 
     private static IReadOnlyList<string> TimedAutoPowerOffOptions { get; } =
         ["Off", "After 5 minutes", "After 30 minutes", "After 1 hour", "After 3 hours"];
@@ -1108,6 +1125,17 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
         if (state == HeadsetConnectionState.Connected)
         {
             ApplySnapshot(_headset.State);
+        }
+    }
+
+    /// <summary>
+    /// Settings changed which flyout sections show; re-reads the named Show* properties.
+    /// </summary>
+    internal void RefreshFlyoutSections(params string[] sections)
+    {
+        foreach (var section in sections)
+        {
+            OnPropertyChanged(section);
         }
     }
 
@@ -1286,7 +1314,7 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
             return;
         }
         EndBluetoothConnect();
-        ShowError("Couldn't connect. Make sure your headphones are on and nearby.");
+        ShowError("Connection failed. Make sure that the headphones are on and near the PC.");
     }
 
     private void EndBluetoothConnect()
@@ -1308,7 +1336,7 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
         _ = RunCommandAsync(
             () => _headset.SwitchPlaybackAsync(device.Address),
             "playback",
-            "Couldn't switch the audio. The other device may be on a call.");
+            "Audio switch failed. The other device is possibly on a call.");
     }
 
     private void SetPlaybackDevices(IReadOnlyList<PlaybackDevice> devices)
@@ -1328,6 +1356,7 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(IsNoiseOff));
         OnPropertyChanged(nameof(IsNoiseCancelling));
         OnPropertyChanged(nameof(IsAmbient));
+        OnPropertyChanged(nameof(ShowAmbientControls));
         UpdateActiveScene();
     }
 

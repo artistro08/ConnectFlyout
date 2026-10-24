@@ -9,7 +9,7 @@
             <TextBlock
                 Margin="0,0,0,8"
                 Style="{StaticResource SecondaryTextStyle}"
-                Text="Switch noise modes from anywhere in Windows."
+                Text="Change the noise mode from any Windows app."
                 TextWrapping="Wrap" />
 
             <!-- Shortcut Rows: one card and warning per noise mode, built in code -->

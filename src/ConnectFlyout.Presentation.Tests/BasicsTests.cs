@@ -29,21 +29,21 @@ public sealed class HeadsetErrorMessagesTests
 {
     [TestMethod]
     public void DescribesTimeout() =>
-        Assert.AreEqual("Your headphones didn't respond. Try again.", HeadsetErrorMessages.Describe(new COMException("", HeadsetErrorMessages.TimeoutHResult)));
+        Assert.AreEqual("The headphones did not respond. Try again.", HeadsetErrorMessages.Describe(new COMException("", HeadsetErrorMessages.TimeoutHResult)));
 
     [TestMethod]
     public void DescribesDisconnect() =>
-        Assert.AreEqual("Your headphones disconnected.", HeadsetErrorMessages.Describe(new COMException("", HeadsetErrorMessages.DisconnectedHResult)));
+        Assert.AreEqual("The headphones disconnected.", HeadsetErrorMessages.Describe(new COMException("", HeadsetErrorMessages.DisconnectedHResult)));
 
     [TestMethod]
     public void DescribesTransportFailure() =>
         Assert.AreEqual(
-            "Couldn't connect. Make sure Bluetooth is on and your headphones are nearby.",
+            "Connection failed. Make sure that Bluetooth is on and the headphones are near the PC.",
             HeadsetErrorMessages.Describe(new COMException("", HeadsetErrorMessages.TransportFailureHResult)));
 
     [TestMethod]
     public void FallsBackForUnknownErrors() =>
-        Assert.AreEqual("Something went wrong talking to your headphones.", HeadsetErrorMessages.Describe(new InvalidOperationException()));
+        Assert.AreEqual("Communication with the headphones failed.", HeadsetErrorMessages.Describe(new InvalidOperationException()));
 }
 
 [TestClass]

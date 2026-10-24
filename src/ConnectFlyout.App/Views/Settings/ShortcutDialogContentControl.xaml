@@ -212,7 +212,7 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <TextBlock TextWrapping="Wrap">
-            <Run Text="A shortcut should start with the" />
+            <Run Text="A shortcut must start with the" />
             <Bold>Windows key</Bold><Run Text="," />
             <Bold>Ctrl</Bold><Run Text=", or" />
             <Bold>Alt</Bold><Run Text=", and end with a letter, a number, or an F key." />
@@ -272,7 +272,7 @@
                 Click="ClearBtn_Click"
                 AutomationProperties.Name="Clear shortcut">
                 <ToolTipService.ToolTip>
-                    <TextBlock Text="Clear and unassign this shortcut" TextWrapping="Wrap" />
+                    <TextBlock Text="Clear this shortcut" TextWrapping="Wrap" />
                 </ToolTipService.ToolTip>
                 <StackPanel Orientation="Horizontal" Spacing="4">
                     <FontIcon FontSize="14" Glyph="&#xE894;" />
@@ -304,7 +304,7 @@
                 IsTabStop="{x:Bind IsWarningAltGr, Mode=OneWay}"
                 Severity="Warning"
                 Style="{StaticResource CondensedInfoBarStyle}"
-                ToolTipService.ToolTip="Shortcuts with Ctrl and Alt may remove functionality from some international keyboards, because Ctrl + Alt = AltGr in those keyboards."
+                ToolTipService.ToolTip="Shortcuts with Ctrl and Alt can disable some keys on international keyboards, because Ctrl + Alt is AltGr on those keyboards."
                 AutomationProperties.LiveSetting="Polite" />
             <InfoBar
                 BorderThickness="0"

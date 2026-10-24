@@ -14,12 +14,12 @@
             <Border Style="{StaticResource SettingsCardStyle}">
                 <Grid ColumnDefinitions="*,Auto">
                     <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="Start when I sign in" />
-                        <TextBlock Style="{StaticResource SecondaryTextStyle}" Text="If this won't turn on, check Settings &gt; Apps &gt; Startup." />
+                        <TextBlock Text="Start when you sign in" />
+                        <TextBlock Style="{StaticResource SecondaryTextStyle}" Text="If you cannot turn this on, check Settings &gt; Apps &gt; Startup." />
                     </StackPanel>
                     <ToggleSwitch
                         Grid.Column="1"
-                        AutomationProperties.Name="Start when I sign in"
+                        AutomationProperties.Name="Start when you sign in"
                         IsOn="{x:Bind ViewModel.LaunchAtSignIn, Mode=TwoWay}"
                         Style="{StaticResource CardToggleSwitchStyle}" />
                 </Grid>
@@ -38,7 +38,7 @@
                     <views:SettingToggleRow
                         Margin="0,16"
                         IsOn="{x:Bind ViewModel.HideTray, Mode=TwoWay}"
-                        Subtitle="ConnectFlyout keeps running in the background. Opening it from the Start menu does what you pick below."
+                        Subtitle="ConnectFlyout continues to run in the background. Select what the Start menu opens."
                         Title="Hide the tray icon" />
                 </Expander.Header>
                 <StackPanel Spacing="16">
@@ -46,20 +46,20 @@
                     <views:SettingToggleRow
                         IsEnabled="{x:Bind ViewModel.CanHideTrayWhileDisconnected, Mode=OneWay}"
                         IsOn="{x:Bind ViewModel.HideTrayWhileDisconnected, Mode=TwoWay}"
-                        Subtitle="Shows it again while your headphones are connected."
-                        Title="Hide the tray icon until my headphones connect" />
+                        Subtitle="Shows the icon while the headphones are connected."
+                        Title="Hide the tray icon until the headphones connect" />
 
                     <!-- Hidden Tray Launch -->
                     <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
                         <StackPanel VerticalAlignment="Center">
-                            <TextBlock Text="When I open ConnectFlyout while the icon is hidden" TextWrapping="Wrap" />
-                            <TextBlock Style="{StaticResource SettingSubtitleStyle}" Text="From the Start menu, not when it starts with Windows. If the Open the flyout shortcut isn't set, &quot;Do nothing&quot; opens Settings instead, so you can always get back in." TextWrapping="Wrap" />
+                            <TextBlock Text="When you open ConnectFlyout while the icon is hidden" TextWrapping="Wrap" />
+                            <TextBlock Style="{StaticResource SettingSubtitleStyle}" Text="Applies to the Start menu, not to the start with Windows. If the Open the flyout shortcut is not set, &quot;Do nothing&quot; opens Settings." TextWrapping="Wrap" />
                         </StackPanel>
                         <ComboBox
                             Grid.Column="1"
                             MinWidth="180"
                             VerticalAlignment="Center"
-                            AutomationProperties.Name="When I open ConnectFlyout while the icon is hidden"
+                            AutomationProperties.Name="When you open ConnectFlyout while the icon is hidden"
                             ItemsSource="{x:Bind vm:SettingsViewModel.HiddenTrayLaunchOptions}"
                             SelectedIndex="{x:Bind ViewModel.HiddenTrayLaunchIndex, Mode=TwoWay}" />
                     </Grid>
@@ -72,7 +72,7 @@
                 <Grid ColumnDefinitions="*,Auto">
                     <StackPanel VerticalAlignment="Center">
                         <TextBlock Text="Low battery notifications" />
-                        <TextBlock Style="{StaticResource SecondaryTextStyle}" Text="Notifies you once when your headphones drop below 20%." />
+                        <TextBlock Style="{StaticResource SecondaryTextStyle}" Text="Sends one notification when the battery is below 20%." />
                     </StackPanel>
                     <ToggleSwitch
                         Grid.Column="1"
@@ -80,6 +80,29 @@
                         IsOn="{x:Bind ViewModel.LowBatteryNotifications, Mode=TwoWay}"
                         Style="{StaticResource CardToggleSwitchStyle}" />
                 </Grid>
+            </Border>
+
+            <!-- Hide Flyout Controls: a stack of switches, off by default -->
+            <Border Style="{StaticResource SettingsCardStyle}">
+                <StackPanel Spacing="16">
+                    <TextBlock Text="Hide flyout controls" />
+                    <views:SettingToggleRow
+                        IsOn="{x:Bind ViewModel.HideAmbientControls, Mode=TwoWay}"
+                        Subtitle="The Ambient sound slider and Focus on voice. Also in Settings &gt; Noise &amp; scenes."
+                        Title="Hide ambient sound controls" />
+                    <views:SettingToggleRow
+                        IsOn="{x:Bind ViewModel.HideScenes, Mode=TwoWay}"
+                        Subtitle="The Focus, Office and Aware tiles below Noise control."
+                        Title="Hide scenes" />
+                    <views:SettingToggleRow
+                        IsOn="{x:Bind ViewModel.HidePlayback, Mode=TwoWay}"
+                        Subtitle="The device that has the audio, on headphones that can change device. Not in Settings."
+                        Title="Hide playback" />
+                    <views:SettingToggleRow
+                        IsOn="{x:Bind ViewModel.HideSoundControls, Mode=TwoWay}"
+                        Subtitle="The Equalizer and DSEE rows. Also in Settings &gt; Sound."
+                        Title="Hide sound controls" />
+                </StackPanel>
             </Border>
 
             <!-- Theme -->
@@ -102,7 +125,7 @@
                     <Grid ColumnDefinitions="*,Auto">
                         <StackPanel VerticalAlignment="Center">
                             <TextBlock Text="Debug logging" />
-                            <TextBlock Style="{StaticResource SecondaryTextStyle}" Text="Also logs every byte sent to and from the headphones. Turn on only when troubleshooting." />
+                            <TextBlock Style="{StaticResource SecondaryTextStyle}" Text="Also writes all data sent to and from the headphones to the log. Turn on only to find a fault." />
                         </StackPanel>
                         <ToggleSwitch
                             Grid.Column="1"

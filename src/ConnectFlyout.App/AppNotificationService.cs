@@ -67,7 +67,7 @@ internal sealed class AppNotificationService : INotificationService, IDisposable
     public void ShowLowBattery(string headsetId, string deviceName, int level)
     {
         var title = $"{deviceName} battery is low";
-        var message = $"{level}% left. Charge them soon.";
+        var message = $"{level}% remains. Charge the headphones soon.";
 
         if (_classicNotifier is not null)
         {

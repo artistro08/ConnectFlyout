@@ -265,7 +265,7 @@ public sealed class SettingsViewModel : ObservableObject
     }
 
     /// <summary>
-    /// "Until my headphones connect" only matters while the icon isn't hidden for good.
+    /// "Until the headphones connect" only matters while the icon isn't hidden for good.
     /// </summary>
     public bool CanHideTrayWhileDisconnected => !HideTray;
 
@@ -300,6 +300,79 @@ public sealed class SettingsViewModel : ObservableObject
             OnPropertyChanged();
         }
     }
+
+    // Hide Flyout Controls: each switch saves, then tells every headset page which sections to redraw
+    public bool HideAmbientControls
+    {
+        get => _settings.HideAmbientControls;
+        set
+        {
+            if (value == _settings.HideAmbientControls)
+            {
+                return;
+            }
+            _settings.HideAmbientControls = value;
+            OnPropertyChanged();
+            RefreshFlyoutSections(nameof(HeadsetViewModel.ShowAmbientControls));
+        }
+    }
+
+    public bool HideScenes
+    {
+        get => _settings.HideScenes;
+        set
+        {
+            if (value == _settings.HideScenes)
+            {
+                return;
+            }
+            _settings.HideScenes = value;
+            OnPropertyChanged();
+            RefreshFlyoutSections(nameof(HeadsetViewModel.ShowScenes));
+        }
+    }
+
+    public bool HidePlayback
+    {
+        get => _settings.HidePlayback;
+        set
+        {
+            if (value == _settings.HidePlayback)
+            {
+                return;
+            }
+            _settings.HidePlayback = value;
+            OnPropertyChanged();
+            RefreshFlyoutSections(nameof(HeadsetViewModel.ShowPlayback));
+        }
+    }
+
+    public bool HideSoundControls
+    {
+        get => _settings.HideSoundControls;
+        set
+        {
+            if (value == _settings.HideSoundControls)
+            {
+                return;
+            }
+            _settings.HideSoundControls = value;
+            OnPropertyChanged();
+            RefreshFlyoutSections(
+                nameof(HeadsetViewModel.ShowPopupSoundSection),
+                nameof(HeadsetViewModel.ShowPopupConnectionSeparator),
+                nameof(HeadsetViewModel.ShowPopupSoundSeparator));
+        }
+    }
+
+    private void RefreshFlyoutSections(params string[] sections)
+    {
+        foreach (var headset in Headsets)
+        {
+            headset.RefreshFlyoutSections(sections);
+        }
+    }
+    // /Hide Flyout Controls
 
     public static IReadOnlyList<string> ThemeOptions { get; } = ["Use system setting", "Light", "Dark"];
 

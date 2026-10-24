@@ -22,7 +22,7 @@
                         <Grid ColumnDefinitions="*,Auto">
                             <StackPanel VerticalAlignment="Center">
                                 <TextBlock Text="Equalizer preset" />
-                                <TextBlock Style="{StaticResource SecondaryTextStyle}" Text="Choose a preset for your headphones." />
+                                <TextBlock Style="{StaticResource SecondaryTextStyle}" Text="Select a preset." />
                             </StackPanel>
                             <ComboBox
                                 Grid.Column="1"
@@ -40,7 +40,7 @@
                     <Border Style="{StaticResource SettingsCardStyle}" Visibility="{x:Bind ViewModel.SelectedHeadset.Features.ClearBass, Mode=OneWay}">
                         <StackPanel Spacing="12">
                             <TextBlock Text="Custom equalizer" />
-                            <TextBlock Style="{StaticResource SecondaryTextStyle}" Text="Each band goes from -10 to +10. Apply sends the curve and switches the preset to Manual." />
+                            <TextBlock Style="{StaticResource SecondaryTextStyle}" Text="Each band has a range of -10 to +10. Apply sends the curve and sets the preset to Manual." />
                             <!-- Bands: one vertical slider per column, frequency underneath -->
                             <Grid ColumnDefinitions="*,*,*,*,*,*" RowDefinitions="Auto,Auto" RowSpacing="8">
                                 <Slider Grid.Column="0" AutomationProperties.Name="Clear Bass" IsEnabled="{x:Bind ViewModel.SelectedHeadset.CanEditHeadsetSound, Mode=OneWay}" Style="{StaticResource EqualizerBandSliderStyle}" Value="{x:Bind ViewModel.SelectedHeadset.ClearBass, Mode=TwoWay}" />
@@ -72,7 +72,7 @@
                         <Grid ColumnDefinitions="*,Auto">
                             <StackPanel VerticalAlignment="Center">
                                 <TextBlock Text="{x:Bind ViewModel.SelectedHeadset.DseeName, Mode=OneWay}" />
-                                <TextBlock Style="{StaticResource SecondaryTextStyle}" Text="Upscales compressed music. Uses a little more battery." />
+                                <TextBlock Style="{StaticResource SecondaryTextStyle}" Text="Improves the quality of compressed music. Uses more battery power." />
                             </StackPanel>
                             <ComboBox
                                 Grid.Column="1"
@@ -92,7 +92,7 @@
                         <Grid ColumnDefinitions="*,Auto">
                             <StackPanel VerticalAlignment="Center">
                                 <TextBlock Text="Surround (VPT)" />
-                                <TextBlock Style="{StaticResource SecondaryTextStyle}" Text="Adds a virtual surround effect to your audio." />
+                                <TextBlock Style="{StaticResource SecondaryTextStyle}" Text="Adds a virtual surround effect." />
                             </StackPanel>
                             <ComboBox
                                 Grid.Column="1"
@@ -111,7 +111,7 @@
                         <Grid ColumnDefinitions="*,Auto">
                             <StackPanel VerticalAlignment="Center">
                                 <TextBlock Text="Sound position" />
-                                <TextBlock Style="{StaticResource SecondaryTextStyle}" Text="Moves the apparent direction of the sound." />
+                                <TextBlock Style="{StaticResource SecondaryTextStyle}" Text="Changes the direction of the sound." />
                             </StackPanel>
                             <ComboBox
                                 Grid.Column="1"

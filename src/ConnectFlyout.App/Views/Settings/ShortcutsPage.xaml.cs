@@ -120,9 +120,9 @@ public sealed partial class ShortcutsPage : Page
         control.HotkeySettings = Hotkey.TryParse(shortcut, out var hotkey) ? HotkeySettings.FromHotkey(hotkey) : new HotkeySettings();
 
         // Without the tray icon's window nothing can be registered, which isn't another app's doing
-        var message = !shortcuts.IsAvailable ? "Shortcuts aren't available because the tray icon couldn't start."
+        var message = !shortcuts.IsAvailable ? "Shortcuts are not available because the tray icon did not start."
             : _notes.TryGetValue(action, out var note) ? note
-            : shortcuts.IsTaken(action) ? $"Another app is using {shortcut}. Pick a different shortcut."
+            : shortcuts.IsTaken(action) ? $"A different app uses {shortcut}. Select a different shortcut."
             : null;
         control.HasConflict = shortcuts.IsAvailable && shortcuts.IsTaken(action);
         control.Tooltip = message;
@@ -156,9 +156,9 @@ public sealed partial class ShortcutsPage : Page
     {
         var text = hotkey.ToString();
         var other = ShortcutActions.All.FirstOrDefault(each => each != action && _context.Settings.GetShortcut(each) == text);
-        return !_context.Shortcuts.IsAvailable ? "Shortcuts aren't available because the tray icon couldn't start."
+        return !_context.Shortcuts.IsAvailable ? "Shortcuts are not available because the tray icon did not start."
             : other != default ? $"“{ShortcutActions.NameFor(other)}” already uses {text}."
-            : !_context.Shortcuts.IsFree(hotkey) ? $"Windows or another app is using {text}. Try a different one."
+            : !_context.Shortcuts.IsFree(hotkey) ? $"Windows or a different app uses {text}. Select a different shortcut."
             : null;
     }
 

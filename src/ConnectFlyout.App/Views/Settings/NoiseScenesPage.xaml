@@ -11,7 +11,7 @@
 
             <!-- Scenes -->
             <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="Scenes" />
-            <TextBlock Style="{StaticResource SecondaryTextStyle}" Text="Scenes are the quick buttons under Noise control in the flyout." />
+            <TextBlock Style="{StaticResource SecondaryTextStyle}" Text="Scenes are the buttons below Noise control in the flyout." />
             <ItemsRepeater ItemsSource="{x:Bind ViewModel.Scenes}">
                 <ItemsRepeater.Layout>
                     <StackLayout Spacing="8" />
@@ -99,7 +99,7 @@
                 <Grid ColumnDefinitions="*,Auto">
                     <StackPanel VerticalAlignment="Center">
                         <TextBlock Text="Speak-to-Chat" />
-                        <TextBlock Style="{StaticResource SecondaryTextStyle}" Text="Pauses music and lets in outside sound when you start talking." />
+                        <TextBlock Style="{StaticResource SecondaryTextStyle}" Text="Stops the music and lets in outside sound when you speak." />
                     </StackPanel>
                     <ToggleSwitch
                         Grid.Column="1"

@@ -20,6 +20,10 @@ public sealed class AppSettingsTests
         Assert.IsFalse(settings.HideTray);
         Assert.IsFalse(settings.HideTrayWhileDisconnected);
         Assert.AreEqual(HiddenTrayLaunch.OpenSettings, settings.HiddenTrayLaunch);
+        Assert.IsFalse(settings.HideAmbientControls);
+        Assert.IsFalse(settings.HideScenes);
+        Assert.IsFalse(settings.HidePlayback);
+        Assert.IsFalse(settings.HideSoundControls);
         Assert.IsTrue(settings.IsAutoConnectEnabled("AC:80:0A:12:34:56"));
         CollectionAssert.AreEqual(Scene.Defaults.ToList(), settings.Scenes.ToList());
     }
@@ -37,6 +41,10 @@ public sealed class AppSettingsTests
             HideTray = true,
             HideTrayWhileDisconnected = true,
             HiddenTrayLaunch = HiddenTrayLaunch.OpenFlyout,
+            HideAmbientControls = true,
+            HideScenes = true,
+            HidePlayback = true,
+            HideSoundControls = true,
         };
         settings.SetAutoConnectEnabled("AC:80:0A:12:34:56", false);
 
@@ -48,6 +56,10 @@ public sealed class AppSettingsTests
         Assert.IsTrue(reloaded.HideTray);
         Assert.IsTrue(reloaded.HideTrayWhileDisconnected);
         Assert.AreEqual(HiddenTrayLaunch.OpenFlyout, reloaded.HiddenTrayLaunch);
+        Assert.IsTrue(reloaded.HideAmbientControls);
+        Assert.IsTrue(reloaded.HideScenes);
+        Assert.IsTrue(reloaded.HidePlayback);
+        Assert.IsTrue(reloaded.HideSoundControls);
         Assert.IsFalse(reloaded.IsAutoConnectEnabled("AC:80:0A:12:34:56"));
     }
 

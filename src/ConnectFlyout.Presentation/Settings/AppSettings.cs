@@ -38,6 +38,10 @@ public sealed class AppSettings
     private const string HideTrayKey                  = "HideTray";
     private const string HideTrayWhileDisconnectedKey = "HideTrayWhileDisconnected";
     private const string HiddenTrayLaunchKey          = "HiddenTrayLaunch";
+    private const string HideScenesKey                = "HideScenes";
+    private const string HidePlaybackKey              = "HidePlayback";
+    private const string HideSoundControlsKey         = "HideSoundControls";
+    private const string HideAmbientControlsKey       = "HideAmbientControls";
     private const string AutoConnectKeyPrefix         = "AutoConnect.";
     private const string KnownHeadsetKeyPrefix        = "KnownHeadset.";
     private const string LastCaseBatteryKeyPrefix     = "LastCaseBattery.";
@@ -108,6 +112,42 @@ public sealed class AppSettings
             ? action
             : HiddenTrayLaunch.OpenSettings;
         set => _store.SetString(HiddenTrayLaunchKey, value.ToString());
+    }
+
+    /// <summary>
+    /// Hides the Focus, Office and Aware scene tiles in the flyout.
+    /// </summary>
+    public bool HideScenes
+    {
+        get => GetBool(HideScenesKey, false);
+        set => SetBool(HideScenesKey, value);
+    }
+
+    /// <summary>
+    /// Hides the Playback section in the flyout (on headphones that can switch devices).
+    /// </summary>
+    public bool HidePlayback
+    {
+        get => GetBool(HidePlaybackKey, false);
+        set => SetBool(HidePlaybackKey, value);
+    }
+
+    /// <summary>
+    /// Hides the Ambient sound slider and Focus on voice in the flyout.
+    /// </summary>
+    public bool HideAmbientControls
+    {
+        get => GetBool(HideAmbientControlsKey, false);
+        set => SetBool(HideAmbientControlsKey, value);
+    }
+
+    /// <summary>
+    /// Hides the Equalizer and DSEE rows in the flyout.
+    /// </summary>
+    public bool HideSoundControls
+    {
+        get => GetBool(HideSoundControlsKey, false);
+        set => SetBool(HideSoundControlsKey, value);
     }
 
     /// <summary>

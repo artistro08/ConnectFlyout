@@ -35,7 +35,7 @@
             <TextBlock
                 HorizontalAlignment="Center"
                 Style="{StaticResource SecondaryTextStyle}"
-                Text="Connect them in Bluetooth settings and they'll show up here."
+                Text="Connect the headphones in the Windows Bluetooth settings."
                 TextAlignment="Center"
                 TextWrapping="Wrap" />
             <HyperlinkButton
@@ -110,7 +110,7 @@
                                 VerticalAlignment="Center"
                                 AutomationProperties.Name="Connect over Bluetooth"
                                 Command="{x:Bind ConnectCommand}"
-                                ToolTipService.ToolTip="Connects over Bluetooth. Another device using them may lose the audio."
+                                ToolTipService.ToolTip="Connects the headphones through Bluetooth. A different device can lose the audio."
                                 Visibility="{x:Bind ShowConnect, Mode=OneWay}">
                                 <StackPanel Orientation="Horizontal" Spacing="8">
                                     <FontIcon FontSize="14" Glyph="&#xE702;" />
@@ -180,7 +180,7 @@
                             HorizontalAlignment="Center"
                             AutomationProperties.Name="Connect over Bluetooth"
                             Command="{x:Bind ViewModel.CurrentHeadset.ConnectCommand, Mode=OneWay}"
-                            ToolTipService.ToolTip="Connects over Bluetooth. Another device using them may lose the audio."
+                            ToolTipService.ToolTip="Connects the headphones through Bluetooth. A different device can lose the audio."
                             Visibility="{x:Bind ViewModel.CurrentHeadset.ShowConnect, Mode=OneWay, FallbackValue=Collapsed}">
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <FontIcon FontSize="16" Glyph="&#xE702;" />
@@ -249,7 +249,7 @@
                         </Grid>
 
                         <!-- Ambient Level -->
-                        <StackPanel Visibility="{x:Bind ViewModel.CurrentHeadset.IsAmbient, Mode=OneWay}">
+                        <StackPanel Visibility="{x:Bind ViewModel.CurrentHeadset.ShowAmbientControls, Mode=OneWay, FallbackValue=Collapsed}">
                             <Grid ColumnDefinitions="*,Auto">
                                 <TextBlock Text="Ambient sound" />
                                 <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.CurrentHeadset.AmbientLevelText, Mode=OneWay}" />
@@ -266,7 +266,7 @@
 
                         <!-- Focus On Voice: an ambient sound setting; in the other modes the headset
                              ignores it and keeps its last value, so the switch only shows in Ambient -->
-                        <Grid ColumnDefinitions="*,Auto" Visibility="{x:Bind ViewModel.CurrentHeadset.IsAmbient, Mode=OneWay}">
+                        <Grid ColumnDefinitions="*,Auto" Visibility="{x:Bind ViewModel.CurrentHeadset.ShowAmbientControls, Mode=OneWay, FallbackValue=Collapsed}">
                             <TextBlock VerticalAlignment="Center" Text="Focus on voice" />
                             <ToggleSwitch
                                 Grid.Column="1"
@@ -276,7 +276,7 @@
                         </Grid>
 
                         <!-- Scenes -->
-                        <ItemsRepeater ItemsSource="{x:Bind ViewModel.CurrentHeadset.SceneItems, Mode=OneWay}">
+                        <ItemsRepeater ItemsSource="{x:Bind ViewModel.CurrentHeadset.SceneItems, Mode=OneWay}" Visibility="{x:Bind ViewModel.CurrentHeadset.ShowScenes, Mode=OneWay, FallbackValue=Collapsed}">
                             <ItemsRepeater.Layout>
                                 <app:UniformColumnsLayout
                                     ColumnSpacing="8"
@@ -332,7 +332,7 @@
                 </StackPanel>
                 <!-- /Playback -->
 
-                <MenuFlyoutSeparator />
+                <MenuFlyoutSeparator Visibility="{x:Bind ViewModel.CurrentHeadset.ShowPopupSoundSeparator, Mode=OneWay, FallbackValue=Collapsed}" />
 
                 <!-- Codec-gated popup Sound -->
                 <ContentControl

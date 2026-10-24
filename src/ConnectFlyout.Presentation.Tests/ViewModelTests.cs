@@ -461,7 +461,7 @@ public sealed class HeadsetViewModelTests
         viewModel.VptPresetIndex = 1;
 
         Assert.IsTrue(await TestWait.UntilAsync(() => viewModel.VptPresetIndex == 0));
-        Assert.AreEqual("Your headphones didn't respond. Try again.", viewModel.ErrorMessage);
+        Assert.AreEqual("The headphones did not respond. Try again.", viewModel.ErrorMessage);
     }
 
     [TestMethod]
@@ -508,7 +508,7 @@ public sealed class HeadsetViewModelTests
         _viewModel.SetNoiseModeCommand.Execute("Off");
 
         Assert.IsTrue(_viewModel.IsAmbient);
-        Assert.AreEqual("Your headphones didn't respond. Try again.", _viewModel.ErrorMessage);
+        Assert.AreEqual("The headphones did not respond. Try again.", _viewModel.ErrorMessage);
         Assert.IsTrue(_viewModel.HasError);
 
         _time.Advance(TimeSpan.FromSeconds(5));
@@ -567,6 +567,58 @@ public sealed class HeadsetViewModelTests
     }
 
     [TestMethod]
+    public void SettingsCanHideScenesPlaybackAndSoundControls()
+    {
+        _headset.RaiseStateChanged(_headset.State with { PlaybackDevices = TwoDevices });
+        _viewModel.SelectNoiseMode(NoiseMode.Ambient);
+        Assert.IsTrue(_viewModel.ShowAmbientControls);
+        Assert.IsTrue(_viewModel.ShowScenes);
+        Assert.IsTrue(_viewModel.ShowPlayback);
+        Assert.IsTrue(_viewModel.ShowPopupSoundSection);
+
+        _settings.HideAmbientControls = true;
+        _settings.HideScenes = true;
+        _settings.HidePlayback = true;
+        _settings.HideSoundControls = true;
+
+        Assert.IsFalse(_viewModel.ShowAmbientControls);
+        Assert.IsFalse(_viewModel.ShowScenes);
+        Assert.IsFalse(_viewModel.ShowPlayback);
+        Assert.IsFalse(_viewModel.ShowPopupSoundSection);
+        Assert.IsFalse(_viewModel.ShowPopupConnectionSeparator);
+        Assert.IsFalse(_viewModel.ShowPopupSoundSeparator);
+    }
+
+    [TestMethod]
+    public void HidingSoundControlsKeepsTheSeparatorAboveConnectionMode()
+    {
+        using var headset = new FakeHeadset("WH-XB900N", FakeHeadset.Xb900nFeatures)
+        {
+            State = HeadsetSnapshot.Empty with { Codec = "SBC", ConnectionQuality = 1 },
+        };
+        var managed = new ManagedHeadset("device-xb900n", "AC:80:0A:00:09:00", "WH-XB900N", headset)
+        {
+            ConnectionState = HeadsetConnectionState.Connected,
+            IsWindowsConnected = true,
+        };
+        using var viewModel = new HeadsetViewModel(
+            managed,
+            _settings,
+            new LowBatteryMonitor(_settings, _notifications),
+            _time,
+            NullLogger.Instance);
+        Assert.IsTrue(viewModel.ShowPopupSoundSection);
+        Assert.IsTrue(viewModel.ShowPopupConnectionSeparator);
+        Assert.IsTrue(viewModel.ShowPopupSoundSeparator);
+
+        _settings.HideSoundControls = true;
+
+        Assert.IsFalse(viewModel.ShowPopupSoundSection);
+        Assert.IsFalse(viewModel.ShowPopupConnectionSeparator);
+        Assert.IsTrue(viewModel.ShowPopupSoundSeparator);
+    }
+
+    [TestMethod]
     public void PlaybackHidesWhileDisconnected()
     {
         _headset.RaiseStateChanged(_headset.State with { PlaybackDevices = TwoDevices });
@@ -598,7 +650,7 @@ public sealed class HeadsetViewModelTests
 
         Assert.IsTrue(_viewModel.PlaybackDevices[0].Playing);
         Assert.IsFalse(_viewModel.PlaybackDevices[1].Playing);
-        Assert.AreEqual("Couldn't switch the audio. The other device may be on a call.", _viewModel.ErrorMessage);
+        Assert.AreEqual("Audio switch failed. The other device is possibly on a call.", _viewModel.ErrorMessage);
     }
 
     [TestMethod]
@@ -759,13 +811,13 @@ public sealed class HeadsetViewModelTests
 
         // Windows still has the headphones; only the app let go
         _viewModel.UpdateConnectionState(HeadsetConnectionState.Disconnected);
-        Assert.AreEqual("App Disconnected", _viewModel.StatusText);
-        Assert.AreEqual("App Disconnected", _viewModel.DisconnectedMessage);
+        Assert.AreEqual("App disconnected", _viewModel.StatusText);
+        Assert.AreEqual("App disconnected", _viewModel.DisconnectedMessage);
 
         _managed.IsWindowsConnected = false;
         _viewModel.UpdateConnectionState(HeadsetConnectionState.Disconnected);
         Assert.AreEqual("Disconnected", _viewModel.StatusText);
-        Assert.AreEqual("Device is disconnected.", _viewModel.DisconnectedMessage);
+        Assert.AreEqual("The device is disconnected.", _viewModel.DisconnectedMessage);
     }
 
     [TestMethod]
@@ -1016,7 +1068,7 @@ public sealed class FlyoutViewModelTests
         xm4.ConnectCommand.Execute(null);
 
         Assert.IsFalse(xm4.IsBluetoothConnecting);
-        Assert.AreEqual("Couldn't connect. Make sure your headphones are on and nearby.", xm4.ErrorMessage);
+        Assert.AreEqual("Connection failed. Make sure that the headphones are on and near the PC.", xm4.ErrorMessage);
         Assert.AreEqual(xm4.ErrorMessage, xm4.PickerStatusText); // the list row says so too
     }
 
@@ -1038,7 +1090,7 @@ public sealed class FlyoutViewModelTests
         _time.Advance(HeadsetViewModel.BluetoothConnectTimeout);
 
         Assert.IsFalse(xm4.IsBluetoothConnecting);
-        Assert.AreEqual("Couldn't connect. Make sure your headphones are on and nearby.", xm4.ErrorMessage);
+        Assert.AreEqual("Connection failed. Make sure that the headphones are on and near the PC.", xm4.ErrorMessage);
     }
 
     [TestMethod]
@@ -1318,6 +1370,27 @@ public sealed class SettingsViewModelTests
         _viewModel.SelectCurrentHeadset();
 
         Assert.AreEqual("WH-1000XM4", _viewModel.SelectedHeadset?.DeviceName);
+    }
+
+    [TestMethod]
+    public void HideSwitchesRefreshEveryHeadsetPage()
+    {
+        _source.Report(new BluetoothDeviceInfo("device-xm6", "WF-1000XM6", "ac:80:0a:00:00:06", true));
+        _source.Report(new BluetoothDeviceInfo("device-xm4", "WH-1000XM4", "ac:80:0a:00:00:04", true));
+        var raised = new List<string>();
+        foreach (var headset in _flyout.Headsets)
+        {
+            headset.PropertyChanged += (_, e) => raised.Add(e.PropertyName ?? "");
+        }
+
+        _viewModel.HideScenes = true;
+        _viewModel.HideSoundControls = true;
+
+        Assert.IsTrue(_viewModel.HideScenes);
+        Assert.IsTrue(_flyout.Headsets.All(headset => !headset.ShowScenes && !headset.ShowPopupSoundSection));
+        Assert.AreEqual(2, raised.Count(name => name == nameof(HeadsetViewModel.ShowScenes)));
+        Assert.AreEqual(2, raised.Count(name => name == nameof(HeadsetViewModel.ShowPopupSoundSeparator)));
+        Assert.IsFalse(raised.Contains(nameof(HeadsetViewModel.ShowPlayback)));
     }
 
     [TestMethod]

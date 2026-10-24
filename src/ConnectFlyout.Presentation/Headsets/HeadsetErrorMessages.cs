@@ -17,12 +17,12 @@ public static class HeadsetErrorMessages
 
         return exception.HResult switch
         {
-            TimeoutHResult => "Your headphones didn't respond. Try again.",
-            DisconnectedHResult => "Your headphones disconnected.",
-            UnsupportedHResult => "These headphones don't support that setting.",
-            InvalidDataHResult => "Your headphones sent a reply the app didn't understand.",
-            TransportFailureHResult => "Couldn't connect. Make sure Bluetooth is on and your headphones are nearby.",
-            _ => "Something went wrong talking to your headphones.",
+            TimeoutHResult => "The headphones did not respond. Try again.",
+            DisconnectedHResult => "The headphones disconnected.",
+            UnsupportedHResult => "The headphones do not support this setting.",
+            InvalidDataHResult => "The headphones sent an unknown reply.",
+            TransportFailureHResult => "Connection failed. Make sure that Bluetooth is on and the headphones are near the PC.",
+            _ => "Communication with the headphones failed.",
         };
     }
 }
