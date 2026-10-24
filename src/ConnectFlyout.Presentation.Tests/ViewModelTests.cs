@@ -778,6 +778,19 @@ public sealed class HeadsetViewModelTests
     }
 
     [TestMethod]
+    public void ScenesTurnedOffStayOutOfTheFlyout()
+    {
+        _settings.Scenes = [.. Scene.Defaults.Select((scene, index) => scene with { ShowInFlyout = index != 1 })];
+        _viewModel.RefreshScenes();
+        CollectionAssert.AreEqual(new[] { "Focus", "Aware" }, _viewModel.SceneItems.Select(item => item.Name).ToList());
+        Assert.IsTrue(_viewModel.ShowScenes);
+
+        _settings.Scenes = [.. Scene.Defaults.Select(scene => scene with { ShowInFlyout = false })];
+        _viewModel.RefreshScenes();
+        Assert.IsFalse(_viewModel.ShowScenes);
+    }
+
+    [TestMethod]
     public void SceneSendsOneCommand()
     {
         _viewModel.ApplySceneCommand.Execute(new Scene("Aware", "\uE805", new NoiseControlSetting(NoiseMode.Ambient, 20, false)));
@@ -1603,15 +1616,54 @@ public sealed class SettingsViewModelTests
     }
 
     [TestMethod]
-    public void SavingScenesStoresEdits()
+    public void EditingASceneSavesIt()
     {
         _viewModel.Scenes[0].Name = "Deep work";
         _viewModel.Scenes[0].ModeIndex = (int)NoiseMode.Ambient;
         _viewModel.Scenes[0].AmbientLevel = 5;
+        _viewModel.Scenes[0].IconIndex = 3;
 
-        _viewModel.SaveScenesCommand.Execute(null);
+        Assert.AreEqual(new Scene("Deep work", "\uE80F", new NoiseControlSetting(NoiseMode.Ambient, 5, false)), _settings.Scenes[0]);
+        Assert.AreEqual("Ambient sound · Level 5", _viewModel.Scenes[0].Summary);
+        Assert.AreEqual(3, _viewModel.Scenes[0].IconIndex);
+    }
 
-        Assert.AreEqual(new Scene("Deep work", "\uE708", new NoiseControlSetting(NoiseMode.Ambient, 5, false)), _settings.Scenes[0]);
+    [TestMethod]
+    public void NewSceneIsSavedOnCommitOnly()
+    {
+        _viewModel.BeginNewScene();
+        _viewModel.NewScene!.Name = "Gym";
+        _viewModel.NewScene.IconIndex = 4;
+        Assert.AreEqual(3, _settings.Scenes.Count);
+
+        _viewModel.CommitNewScene();
+
+        Assert.IsNull(_viewModel.NewScene);
+        Assert.AreEqual(4, _viewModel.Scenes.Count);
+        Assert.AreEqual(new Scene("Gym", SceneEditorViewModel.IconOptions[4], new NoiseControlSetting(NoiseMode.NoiseCancelling, 0, false)), _settings.Scenes[3]);
+
+        // The added scene saves its edits like the others
+        _viewModel.Scenes[3].ShowInFlyout = false;
+        Assert.IsFalse(_settings.Scenes[3].ShowInFlyout);
+    }
+
+    [TestMethod]
+    public void CancelingANewSceneSavesNothing()
+    {
+        _viewModel.BeginNewScene();
+        _viewModel.NewScene!.Name = "Gym";
+        _viewModel.CancelNewScene();
+
+        Assert.IsNull(_viewModel.NewScene);
+        Assert.AreEqual(3, _settings.Scenes.Count);
+    }
+
+    [TestMethod]
+    public void DeletingASceneSavesTheRest()
+    {
+        _viewModel.DeleteScene(_viewModel.Scenes[1]);
+
+        CollectionAssert.AreEqual(new[] { "Focus", "Aware" }, _settings.Scenes.Select(scene => scene.Name).ToList());
     }
 
     [TestMethod]
@@ -1630,7 +1682,6 @@ public sealed class SettingsViewModelTests
     public void ResettingScenesRestoresDefaults()
     {
         _viewModel.Scenes[0].Name = "Changed";
-        _viewModel.SaveScenesCommand.Execute(null);
 
         _viewModel.ResetScenesCommand.Execute(null);
 

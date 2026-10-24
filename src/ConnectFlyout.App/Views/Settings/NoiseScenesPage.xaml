@@ -3,91 +3,86 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:ConnectFlyout.App.Views.Settings"
+    xmlns:views="using:ConnectFlyout.App.Views"
     xmlns:vm="using:ConnectFlyout.Presentation.ViewModels">
 
-    <ContentControl Style="{StaticResource SettingsPageStyle}">
-        <StackPanel Spacing="8">
-            <TextBlock Style="{StaticResource SettingsPageTitleStyle}" Text="Noise &amp; scenes" />
+    <!-- The page scrolls above a footer that stays put -->
+    <Grid RowDefinitions="*,Auto">
+        <ContentControl Style="{StaticResource SettingsPageStyle}">
+            <StackPanel Spacing="8">
+                <TextBlock Style="{StaticResource SettingsPageTitleStyle}" Text="Noise &amp; scenes" />
+                <TextBlock
+                    Margin="0,0,0,8"
+                    Style="{StaticResource SecondaryTextStyle}"
+                    Text="Scenes are the buttons below Noise control in the flyout. Each one applies a noise control setting. Changes are saved as you make them." />
 
-            <!-- Scenes -->
-            <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="Scenes" />
-            <TextBlock Style="{StaticResource SecondaryTextStyle}" Text="Scenes are the buttons below Noise control in the flyout." />
-            <ItemsRepeater ItemsSource="{x:Bind ViewModel.Scenes}">
-                <ItemsRepeater.Layout>
-                    <StackLayout Spacing="8" />
-                </ItemsRepeater.Layout>
-                <ItemsRepeater.ItemTemplate>
-                    <DataTemplate x:DataType="vm:SceneEditorViewModel">
-                        <Border Style="{StaticResource SettingsCardStyle}">
-                            <Grid ColumnDefinitions="Auto,*,1.4*,Auto" ColumnSpacing="16" RowDefinitions="Auto,Auto">
-                                <!-- Icon, in the card's top-left corner -->
-                                <FontIcon
-                                    VerticalAlignment="Top"
-                                    FontSize="20"
-                                    Glyph="{x:Bind Glyph}" />
+                <!-- Scene Cards: icon, name and a summary in the header; the settings and Delete inside -->
+                <ItemsRepeater ItemsSource="{x:Bind ViewModel.Scenes}">
+                    <ItemsRepeater.Layout>
+                        <StackLayout Spacing="8" />
+                    </ItemsRepeater.Layout>
+                    <ItemsRepeater.ItemTemplate>
+                        <DataTemplate x:DataType="vm:SceneEditorViewModel">
+                            <views:SettingsExpander Style="{StaticResource SettingsExpanderStyle}">
+                                <views:SettingsExpander.Header>
+                                    <Grid
+                                        Margin="0,16"
+                                        ColumnDefinitions="Auto,*"
+                                        ColumnSpacing="16">
+                                        <FontIcon
+                                            VerticalAlignment="Center"
+                                            FontSize="20"
+                                            Glyph="{x:Bind Glyph, Mode=OneWay}" />
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                            <TextBlock Text="{x:Bind Name, Mode=OneWay}" />
+                                            <TextBlock Style="{StaticResource SettingSubtitleStyle}" Text="{x:Bind Summary, Mode=OneWay}" />
+                                        </StackPanel>
+                                    </Grid>
+                                </views:SettingsExpander.Header>
+                                <StackPanel>
+                                    <local:SceneEditor Scene="{x:Bind}" />
 
-                                <!-- Name, mode and Focus on voice. Top-aligned so the name box keeps
-                                     its own height instead of stretching to the switch's row. -->
-                                <TextBox
-                                    Grid.Column="1"
-                                    VerticalAlignment="Top"
-                                    AutomationProperties.Name="Scene name"
-                                    Header="Name"
-                                    Text="{x:Bind Name, Mode=TwoWay}" />
-                                <ComboBox
-                                    Grid.Column="2"
-                                    HorizontalAlignment="Stretch"
-                                    VerticalAlignment="Top"
-                                    AutomationProperties.Name="Noise control mode"
-                                    Header="Noise control"
-                                    ItemsSource="{x:Bind vm:SceneEditorViewModel.ModeOptions}"
-                                    SelectedIndex="{x:Bind ModeIndex, Mode=TwoWay}" />
-                                <ToggleSwitch
-                                    Grid.Column="3"
-                                    AutomationProperties.Name="Focus on voice"
-                                    Header="Focus on voice"
-                                    IsOn="{x:Bind FocusOnVoice, Mode=TwoWay}"
-                                    Style="{StaticResource CardToggleSwitchStyle}" />
-
-                                <!-- Ambient Level: under a separator, with ticks and the number like the flyout -->
-                                <StackPanel
-                                    Grid.Row="1"
-                                    Grid.ColumnSpan="4"
-                                    Margin="0,12,0,0"
-                                    Spacing="12"
-                                    Visibility="{x:Bind IsAmbient, Mode=OneWay}">
-                                    <Rectangle Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
-                                    <StackPanel>
-                                        <Grid ColumnDefinitions="*,Auto">
-                                            <TextBlock Text="Ambient sound level" />
-                                            <TextBlock Grid.Column="1" Text="{x:Bind AmbientLevelText, Mode=OneWay}" />
+                                    <!-- Delete: only here, inside the open card -->
+                                    <Border Style="{StaticResource SettingsExpanderDividerStyle}" />
+                                    <Border Style="{StaticResource SettingsExpanderItemStyle}">
+                                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                            <StackPanel VerticalAlignment="Center">
+                                                <TextBlock Text="Delete scene" />
+                                                <TextBlock Style="{StaticResource SettingSubtitleStyle}" Text="Removes the scene from the flyout and from this page." />
+                                            </StackPanel>
+                                            <Button
+                                                Grid.Column="1"
+                                                VerticalAlignment="Center"
+                                                AutomationProperties.Name="Delete scene"
+                                                Click="OnDeleteSceneClick"
+                                                Content="Delete"
+                                                Tag="{x:Bind}" />
                                         </Grid>
-                                        <Slider
-                                            AutomationProperties.Name="Ambient sound level"
-                                            Maximum="20"
-                                            Minimum="1"
-                                            StepFrequency="1"
-                                            TickFrequency="1"
-                                            TickPlacement="Outside"
-                                            Value="{x:Bind AmbientLevel, Mode=TwoWay}" />
-                                    </StackPanel>
+                                    </Border>
                                 </StackPanel>
-                            </Grid>
-                        </Border>
-                    </DataTemplate>
-                </ItemsRepeater.ItemTemplate>
-            </ItemsRepeater>
-            <StackPanel
-                HorizontalAlignment="Right"
-                Orientation="Horizontal"
-                Spacing="8">
-                <Button Command="{x:Bind ViewModel.ResetScenesCommand}" Content="Reset to defaults" />
-                <Button
-                    Command="{x:Bind ViewModel.SaveScenesCommand}"
-                    Content="Save scenes"
-                    Style="{StaticResource AccentButtonStyle}" />
+                            </views:SettingsExpander>
+                        </DataTemplate>
+                    </ItemsRepeater.ItemTemplate>
+                </ItemsRepeater>
+                <!-- /Scene Cards -->
             </StackPanel>
-            <!-- /Scenes -->
-        </StackPanel>
-    </ContentControl>
+        </ContentControl>
+
+        <!-- Footer -->
+        <Border Grid.Row="1" Style="{StaticResource SettingsFooterStyle}">
+            <Grid MaxWidth="900">
+                <StackPanel
+                    HorizontalAlignment="Right"
+                    Orientation="Horizontal"
+                    Spacing="8">
+                    <Button Command="{x:Bind ViewModel.ResetScenesCommand}" Content="Reset to defaults" />
+                    <Button
+                        Click="OnAddSceneClick"
+                        Content="Add scene"
+                        Style="{StaticResource AccentButtonStyle}" />
+                </StackPanel>
+            </Grid>
+        </Border>
+        <!-- /Footer -->
+    </Grid>
 </local:SettingsPageBase>

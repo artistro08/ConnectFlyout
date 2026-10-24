@@ -1,0 +1,35 @@
+<local:SettingsPageBase
+    x:Class="ConnectFlyout.App.Views.Settings.SceneEditorPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:ConnectFlyout.App.Views.Settings">
+
+    <!-- The page scrolls above a footer that stays put -->
+    <Grid RowDefinitions="*,Auto">
+        <ContentControl Style="{StaticResource SettingsPageStyle}">
+            <StackPanel Spacing="8">
+                <TextBlock Style="{StaticResource SettingsPageTitleStyle}" Text="New scene" />
+                <Border Padding="0" Style="{StaticResource SettingsCardStyle}">
+                    <local:SceneEditor Scene="{x:Bind ViewModel.NewScene, Mode=OneWay}" />
+                </Border>
+            </StackPanel>
+        </ContentControl>
+
+        <!-- Footer: nothing is saved until Save -->
+        <Border Grid.Row="1" Style="{StaticResource SettingsFooterStyle}">
+            <Grid MaxWidth="900">
+                <StackPanel
+                    HorizontalAlignment="Right"
+                    Orientation="Horizontal"
+                    Spacing="8">
+                    <Button Click="OnCancelClick" Content="Cancel" />
+                    <Button
+                        Click="OnSaveClick"
+                        Content="Save"
+                        Style="{StaticResource AccentButtonStyle}" />
+                </StackPanel>
+            </Grid>
+        </Border>
+        <!-- /Footer -->
+    </Grid>
+</local:SettingsPageBase>

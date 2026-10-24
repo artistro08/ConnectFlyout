@@ -139,7 +139,7 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
         SaveNameCommand = new RelayCommand(() => CustomName = PendingName);
 
         _headset.StateChanged += OnHeadsetStateChanged;
-        SceneItems = [.. settings.Scenes.Select(scene => new SceneItemViewModel(scene))];
+        SceneItems = FlyoutScenes();
         ApplySnapshot(_headset.State);
     }
 
@@ -797,7 +797,7 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
     /// <summary>
     /// The scene tiles show unless Settings hides them.
     /// </summary>
-    public bool ShowScenes => !_settings.HideScenes;
+    public bool ShowScenes => !_settings.HideScenes && SceneItems.Count > 0;
 
     /// <summary>
     /// VPT surround presets exposed by the legacy spatial control.
@@ -1229,10 +1229,14 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
 
     internal void RefreshScenes()
     {
-        SceneItems = [.. _settings.Scenes.Select(scene => new SceneItemViewModel(scene))];
+        SceneItems = FlyoutScenes();
         UpdateActiveScene();
         OnPropertyChanged(nameof(SceneItems));
+        OnPropertyChanged(nameof(ShowScenes));
     }
+
+    private SceneItemViewModel[] FlyoutScenes() =>
+        [.. _settings.Scenes.Where(scene => scene.ShowInFlyout).Select(scene => new SceneItemViewModel(scene))];
 
     public void Dispose()
     {

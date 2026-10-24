@@ -181,8 +181,16 @@
     </Style>
 
     <Style x:Key="SettingsExpanderDividerStyle" TargetType="Border">
-        <Setter Property="Height" Value="1" />
-        <Setter Property="Background" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
+        <Setter Property="Height" Value="2" />
+        <Setter Property="Background" Value="{ThemeResource DividerStrokeColorDefaultBrush}" />
+    </Style>
+
+    <!-- Settings Footer: a bar that stays put under a page's scroll area; its content is limited
+         to the page content's width (900) so the buttons line up with the cards -->
+    <Style x:Key="SettingsFooterStyle" TargetType="Border">
+        <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
+        <Setter Property="BorderThickness" Value="0,1,0,0" />
+        <Setter Property="Padding" Value="36,12" />
     </Style>
 
     <!-- Settings Page: scrolls, pads, and centers the content at up to 900 wide. The padded Grid

@@ -8,7 +8,9 @@ namespace ConnectFlyout.Presentation.Scenes;
 /// <param name="Name">Button label.</param>
 /// <param name="Glyph">Segoe Fluent Icons glyph.</param>
 /// <param name="Setting">What the button applies.</param>
-public sealed record Scene(string Name, string Glyph, NoiseControlSetting Setting)
+/// <param name="ShowInFlyout">Whether the flyout shows the button. Scenes saved before this
+/// setting existed show.</param>
+public sealed record Scene(string Name, string Glyph, NoiseControlSetting Setting, bool ShowInFlyout = true)
 {
     /// <summary>
     /// Office scene icon: a briefcase.

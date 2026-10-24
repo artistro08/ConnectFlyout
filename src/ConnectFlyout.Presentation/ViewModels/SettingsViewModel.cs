@@ -12,34 +12,80 @@ using ConnectFlyout.Presentation.Settings;
 namespace ConnectFlyout.Presentation.ViewModels;
 
 /// <summary>
-/// One editable scene in the Noise &amp; scenes settings page.
+/// One editable scene in the Noise &amp; scenes settings page, or the draft on the New scene page.
 /// </summary>
 public sealed class SceneEditorViewModel : ObservableObject
 {
+    // Segoe Fluent Icons: moon, briefcase, walking, home, music, headphones, game, airplane,
+    // people, video, microphone, phone, calendar, star, settings, power
+    private static readonly string[] Icons =
+    [
+        "\uE708", "\uE821", "\uE805", "\uE80F", "\uE8D6", "\uE7F6", "\uE7FC", "\uE709",
+        "\uE716", "\uE714", "\uE720", "\uE717", "\uE787", "\uE734", "\uE713", "\uE7E8",
+    ];
+
+    private readonly Action? _changed;
     private string _name;
+    private string _glyph;
     private int _modeIndex;
     private double _ambientLevel;
     private bool _focusOnVoice;
+    private bool _showInFlyout;
 
-    public SceneEditorViewModel(Scene scene)
+    /// <param name="scene">The scene to start from.</param>
+    /// <param name="changed">Called after every edit; the settings page saves on it. Null for a draft.</param>
+    public SceneEditorViewModel(Scene scene, Action? changed = null)
     {
         ArgumentNullException.ThrowIfNull(scene);
 
-        Glyph = scene.Glyph;
+        _changed = changed;
         _name = scene.Name;
+        _glyph = scene.Glyph;
         _modeIndex = (int)scene.Setting.Mode;
         _ambientLevel = Math.Clamp(scene.Setting.AmbientLevel, 1, 20);
         _focusOnVoice = scene.Setting.FocusOnVoice;
+        _showInFlyout = scene.ShowInFlyout;
     }
 
     public static IReadOnlyList<string> ModeOptions { get; } = ["Off", "Noise canceling", "Ambient sound"];
 
-    public string Glyph { get; }
+    /// <summary>
+    /// The icons to pick from, as Segoe Fluent Icons glyphs.
+    /// </summary>
+    public static IReadOnlyList<string> IconOptions { get; } = Icons;
 
     public string Name
     {
         get => _name;
-        set => SetProperty(ref _name, value);
+        set => Set(ref _name, value);
+    }
+
+    public string Glyph
+    {
+        get => _glyph;
+        set
+        {
+            if (Set(ref _glyph, value))
+            {
+                OnPropertyChanged(nameof(IconIndex));
+            }
+        }
+    }
+
+    /// <summary>
+    /// Index into <see cref="IconOptions"/>; -1 for a glyph not in the list, which an older
+    /// saved scene keeps until another icon is picked.
+    /// </summary>
+    public int IconIndex
+    {
+        get => Array.IndexOf(Icons, _glyph);
+        set
+        {
+            if (value >= 0 && value < Icons.Length)
+            {
+                Glyph = Icons[value];
+            }
+        }
     }
 
     /// <summary>
@@ -50,9 +96,10 @@ public sealed class SceneEditorViewModel : ObservableObject
         get => _modeIndex;
         set
         {
-            if (SetProperty(ref _modeIndex, value))
+            if (Set(ref _modeIndex, value))
             {
                 OnPropertyChanged(nameof(IsAmbient));
+                OnPropertyChanged(nameof(Summary));
             }
         }
     }
@@ -64,9 +111,10 @@ public sealed class SceneEditorViewModel : ObservableObject
         get => _ambientLevel;
         set
         {
-            if (SetProperty(ref _ambientLevel, Math.Clamp(Math.Round(value), 1, 20)))
+            if (Set(ref _ambientLevel, Math.Clamp(Math.Round(value), 1, 20)))
             {
                 OnPropertyChanged(nameof(AmbientLevelText));
+                OnPropertyChanged(nameof(Summary));
             }
         }
     }
@@ -79,15 +127,48 @@ public sealed class SceneEditorViewModel : ObservableObject
     public bool FocusOnVoice
     {
         get => _focusOnVoice;
-        set => SetProperty(ref _focusOnVoice, value);
+        set
+        {
+            if (Set(ref _focusOnVoice, value))
+            {
+                OnPropertyChanged(nameof(Summary));
+            }
+        }
     }
+
+    /// <summary>
+    /// Whether the flyout shows this scene's button.
+    /// </summary>
+    public bool ShowInFlyout
+    {
+        get => _showInFlyout;
+        set => Set(ref _showInFlyout, value);
+    }
+
+    /// <summary>
+    /// The card header's second line: the mode, plus the level and Focus on voice in Ambient sound.
+    /// </summary>
+    public string Summary => IsAmbient
+        ? $"Ambient sound · Level {_ambientLevel:0}" + (_focusOnVoice ? " · Focus on voice" : "")
+        : ModeOptions[Math.Clamp(_modeIndex, 0, 2)];
 
     public Scene ToScene()
     {
         var mode = (NoiseMode)Math.Clamp(_modeIndex, 0, 2);
         var level = mode == NoiseMode.Ambient ? (int)_ambientLevel : 0;
         var name = string.IsNullOrWhiteSpace(_name) ? "Scene" : _name.Trim();
-        return new Scene(name, Glyph, new NoiseControlSetting(mode, level, _focusOnVoice));
+        return new Scene(name, _glyph, new NoiseControlSetting(mode, level, _focusOnVoice), _showInFlyout);
+    }
+
+    // SetProperty, then the save callback
+    private bool Set<T>(ref T field, T value, [System.Runtime.CompilerServices.CallerMemberName] string? name = null)
+    {
+        if (!SetProperty(ref field, value, name))
+        {
+            return false;
+        }
+        _changed?.Invoke();
+        return true;
     }
 }
 
@@ -108,6 +189,7 @@ public sealed class SettingsViewModel : ObservableObject
 
     private int _selectedHeadsetIndex;
     private bool _launchAtSignIn;
+    private SceneEditorViewModel? _newScene;
 
     public SettingsViewModel(
         FlyoutViewModel flyout,
@@ -132,8 +214,7 @@ public sealed class SettingsViewModel : ObservableObject
         _logger = logger;
         LogFolder = logFolder;
 
-        Scenes = [.. settings.Scenes.Select(scene => new SceneEditorViewModel(scene))];
-        SaveScenesCommand = new RelayCommand(SaveScenes);
+        Scenes = [.. settings.Scenes.Select(scene => new SceneEditorViewModel(scene, SaveScenes))];
         ResetScenesCommand = new RelayCommand(ResetScenes);
         OpenLogFolderCommand = new RelayCommand(() => _openFolder(LogFolder));
 
@@ -202,11 +283,52 @@ public sealed class SettingsViewModel : ObservableObject
     // SCENES
     // =========================================================================
 
+    /// <summary>
+    /// The saved scenes. Each one saves itself after every edit.
+    /// </summary>
     public ObservableCollection<SceneEditorViewModel> Scenes { get; }
 
-    public IRelayCommand SaveScenesCommand { get; }
-
     public IRelayCommand ResetScenesCommand { get; }
+
+    /// <summary>
+    /// The draft on the New scene page; null between visits. Nothing is saved until
+    /// <see cref="CommitNewScene"/>.
+    /// </summary>
+    public SceneEditorViewModel? NewScene
+    {
+        get => _newScene;
+        private set => SetProperty(ref _newScene, value);
+    }
+
+    /// <summary>
+    /// Starts a draft for the New scene page: Noise canceling, the first icon, shown in the flyout.
+    /// </summary>
+    public void BeginNewScene() =>
+        NewScene = new SceneEditorViewModel(new Scene("", SceneEditorViewModel.IconOptions[0], new NoiseControlSetting(NoiseMode.NoiseCancelling, 10, false)));
+
+    /// <summary>
+    /// Adds the draft to the scenes and saves. Does nothing without a draft.
+    /// </summary>
+    public void CommitNewScene()
+    {
+        if (NewScene is null)
+        {
+            return;
+        }
+        Scenes.Add(new SceneEditorViewModel(NewScene.ToScene(), SaveScenes));
+        NewScene = null;
+        SaveScenes();
+    }
+
+    public void CancelNewScene() => NewScene = null;
+
+    public void DeleteScene(SceneEditorViewModel scene)
+    {
+        if (Scenes.Remove(scene))
+        {
+            SaveScenes();
+        }
+    }
 
     // =========================================================================
     // APP
@@ -455,7 +577,7 @@ public sealed class SettingsViewModel : ObservableObject
         Scenes.Clear();
         foreach (var scene in Scene.Defaults)
         {
-            Scenes.Add(new SceneEditorViewModel(scene));
+            Scenes.Add(new SceneEditorViewModel(scene, SaveScenes));
         }
         SaveScenes();
     }

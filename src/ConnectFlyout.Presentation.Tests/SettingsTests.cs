@@ -113,6 +113,16 @@ public sealed class AppSettingsTests
     }
 
     [TestMethod]
+    public void ScenesSavedBeforeShowInFlyoutExistedShowInTheFlyout()
+    {
+        var store = new InMemorySettingsStore();
+        new AppSettings(store).Scenes = [new Scene("Gym", "\uE805", new NoiseControlSetting(NoiseMode.Ambient, 12, false))];
+        store.SetString("Scenes", store.GetString("Scenes")!.Replace(",\"ShowInFlyout\":true", "", StringComparison.Ordinal));
+
+        Assert.IsTrue(new AppSettings(store).Scenes[0].ShowInFlyout);
+    }
+
+    [TestMethod]
     public void FallsBackToDefaultScenesWhenSavedJsonIsBroken()
     {
         var store = new InMemorySettingsStore();

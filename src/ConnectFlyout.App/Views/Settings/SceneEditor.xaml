@@ -1,0 +1,109 @@
+<UserControl
+    x:Class="ConnectFlyout.App.Views.Settings.SceneEditor"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:views="using:ConnectFlyout.App.Views"
+    xmlns:vm="using:ConnectFlyout.Presentation.ViewModels">
+
+    <!-- Scene Rows: one setting per row, dividers between. The first row has no divider; the
+         ambient rows collapse with theirs outside Ambient sound. -->
+    <StackPanel>
+        <!-- Name -->
+        <Border Style="{StaticResource SettingsExpanderItemStyle}">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="Name" />
+                    <TextBlock Style="{StaticResource SettingSubtitleStyle}" Text="Shown on the button in the flyout." />
+                </StackPanel>
+                <TextBox
+                    Grid.Column="1"
+                    MinWidth="160"
+                    VerticalAlignment="Center"
+                    AutomationProperties.Name="Scene name"
+                    Text="{x:Bind Scene.Name, Mode=TwoWay}" />
+            </Grid>
+        </Border>
+
+        <!-- Icon -->
+        <Border Style="{StaticResource SettingsExpanderDividerStyle}" />
+        <Border Style="{StaticResource SettingsExpanderItemStyle}">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                <TextBlock VerticalAlignment="Center" Text="Icon" />
+                <ComboBox
+                    Grid.Column="1"
+                    MinWidth="80"
+                    VerticalAlignment="Center"
+                    AutomationProperties.Name="Icon"
+                    ItemsSource="{x:Bind vm:SceneEditorViewModel.IconOptions}"
+                    SelectedIndex="{x:Bind Scene.IconIndex, Mode=TwoWay}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="x:String">
+                            <FontIcon FontSize="16" Glyph="{x:Bind}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </Grid>
+        </Border>
+
+        <!-- Noise Control -->
+        <Border Style="{StaticResource SettingsExpanderDividerStyle}" />
+        <Border Style="{StaticResource SettingsExpanderItemStyle}">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="Noise control" />
+                    <TextBlock Style="{StaticResource SettingSubtitleStyle}" Text="The mode the scene sets." />
+                </StackPanel>
+                <ComboBox
+                    Grid.Column="1"
+                    MinWidth="180"
+                    VerticalAlignment="Center"
+                    AutomationProperties.Name="Noise control mode"
+                    ItemsSource="{x:Bind vm:SceneEditorViewModel.ModeOptions}"
+                    SelectedIndex="{x:Bind Scene.ModeIndex, Mode=TwoWay}" />
+            </Grid>
+        </Border>
+
+        <!-- Ambient Level: with ticks and the number like the flyout -->
+        <StackPanel Visibility="{x:Bind Scene.IsAmbient, Mode=OneWay, FallbackValue=Collapsed}">
+            <Border Style="{StaticResource SettingsExpanderDividerStyle}" />
+            <Border Style="{StaticResource SettingsExpanderItemStyle}">
+                <StackPanel>
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Text="Ambient sound level" />
+                        <TextBlock Grid.Column="1" Text="{x:Bind Scene.AmbientLevelText, Mode=OneWay}" />
+                    </Grid>
+                    <Slider
+                        AutomationProperties.Name="Ambient sound level"
+                        Maximum="20"
+                        Minimum="1"
+                        StepFrequency="1"
+                        TickFrequency="1"
+                        TickPlacement="Outside"
+                        Value="{x:Bind Scene.AmbientLevel, Mode=TwoWay}" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+
+        <!-- Focus On Voice -->
+        <StackPanel Visibility="{x:Bind Scene.IsAmbient, Mode=OneWay, FallbackValue=Collapsed}">
+            <Border Style="{StaticResource SettingsExpanderDividerStyle}" />
+            <Border Style="{StaticResource SettingsExpanderItemStyle}">
+                <views:SettingToggleRow
+                    VerticalAlignment="Center"
+                    IsOn="{x:Bind Scene.FocusOnVoice, Mode=TwoWay}"
+                    Subtitle="Lets voices through more than other sound."
+                    Title="Focus on voice" />
+            </Border>
+        </StackPanel>
+
+        <!-- Show In Flyout -->
+        <Border Style="{StaticResource SettingsExpanderDividerStyle}" />
+        <Border Style="{StaticResource SettingsExpanderItemStyle}">
+            <views:SettingToggleRow
+                VerticalAlignment="Center"
+                IsOn="{x:Bind Scene.ShowInFlyout, Mode=TwoWay}"
+                Subtitle="Shows the scene as a button below Noise control."
+                Title="Show in the flyout" />
+        </Border>
+    </StackPanel>
+</UserControl>

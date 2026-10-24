@@ -37,6 +37,10 @@ Switch noise modes from anywhere in Windows. Win+F10 is Noise canceling, Win+F11
 
 Settings > Devices has a card per pair of headphones. Expand it to name them (shown in the app only; type a name and select Save, or clear the box and save to go back to the Windows name), set the equalizer, DSEE and the other sound options, turn Speak-to-Chat, Adaptive volume and Voice guidance on or off, set Auto power-off and the Connection mode, and use Disconnect app control, which lets another device, like the Sony app on a phone, control them. The Connect button in the card header asks Windows to connect the headphones while they're paired but not connected.
 
+## Scenes
+
+Scenes are the buttons below Noise control in the flyout. Settings > Noise & scenes shows one card per scene: expand it to change the name, icon, noise control mode, ambient level and Focus on voice, hide it from the flyout, or delete it. Changes save as you make them. Add scene opens a page where you fill in a new one and Save or Cancel. Reset to defaults brings back Focus, Office and Aware.
+
 ## Hiding Flyout Controls
 
 Settings > General can hide the Ambient sound slider and Focus on voice, the scene tiles (Focus, Office, Aware), the Playback section, and the Equalizer and DSEE rows from the flyout. The ambient, scene and sound settings stay on their Settings pages. Playback has no Settings page, so hide it only if you don't switch devices from the flyout.

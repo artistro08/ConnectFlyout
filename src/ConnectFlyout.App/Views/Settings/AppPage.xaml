@@ -102,7 +102,7 @@
                         <views:SettingToggleRow
                             VerticalAlignment="Center"
                             IsOn="{x:Bind ViewModel.HideScenes, Mode=TwoWay}"
-                            Subtitle="The Focus, Office and Aware tiles below Noise control."
+                            Subtitle="The scene tiles below Noise control."
                             Title="Hide scenes" />
                     </Border>
                     <Border Style="{StaticResource SettingsExpanderDividerStyle}" />
