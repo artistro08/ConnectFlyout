@@ -1650,6 +1650,41 @@ public sealed class SettingsViewModelTests
     }
 
     [TestMethod]
+    public void EditsStillWaitingSaveOnFlush()
+    {
+        _viewModel.Scenes[0].Name = "Deep work";
+        Assert.AreEqual("Focus", _settings.Scenes[0].Name);
+
+        _viewModel.FlushScenes();
+
+        Assert.AreEqual("Deep work", _settings.Scenes[0].Name);
+        // Nothing left to save: the timer firing later changes nothing
+        _settings.SetSceneShortcut("focus", "Win+F3");
+        LetEditsSave();
+        Assert.AreEqual("Win+F3", _settings.GetSceneShortcut("focus"));
+    }
+
+    [TestMethod]
+    public async Task SwitchingOffAnOffSceneTurnsNoiseCancelingOn()
+    {
+        _viewModel.BeginNewScene();
+        _viewModel.NewScene!.Name = "Quiet";
+        _viewModel.NewScene.ModeIndex = (int)NoiseMode.Off;
+        _viewModel.CommitNewScene();
+        var quiet = _viewModel.Scenes[3];
+        _source.Report(new BluetoothDeviceInfo("device-xm6", "WF-1000XM6", "ac:80:0a:00:00:06", true));
+        var headset = _flyout.Headsets.Single();
+        Assert.IsTrue(await TestWait.UntilAsync(() => headset.IsConnected));
+        headset.SetNoiseModeCommand.Execute(nameof(NoiseMode.Off));
+        Assert.IsTrue(await TestWait.UntilAsync(() => quiet.IsActive));
+
+        _viewModel.ToggleScene(quiet, false);
+
+        Assert.IsTrue(await TestWait.UntilAsync(() => headset.IsNoiseCancelling));
+        Assert.IsFalse(quiet.IsActive);
+    }
+
+    [TestMethod]
     public void ResetKeepsTheDefaultsShortcutsAndDropsTheRest()
     {
         var announced = 0;

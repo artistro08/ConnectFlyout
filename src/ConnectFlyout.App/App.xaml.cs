@@ -525,6 +525,7 @@ public partial class App : Application, IDisposable
         // A show request already queued must not open windows that are shutting down
         _quitting = true;
         _trimTimer?.Stop();
+        _settingsViewModel?.FlushScenes();
         _shortcuts?.Suspend();
         _trayIcon?.Dispose();
         _trayMenu?.Close();

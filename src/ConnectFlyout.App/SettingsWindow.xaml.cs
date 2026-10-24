@@ -48,8 +48,13 @@ public sealed partial class SettingsWindow : Window
         Navigation.SelectedItem = Navigation.MenuItems[0];
         _ = _viewModel.LoadAsync();
 
-        // A shortcut dialog open as the window closes would keep its keyboard hook (it swallows every key)
-        Closed += (_, _) => ShortcutRow.CloseAll();
+        // A shortcut dialog open as the window closes would keep its keyboard hook (it swallows every
+        // key), and a scene edit made a moment ago is still waiting to save
+        Closed += (_, _) =>
+        {
+            ShortcutRow.CloseAll();
+            _viewModel.FlushScenes();
+        };
     }
 
     /// <summary>

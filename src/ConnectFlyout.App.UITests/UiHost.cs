@@ -131,12 +131,9 @@ public static class UiHost
     public static async Task<T> LoadAsync<T>(T element, double? width = null) where T : FrameworkElement
     {
         ArgumentNullException.ThrowIfNull(element);
-        var loaded = new TaskCompletionSource();
-        element.Loaded += (_, _) => loaded.TrySetResult();
         Root.Children.Clear();
         Root.Children.Add(width is { } w ? new Border { Width = w, VerticalAlignment = VerticalAlignment.Top, Child = element } : element);
-        await loaded.Task.WaitAsync(TimeSpan.FromSeconds(10));
-        await IdleAsync();
+        await Pages.LoadedAsync(element);
         return element;
     }
 

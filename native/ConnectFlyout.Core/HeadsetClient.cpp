@@ -190,8 +190,16 @@ void HeadsetClient::SetDebugLogging(bool enabled) {
 }
 
 IAsyncOperation<hstring> HeadsetClient::LocalBluetoothAddressAsync() {
-    const auto adapter = co_await winrt::Windows::Devices::Bluetooth::BluetoothAdapter::GetDefaultAsync();
+    winrt::Windows::Devices::Bluetooth::BluetoothAdapter adapter{nullptr};
+    try {
+        adapter = co_await winrt::Windows::Devices::Bluetooth::BluetoothAdapter::GetDefaultAsync();
+    } catch (const winrt::hresult_error& error) {
+        // Without it the playback shortcuts can't tell this PC from the other device; say so
+        sony::Logger::warn("device", "Couldn't read this PC's Bluetooth address: " + winrt::to_string(error.message()));
+        co_return hstring{};
+    }
     if (!adapter) {
+        sony::Logger::warn("device", "This PC has no Bluetooth adapter, so the playback shortcuts can't tell the devices apart");
         co_return hstring{};
     }
     const uint64_t address = adapter.BluetoothAddress();

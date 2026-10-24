@@ -182,6 +182,7 @@ public sealed class SettingsViewModel : ObservableObject
     private bool _launchAtSignIn;
     private SceneEditorViewModel? _newScene;
     private ITimer? _saveTimer;
+    private bool _savePending;
 
     public SettingsViewModel(
         FlyoutViewModel flyout,
@@ -315,9 +316,10 @@ public sealed class SettingsViewModel : ObservableObject
     private IEnumerable<HeadsetViewModel> ConnectedHeadsets => Headsets.Where(headset => headset.IsConnected);
 
     /// <summary>
-    /// The card's switch: on applies the scene to the connected headphones, off turns their
-    /// noise control off. A switch that already matches does nothing, which is how its own
-    /// binding updates arrive. With nothing connected the switch snaps back.
+    /// The card's switch: on applies the scene to the connected headphones; off leaves it, on
+    /// the headphones that are in it, by turning noise control off (or on, for a scene that is
+    /// Off itself). A switch that already matches does nothing, which is how its own binding
+    /// updates arrive. With nothing connected the switch snaps back.
     /// </summary>
     public void ToggleScene(SceneEditorViewModel scene, bool on)
     {
@@ -332,9 +334,11 @@ public sealed class SettingsViewModel : ObservableObject
         }
         else
         {
-            foreach (var headset in ConnectedHeadsets)
+            var applied = scene.ToScene();
+            var leave = applied.Setting.Mode == NoiseMode.Off ? NoiseMode.NoiseCancelling : NoiseMode.Off;
+            foreach (var headset in ConnectedHeadsets.Where(headset => headset.MatchesScene(applied)))
             {
-                headset.SetNoiseModeCommand.Execute(nameof(NoiseMode.Off));
+                headset.SetNoiseModeCommand.Execute(leave.ToString());
             }
         }
         RefreshActiveScenes();
@@ -610,6 +614,7 @@ public sealed class SettingsViewModel : ObservableObject
     /// </summary>
     public void SaveScenes()
     {
+        _savePending = false;
         _settings.Scenes = [.. Scenes.Select(scene => scene.ToScene())];
         foreach (var headset in Headsets)
         {
@@ -637,7 +642,21 @@ public sealed class SettingsViewModel : ObservableObject
     // An edit's save, a moment after the last edit
     private void ScheduleSave()
     {
+        _savePending = true;
         _saveTimer ??= _timeProvider.CreateTimer(_ => _ui.Post(SaveScenes), null, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
         _saveTimer.Change(SaveDelay, Timeout.InfiniteTimeSpan);
+    }
+
+    /// <summary>
+    /// Saves an edit still waiting on its moment. Called as the settings window closes and as
+    /// the app quits, so an edit made just before isn't lost.
+    /// </summary>
+    public void FlushScenes()
+    {
+        if (_savePending)
+        {
+            _saveTimer?.Change(Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
+            SaveScenes();
+        }
     }
 }

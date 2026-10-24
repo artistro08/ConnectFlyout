@@ -387,11 +387,10 @@ public sealed class FlyoutViewModel : ObservableObject, IDisposable
     // and before unlisted ones; unlisted headsets go last
     private int OrderedIndexFor(string id)
     {
-        var order = _settings.HeadsetOrder.ToList();
-        var rank = order.IndexOf(id);
-        return rank < 0
-            ? Headsets.Count
-            : Headsets.TakeWhile(each => order.IndexOf(each.Id) is var other && other >= 0 && other <= rank).Count();
+        var rank = _settings.HeadsetOrder.Select((each, index) => (each, index)).ToDictionary(pair => pair.each, pair => pair.index);
+        return rank.TryGetValue(id, out var mine)
+            ? Headsets.TakeWhile(each => rank.TryGetValue(each.Id, out var other) && other <= mine).Count()
+            : Headsets.Count;
     }
 
     private void Refresh()

@@ -1,5 +1,6 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media;
 using ConnectFlyout.Presentation.ViewModels;
 
 namespace ConnectFlyout.App.Views.Settings;
@@ -46,7 +47,8 @@ public sealed partial class SceneEditor : UserControl
 
     private async void OnChangeIconClick(object sender, RoutedEventArgs e)
     {
-        if (Scene is null || _picking)
+        // WinUI allows one dialog at a time: not while ours or another (the shortcut picker) is up
+        if (Scene is null || _picking || VisualTreeHelper.GetOpenPopupsForXamlRoot(XamlRoot).Any(popup => popup.Child is ContentDialog))
         {
             return;
         }
@@ -58,10 +60,6 @@ public sealed partial class SceneEditor : UserControl
             {
                 Scene.Glyph = dialog.SelectedGlyph;
             }
-        }
-        catch (Exception)
-        {
-            // Another dialog (the shortcut picker, say) is up; WinUI refuses a second one
         }
         finally
         {

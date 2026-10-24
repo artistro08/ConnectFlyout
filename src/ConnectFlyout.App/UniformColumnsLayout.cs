@@ -20,6 +20,9 @@ public sealed partial class UniformColumnsLayout : NonVirtualizingLayout
     /// </summary>
     public int Columns { get; set; } = 3;
 
+    // Never fewer than one, whatever XAML asks for
+    private int ColumnLimit => Math.Max(1, Columns);
+
     public double ColumnSpacing { get; set; }
 
     public double RowSpacing { get; set; }
@@ -39,7 +42,7 @@ public sealed partial class UniformColumnsLayout : NonVirtualizingLayout
             rowHeight = Math.Max(rowHeight, child.DesiredSize.Height);
         }
 
-        var rows = (children.Count + Columns - 1) / Columns;
+        var rows = (children.Count + ColumnLimit - 1) / ColumnLimit;
         return new Size(availableSize.Width, (rows * rowHeight) + ((rows - 1) * RowSpacing));
     }
 
@@ -59,7 +62,7 @@ public sealed partial class UniformColumnsLayout : NonVirtualizingLayout
     // it has share its full width, so a short last row spreads out instead of leaving a gap.
     private IEnumerable<(UIElement Child, double Width, double X, int Row)> Cells(IReadOnlyList<UIElement> children, double width)
     {
-        var columns = Math.Max(1, Columns);
+        var columns = ColumnLimit;
         for (var i = 0; i < children.Count; i++)
         {
             var row = i / columns;

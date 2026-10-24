@@ -89,6 +89,7 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
     private bool _connectRetried;
     private bool _applying;
     private int _noiseCommandsInFlight;
+    private string _customName;
     private string _pendingName;
 
     public HeadsetViewModel(
@@ -108,7 +109,8 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
         _logger = logger;
         _noiseThrottler = new Throttler(SliderInterval, timeProvider);
         _connectionState = managed.ConnectionState;
-        _pendingName = CustomName;
+        _customName = settings.GetDisplayName(managed.Id) ?? "";
+        _pendingName = _customName;
 
         SetNoiseModeCommand = new RelayCommand<string>(mode =>
         {
@@ -152,7 +154,7 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
     /// <summary>
     /// The name the app shows: <see cref="CustomName"/> when one is set, else the name in Windows.
     /// </summary>
-    public string DeviceName => _settings.GetDisplayName(Id) is { Length: > 0 } custom ? custom : _managed.Name;
+    public string DeviceName => _customName.Length > 0 ? _customName : _managed.Name;
 
     /// <summary>
     /// Name in Windows. Follows renames there.
@@ -164,15 +166,16 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
     /// </summary>
     public string CustomName
     {
-        get => _settings.GetDisplayName(Id) ?? "";
+        get => _customName;
         set
         {
             var trimmed = value?.Trim() ?? "";
             PendingName = trimmed;
-            if (trimmed == CustomName)
+            if (trimmed == _customName)
             {
                 return;
             }
+            _customName = trimmed;
             _settings.SetDisplayName(Id, trimmed.Length == 0 ? null : trimmed);
             OnPropertyChanged();
             OnPropertyChanged(nameof(DeviceName));

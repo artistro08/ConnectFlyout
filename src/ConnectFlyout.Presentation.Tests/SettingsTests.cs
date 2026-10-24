@@ -145,9 +145,16 @@ public sealed class AppSettingsTests
 
         var ids = new AppSettings(store).Scenes.Select(scene => scene.Id).ToList();
 
-        Assert.IsTrue(ids.All(id => !string.IsNullOrEmpty(id)));
-        Assert.AreEqual(3, ids.Distinct().Count());
+        // The stock scenes keep their stock IDs, so Reset to defaults still knows them
+        CollectionAssert.AreEqual(new[] { "focus", "office", "aware" }, ids);
         CollectionAssert.AreEqual(ids, new AppSettings(store).Scenes.Select(scene => scene.Id).ToList());
+
+        // A scene of the user's own gets a fresh one that sticks
+        new AppSettings(store).Scenes = [.. Scene.Defaults, new Scene("Gym", "\uE805", new NoiseControlSetting(NoiseMode.Ambient, 12, false))];
+        store.SetString("Scenes", System.Text.RegularExpressions.Regex.Replace(store.GetString("Scenes")!, ",\"Id\":\"[a-z0-9]+\"", ""));
+        var gym = new AppSettings(store).Scenes[3].Id;
+        Assert.IsFalse(string.IsNullOrEmpty(gym));
+        Assert.AreEqual(gym, new AppSettings(store).Scenes[3].Id);
     }
 
     [TestMethod]

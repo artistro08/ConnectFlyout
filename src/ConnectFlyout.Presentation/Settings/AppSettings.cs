@@ -54,6 +54,7 @@ public sealed class AppSettings
 
     private readonly ISettingsStore _store;
     private IReadOnlyList<Scene>? _scenes;
+    private IReadOnlyList<string>? _headsetOrder;
 
     public AppSettings(ISettingsStore store)
     {
@@ -190,35 +191,38 @@ public sealed class AppSettings
 
     private IReadOnlyList<Scene> LoadScenes()
     {
+        var json = _store.GetString(ScenesKey);
+        if (string.IsNullOrEmpty(json))
         {
-            var json = _store.GetString(ScenesKey);
-            if (string.IsNullOrEmpty(json))
+            return Scene.Defaults;
+        }
+        try
+        {
+            var scenes = JsonSerializer.Deserialize<List<Scene>>(json, JsonOptions);
+            if (scenes is null)
             {
                 return Scene.Defaults;
             }
-            try
+            List<Scene> loaded = [.. scenes
+                .Select(scene => scene.Glyph == Scene.OldOfficeGlyph ? scene with { Glyph = Scene.OfficeGlyph } : scene)
+                .Select(scene => scene.Id is null ? scene with { Id = IdForLegacy(scene) } : scene)];
+            // Scenes saved before IDs existed get theirs once and keep them, so shortcuts stay put
+            if (scenes.Any(scene => scene.Id is null))
             {
-                var scenes = JsonSerializer.Deserialize<List<Scene>>(json, JsonOptions);
-                if (scenes is null)
-                {
-                    return Scene.Defaults;
-                }
-                List<Scene> loaded = [.. scenes
-                    .Select(scene => scene.Glyph == Scene.OldOfficeGlyph ? scene with { Glyph = Scene.OfficeGlyph } : scene)
-                    .Select(scene => scene.Id is null ? scene with { Id = Scene.NewId() } : scene)];
-                // Scenes saved before IDs existed get theirs once and keep them, so shortcuts stay put
-                if (scenes.Any(scene => scene.Id is null))
-                {
-                    _store.SetString(ScenesKey, JsonSerializer.Serialize(loaded, JsonOptions));
-                }
-                return loaded;
+                _store.SetString(ScenesKey, JsonSerializer.Serialize(loaded, JsonOptions));
             }
-            catch (JsonException)
-            {
-                return Scene.Defaults;
-            }
+            return loaded;
+        }
+        catch (JsonException)
+        {
+            return Scene.Defaults;
         }
     }
+
+    // A stock scene saved before IDs existed keeps its stock ID, so Reset to defaults still
+    // knows it; anything else gets a fresh one
+    private static string IdForLegacy(Scene scene) =>
+        Scene.Defaults.FirstOrDefault(standard => standard.Name == scene.Name && standard.Setting == scene.Setting)?.Id ?? Scene.NewId();
 
     /// <summary>
     /// The headphones' order in the flyout and in Settings, as headset IDs. Headphones not
@@ -226,18 +230,24 @@ public sealed class AppSettings
     /// </summary>
     public IReadOnlyList<string> HeadsetOrder
     {
-        get
+        get => _headsetOrder ??= LoadHeadsetOrder();
+        set
         {
-            try
-            {
-                return JsonSerializer.Deserialize<List<string>>(_store.GetString(HeadsetOrderKey) ?? "[]", JsonOptions) ?? [];
-            }
-            catch (JsonException)
-            {
-                return [];
-            }
+            _store.SetString(HeadsetOrderKey, JsonSerializer.Serialize(value, JsonOptions));
+            _headsetOrder = null;
         }
-        set => _store.SetString(HeadsetOrderKey, JsonSerializer.Serialize(value, JsonOptions));
+    }
+
+    private List<string> LoadHeadsetOrder()
+    {
+        try
+        {
+            return JsonSerializer.Deserialize<List<string>>(_store.GetString(HeadsetOrderKey) ?? "[]", JsonOptions) ?? [];
+        }
+        catch (JsonException)
+        {
+            return [];
+        }
     }
 
     /// <summary>

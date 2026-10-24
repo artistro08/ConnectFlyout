@@ -29,8 +29,7 @@ internal static class VisualTree
     public static IEnumerable<T> Descendants<T>(DependencyObject root) where T : DependencyObject => Descendants(root).OfType<T>();
 
     public static T Find<T>(DependencyObject root, string automationName) where T : DependencyObject =>
-        Descendants<T>(root).FirstOrDefault(each => AutomationProperties.GetName(each) == automationName)
-        ?? throw new AssertFailedException($"No {typeof(T).Name} named \"{automationName}\".");
+        TryFind<T>(root, automationName) ?? throw new AssertFailedException($"No {typeof(T).Name} named \"{automationName}\".");
 
     public static T? TryFind<T>(DependencyObject root, string automationName) where T : DependencyObject =>
         Descendants<T>(root).FirstOrDefault(each => AutomationProperties.GetName(each) == automationName);

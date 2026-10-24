@@ -17,7 +17,10 @@ param(
     [ValidateSet('x64', 'ARM64')]
     [string] $Platform = 'x64',
 
-    [switch] $IncludeXm4
+    [switch] $IncludeXm4,
+
+    # The UI tests open a WinUI window, which a headless or remote session can't; skip them there
+    [switch] $SkipUiTests
 )
 
 $ErrorActionPreference = 'Stop'
@@ -58,9 +61,13 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 # UI Tests: in-process WinUI on the app's real views, no hardware; needs a desktop session
-dotnet test (Join-Path $root 'src\ConnectFlyout.App.UITests\ConnectFlyout.App.UITests.csproj') --no-build -c $Configuration -p:Platform=x64
-if ($LASTEXITCODE -ne 0) {
-    throw 'UI tests failed.'
+if ($SkipUiTests) {
+    Write-Output 'Skipping the UI tests.'
+} else {
+    dotnet test (Join-Path $root 'src\ConnectFlyout.App.UITests\ConnectFlyout.App.UITests.csproj') --no-build -c $Configuration -p:Platform=x64
+    if ($LASTEXITCODE -ne 0) {
+        throw 'UI tests failed.'
+    }
 }
 
 Write-Output 'Build and tests passed.'
