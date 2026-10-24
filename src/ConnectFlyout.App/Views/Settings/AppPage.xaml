@@ -33,7 +33,8 @@
                         Margin="0,16"
                         ColumnDefinitions="Auto,*"
                         ColumnSpacing="20">
-                        <FontIcon Glyph="&#xE890;" Style="{StaticResource SettingsCardIconStyle}" />
+                        <!-- The tray icon itself: the Headphone glyph the .ico is drawn from -->
+                        <FontIcon Glyph="&#xE7F6;" Style="{StaticResource SettingsCardIconStyle}" />
                         <views:SettingToggleRow
                             Grid.Column="1"
                             IsOn="{x:Bind ViewModel.HideTray, Mode=TwoWay}"
@@ -76,7 +77,15 @@
             <!-- Low Battery -->
             <Border Style="{StaticResource SettingsCardStyle}">
                 <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="20">
-                    <FontIcon Glyph="&#xE851;" Style="{StaticResource SettingsCardIconStyle}" />
+                    <!-- Fluent UI System Icons' battery_2_20_regular (MIT), the same line weight as the
+                         plug icon; Segoe's battery glyphs are heavier than the icons around them -->
+                    <Viewbox
+                        Width="20"
+                        Height="20"
+                        Margin="2,0,0,0"
+                        VerticalAlignment="Center">
+                        <PathIcon Data="M16 5C17.6569 5 19 6.34315 19 8C19.5523 8 20 8.44772 20 9V11C20 11.5523 19.5523 12 19 12C19 13.6569 17.6569 15 16 15H3C1.34315 15 0 13.6569 0 12V8C0 6.34315 1.34315 5 3 5H16ZM3 6C1.89543 6 1 6.89543 1 8V12C1 13.1046 1.89543 14 3 14H16C17.1046 14 18 13.1046 18 12V8C18 6.89543 17.1046 6 16 6H3ZM4 7C4.55228 7 5 7.44772 5 8V12C5 12.5523 4.55228 13 4 13H3C2.44772 13 2 12.5523 2 12V8C2 7.44772 2.44772 7 3 7H4Z" />
+                    </Viewbox>
                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
                         <TextBlock Text="Low battery notifications" />
                         <TextBlock Style="{StaticResource SecondaryTextStyle}" Text="Sends one notification when the battery is below 20%." />
