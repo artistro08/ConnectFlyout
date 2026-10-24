@@ -322,6 +322,19 @@ public sealed class SettingsViewModel : ObservableObject
 
     public void CancelNewScene() => NewScene = null;
 
+    /// <summary>
+    /// Applies the scene to every connected pair of headphones, as its flyout button would.
+    /// </summary>
+    public void ActivateScene(SceneEditorViewModel scene)
+    {
+        ArgumentNullException.ThrowIfNull(scene);
+        var applied = scene.ToScene();
+        foreach (var headset in Headsets.Where(headset => headset.IsConnected))
+        {
+            headset.ApplySceneCommand.Execute(applied);
+        }
+    }
+
     public void DeleteScene(SceneEditorViewModel scene)
     {
         if (Scenes.Remove(scene))

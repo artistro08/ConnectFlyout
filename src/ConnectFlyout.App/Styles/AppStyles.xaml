@@ -185,10 +185,15 @@
         <Setter Property="Background" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
     </Style>
 
-    <!-- Settings Footer: a bar that stays put under a page's scroll area; its content is limited
-         to the page content's width (900) so the buttons line up with the cards -->
+    <!-- Settings Footer: a bar over the bottom of a page's scroll area, in-app acrylic so the
+         cards frost as they scroll under it, with a window-edge stroke on top. Its content is
+         limited to the page content's width (900) so the buttons line up with the cards. Pages
+         leave SettingsFooterHeight of room under their content. -->
+    <x:Double x:Key="SettingsFooterHeight">57</x:Double>
     <Style x:Key="SettingsFooterStyle" TargetType="Border">
-        <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
+        <Setter Property="VerticalAlignment" Value="Bottom" />
+        <Setter Property="Background" Value="{ThemeResource AcrylicInAppFillColorDefaultBrush}" />
+        <Setter Property="BorderBrush" Value="{ThemeResource SurfaceStrokeColorDefaultBrush}" />
         <Setter Property="BorderThickness" Value="0,1,0,0" />
         <Setter Property="Padding" Value="36,12" />
     </Style>

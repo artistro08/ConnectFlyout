@@ -4,10 +4,11 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:ConnectFlyout.App.Views.Settings">
 
-    <!-- The page scrolls above a footer that stays put -->
-    <Grid RowDefinitions="*,Auto">
+    <!-- The page scrolls under a footer that stays put; the bottom margin lets the last card
+         scroll clear of it -->
+    <Grid>
         <ContentControl Style="{StaticResource SettingsPageStyle}">
-            <StackPanel Spacing="8">
+            <StackPanel Margin="0,0,0,57" Spacing="8">
                 <TextBlock Style="{StaticResource SettingsPageTitleStyle}" Text="New scene" />
                 <Border Padding="0" Style="{StaticResource SettingsCardStyle}">
                     <local:SceneEditor Scene="{x:Bind ViewModel.NewScene, Mode=OneWay}" />
@@ -16,7 +17,7 @@
         </ContentControl>
 
         <!-- Footer: nothing is saved until Save -->
-        <Border Grid.Row="1" Style="{StaticResource SettingsFooterStyle}">
+        <Border Style="{StaticResource SettingsFooterStyle}">
             <Grid MaxWidth="900">
                 <StackPanel
                     HorizontalAlignment="Right"

@@ -6,10 +6,11 @@
     xmlns:views="using:ConnectFlyout.App.Views"
     xmlns:vm="using:ConnectFlyout.Presentation.ViewModels">
 
-    <!-- The page scrolls above a footer that stays put -->
-    <Grid RowDefinitions="*,Auto">
+    <!-- The page scrolls under a footer that stays put; the bottom margin lets the last card
+         scroll clear of it -->
+    <Grid>
         <ContentControl Style="{StaticResource SettingsPageStyle}">
-            <StackPanel Spacing="8">
+            <StackPanel Margin="0,0,0,57" Spacing="8">
                 <TextBlock Style="{StaticResource SettingsPageTitleStyle}" Text="Noise &amp; scenes" />
                 <TextBlock
                     Margin="0,0,0,8"
@@ -27,7 +28,7 @@
                                 <views:SettingsExpander.Header>
                                     <Grid
                                         Margin="0,16"
-                                        ColumnDefinitions="Auto,*"
+                                        ColumnDefinitions="Auto,*,Auto"
                                         ColumnSpacing="16">
                                         <FontIcon
                                             VerticalAlignment="Center"
@@ -37,6 +38,20 @@
                                             <TextBlock Text="{x:Bind Name, Mode=OneWay}" />
                                             <TextBlock Style="{StaticResource SettingSubtitleStyle}" Text="{x:Bind Summary, Mode=OneWay}" />
                                         </StackPanel>
+
+                                        <!-- Activate: applies the scene to the connected headphones, like its flyout button -->
+                                        <Button
+                                            Grid.Column="2"
+                                            VerticalAlignment="Center"
+                                            AutomationProperties.Name="Activate scene"
+                                            Click="OnActivateSceneClick"
+                                            Tag="{x:Bind}"
+                                            ToolTipService.ToolTip="Applies the scene to the connected headphones">
+                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                <FontIcon FontSize="14" Glyph="&#xE768;" />
+                                                <TextBlock Text="Activate" />
+                                            </StackPanel>
+                                        </Button>
                                     </Grid>
                                 </views:SettingsExpander.Header>
                                 <StackPanel>
@@ -55,8 +70,12 @@
                                                 VerticalAlignment="Center"
                                                 AutomationProperties.Name="Delete scene"
                                                 Click="OnDeleteSceneClick"
-                                                Content="Delete"
-                                                Tag="{x:Bind}" />
+                                                Tag="{x:Bind}">
+                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                                    <FontIcon FontSize="14" Glyph="&#xE74D;" />
+                                                    <TextBlock Text="Delete" />
+                                                </StackPanel>
+                                            </Button>
                                         </Grid>
                                     </Border>
                                 </StackPanel>
@@ -69,7 +88,7 @@
         </ContentControl>
 
         <!-- Footer -->
-        <Border Grid.Row="1" Style="{StaticResource SettingsFooterStyle}">
+        <Border Style="{StaticResource SettingsFooterStyle}">
             <Grid MaxWidth="900">
                 <StackPanel
                     HorizontalAlignment="Right"

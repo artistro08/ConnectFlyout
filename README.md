@@ -39,7 +39,7 @@ Settings > Devices has a card per pair of headphones. Expand it to name them (sh
 
 ## Scenes
 
-Scenes are the buttons below Noise control in the flyout. Settings > Noise & scenes shows one card per scene: expand it to change the name, icon, noise control mode, ambient level and Focus on voice, hide it from the flyout, or delete it. Changes save as you make them. Add scene opens a page where you fill in a new one and Save or Cancel. Reset to defaults brings back Focus, Office and Aware.
+Scenes are the buttons below Noise control in the flyout. Settings > Noise & scenes shows one card per scene: expand it to change the name, icon, noise control mode, ambient level and Focus on voice, hide it from the flyout, or delete it. Activate applies it to the connected headphones right away. Changes save as you make them. Add scene opens a page where you fill in a new one and Save or Cancel. Reset to defaults brings back Focus, Office and Aware.
 
 ## Hiding Flyout Controls
 

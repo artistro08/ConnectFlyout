@@ -1667,6 +1667,19 @@ public sealed class SettingsViewModelTests
     }
 
     [TestMethod]
+    public async Task ActivateAppliesTheSceneToTheConnectedHeadphones()
+    {
+        _source.Report(new BluetoothDeviceInfo("device-xm6", "WF-1000XM6", "ac:80:0a:00:00:06", true));
+        var headset = _flyout.Headsets.Single();
+        Assert.IsTrue(await TestWait.UntilAsync(() => headset.IsConnected));
+        Assert.IsFalse(headset.SceneItems.Single(item => item.Name == "Aware").IsActive);
+
+        _viewModel.ActivateScene(_viewModel.Scenes.Single(scene => scene.Name == "Aware"));
+
+        Assert.IsTrue(await TestWait.UntilAsync(() => headset.SceneItems.Single(item => item.Name == "Aware").IsActive));
+    }
+
+    [TestMethod]
     public void SceneEditorShowsItsAmbientLevel()
     {
         var changed = new List<string?>();
