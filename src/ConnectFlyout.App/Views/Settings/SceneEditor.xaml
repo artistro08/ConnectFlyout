@@ -6,10 +6,11 @@
     xmlns:vm="using:ConnectFlyout.Presentation.ViewModels">
 
     <!-- Scene Rows: one setting per row, dividers between. The first row has no divider; the
-         ambient rows collapse with theirs outside Ambient sound. -->
+         ambient rows collapse with theirs outside Ambient sound. RowPadding is the expander
+         row's by default; a plain card passes its own, since it has no chevron to clear. -->
     <StackPanel>
         <!-- Name -->
-        <Border Style="{StaticResource SettingsExpanderItemStyle}">
+        <Border Padding="{x:Bind RowPadding, Mode=OneWay}" Style="{StaticResource SettingsExpanderItemStyle}">
             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
                 <StackPanel VerticalAlignment="Center">
                     <TextBlock Text="Name" />
@@ -26,7 +27,7 @@
 
         <!-- Icon: the current one on the button; Change opens the searchable picker -->
         <Border Style="{StaticResource SettingsExpanderDividerStyle}" />
-        <Border Style="{StaticResource SettingsExpanderItemStyle}">
+        <Border Padding="{x:Bind RowPadding, Mode=OneWay}" Style="{StaticResource SettingsExpanderItemStyle}">
             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
                 <StackPanel VerticalAlignment="Center">
                     <TextBlock Text="Icon" />
@@ -61,7 +62,7 @@
 
         <!-- Noise Control -->
         <Border Style="{StaticResource SettingsExpanderDividerStyle}" />
-        <Border Style="{StaticResource SettingsExpanderItemStyle}">
+        <Border Padding="{x:Bind RowPadding, Mode=OneWay}" Style="{StaticResource SettingsExpanderItemStyle}">
             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
                 <StackPanel VerticalAlignment="Center">
                     <TextBlock Text="Noise control" />
@@ -80,7 +81,7 @@
         <!-- Ambient Level: with ticks and the number like the flyout -->
         <StackPanel Visibility="{x:Bind Scene.IsAmbient, Mode=OneWay, FallbackValue=Collapsed}">
             <Border Style="{StaticResource SettingsExpanderDividerStyle}" />
-            <Border Style="{StaticResource SettingsExpanderItemStyle}">
+            <Border Padding="{x:Bind RowPadding, Mode=OneWay}" Style="{StaticResource SettingsExpanderItemStyle}">
                 <StackPanel>
                     <Grid ColumnDefinitions="*,Auto">
                         <TextBlock Text="Ambient sound level" />
@@ -101,7 +102,7 @@
         <!-- Focus On Voice -->
         <StackPanel Visibility="{x:Bind Scene.IsAmbient, Mode=OneWay, FallbackValue=Collapsed}">
             <Border Style="{StaticResource SettingsExpanderDividerStyle}" />
-            <Border Style="{StaticResource SettingsExpanderItemStyle}">
+            <Border Padding="{x:Bind RowPadding, Mode=OneWay}" Style="{StaticResource SettingsExpanderItemStyle}">
                 <views:SettingToggleRow
                     VerticalAlignment="Center"
                     IsOn="{x:Bind Scene.FocusOnVoice, Mode=TwoWay}"
@@ -112,7 +113,7 @@
 
         <!-- Show In Flyout -->
         <Border Style="{StaticResource SettingsExpanderDividerStyle}" />
-        <Border Style="{StaticResource SettingsExpanderItemStyle}">
+        <Border Padding="{x:Bind RowPadding, Mode=OneWay}" Style="{StaticResource SettingsExpanderItemStyle}">
             <views:SettingToggleRow
                 VerticalAlignment="Center"
                 IsOn="{x:Bind Scene.ShowInFlyout, Mode=TwoWay}"

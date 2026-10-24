@@ -15,9 +15,24 @@ public sealed partial class SceneEditor : UserControl
         typeof(SceneEditor),
         new PropertyMetadata(null, (sender, _) => ((SceneEditor)sender).Bindings.Update()));
 
+    public static readonly DependencyProperty RowPaddingProperty = DependencyProperty.Register(
+        nameof(RowPadding),
+        typeof(Thickness),
+        typeof(SceneEditor),
+        new PropertyMetadata(new Thickness(16, 14, 44, 14)));
+
     public SceneEditor()
     {
         InitializeComponent();
+    }
+
+    /// <summary>
+    /// Each row's padding: the expander row's by default (its right side clears the chevron).
+    /// </summary>
+    public Thickness RowPadding
+    {
+        get => (Thickness)GetValue(RowPaddingProperty);
+        set => SetValue(RowPaddingProperty, value);
     }
 
     public SceneEditorViewModel? Scene

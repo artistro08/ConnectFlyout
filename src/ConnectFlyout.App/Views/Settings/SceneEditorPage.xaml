@@ -11,7 +11,7 @@
             <StackPanel Margin="0,0,0,57" Spacing="8">
                 <TextBlock Style="{StaticResource SettingsPageTitleStyle}" Text="New scene" />
                 <Border Padding="0" Style="{StaticResource SettingsCardStyle}">
-                    <local:SceneEditor Scene="{x:Bind ViewModel.NewScene, Mode=OneWay}" />
+                    <local:SceneEditor RowPadding="16,14,16,14" Scene="{x:Bind ViewModel.NewScene, Mode=OneWay}" />
                 </Border>
             </StackPanel>
         </ContentControl>
