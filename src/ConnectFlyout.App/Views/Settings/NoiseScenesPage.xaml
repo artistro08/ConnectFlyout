@@ -88,27 +88,6 @@
                     Style="{StaticResource AccentButtonStyle}" />
             </StackPanel>
             <!-- /Scenes -->
-
-            <!-- Speak-to-Chat -->
-            <TextBlock
-                Margin="0,16,0,0"
-                Style="{StaticResource BodyStrongTextBlockStyle}"
-                Text="Headphones" />
-            <local:HeadsetSelector ViewModel="{x:Bind ViewModel}" />
-            <Border Style="{StaticResource SettingsCardStyle}" Visibility="{x:Bind ViewModel.SelectedHeadset.Features.SpeakToChat, Mode=OneWay}">
-                <Grid ColumnDefinitions="*,Auto">
-                    <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="Speak-to-Chat" />
-                        <TextBlock Style="{StaticResource SecondaryTextStyle}" Text="Stops the music and lets in outside sound when you speak." />
-                    </StackPanel>
-                    <ToggleSwitch
-                        Grid.Column="1"
-                        AutomationProperties.Name="Speak-to-Chat"
-                        IsEnabled="{x:Bind ViewModel.SelectedHeadset.IsConnected, Mode=OneWay, FallbackValue=False}"
-                        IsOn="{x:Bind ViewModel.SelectedHeadset.SpeakToChat, Mode=TwoWay}"
-                        Style="{StaticResource CardToggleSwitchStyle}" />
-                </Grid>
-            </Border>
         </StackPanel>
     </ContentControl>
 </local:SettingsPageBase>

@@ -91,7 +91,7 @@
                                     </Grid>
                                 </Border>
 
-                                <!-- Sound (disabled while the headphones are disconnected) -->
+                                <!-- Sound and Speak-to-Chat (disabled while the headphones are disconnected) -->
                                 <ContentControl IsEnabled="{x:Bind IsConnected, Mode=OneWay}" Style="{StaticResource SectionStyle}">
                                     <StackPanel>
                                         <!-- Equalizer Preset -->
@@ -211,9 +211,21 @@
                                                 </Grid>
                                             </Border>
                                         </StackPanel>
+
+                                        <!-- Speak-to-Chat -->
+                                        <StackPanel Visibility="{x:Bind Features.SpeakToChat}">
+                                            <Border Style="{StaticResource SettingsExpanderDividerStyle}" />
+                                            <Border Style="{StaticResource SettingsExpanderItemStyle}">
+                                                <views:SettingToggleRow
+                                                    VerticalAlignment="Center"
+                                                    IsOn="{x:Bind SpeakToChat, Mode=TwoWay}"
+                                                    Subtitle="Stops the music and lets in outside sound when you speak."
+                                                    Title="Speak-to-Chat" />
+                                            </Border>
+                                        </StackPanel>
                                     </StackPanel>
                                 </ContentControl>
-                                <!-- /Sound -->
+                                <!-- /Sound and Speak-to-Chat -->
 
                                 <!-- Disconnect App Control: release the headphones for another device, or take them back -->
                                 <Border Style="{StaticResource SettingsExpanderDividerStyle}" />
@@ -227,8 +239,9 @@
                                             <Button
                                                 AutomationProperties.Name="Disconnect app control"
                                                 Command="{x:Bind DisconnectCommand}"
+                                                IsEnabled="{x:Bind IsConnected, Mode=OneWay}"
                                                 ToolTipService.ToolTip="Disconnect app control"
-                                                Visibility="{x:Bind IsConnected, Mode=OneWay}">
+                                                Visibility="{x:Bind ShowDisconnect, Mode=OneWay}">
                                                 <StackPanel Orientation="Horizontal" Spacing="8">
                                                     <views:PlugIcon VerticalAlignment="Center" />
                                                     <TextBlock Text="Disconnect" />
