@@ -5,7 +5,8 @@ using Windows.Foundation;
 namespace ConnectFlyout.App;
 
 /// <summary>
-/// Lays items out in equal-width columns, wrapping to new rows. Every item is always realized.
+/// Lays items out in equal-width columns, up to <see cref="Columns"/> per row, wrapping to new
+/// rows. Fewer items than columns share the full width. Every item is always realized.
 /// </summary>
 /// <remarks>
 /// Used for the flyout's scene buttons instead of <see cref="UniformGridLayout"/>, which
@@ -14,6 +15,9 @@ namespace ConnectFlyout.App;
 /// </remarks>
 public sealed partial class UniformColumnsLayout : NonVirtualizingLayout
 {
+    /// <summary>
+    /// The most items in a row.
+    /// </summary>
     public int Columns { get; set; } = 3;
 
     public double ColumnSpacing { get; set; }
@@ -28,7 +32,8 @@ public sealed partial class UniformColumnsLayout : NonVirtualizingLayout
             return new Size(0, 0);
         }
 
-        var itemWidth = ItemWidth(availableSize.Width);
+        var columns = ColumnsFor(children.Count);
+        var itemWidth = ItemWidth(availableSize.Width, columns);
         var rowHeight = 0.0;
         foreach (var child in children)
         {
@@ -36,25 +41,29 @@ public sealed partial class UniformColumnsLayout : NonVirtualizingLayout
             rowHeight = Math.Max(rowHeight, child.DesiredSize.Height);
         }
 
-        var rows = (children.Count + Columns - 1) / Columns;
+        var rows = (children.Count + columns - 1) / columns;
         return new Size(availableSize.Width, (rows * rowHeight) + ((rows - 1) * RowSpacing));
     }
 
     protected override Size ArrangeOverride(NonVirtualizingLayoutContext context, Size finalSize)
     {
         var children = context.Children;
-        var itemWidth = ItemWidth(finalSize.Width);
+        var columns = ColumnsFor(children.Count);
+        var itemWidth = ItemWidth(finalSize.Width, columns);
         var rowHeight = children.Count == 0 ? 0 : children.Max(child => child.DesiredSize.Height);
 
         for (var i = 0; i < children.Count; i++)
         {
-            var x = (i % Columns) * (itemWidth + ColumnSpacing);
-            var y = (i / Columns) * (rowHeight + RowSpacing);
+            var x = (i % columns) * (itemWidth + ColumnSpacing);
+            var y = (i / columns) * (rowHeight + RowSpacing);
             children[i].Arrange(new Rect(x, y, itemWidth, rowHeight));
         }
         return finalSize;
     }
 
-    private double ItemWidth(double width) =>
-        Math.Max(0, (width - ((Columns - 1) * ColumnSpacing)) / Columns);
+    // Fewer items than Columns spread across the width; never fewer than one column
+    private int ColumnsFor(int count) => Math.Clamp(count, 1, Math.Max(1, Columns));
+
+    private double ItemWidth(double width, int columns) =>
+        Math.Max(0, (width - ((columns - 1) * ColumnSpacing)) / columns);
 }
