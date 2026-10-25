@@ -230,8 +230,9 @@ public sealed class HeadsetManagerTests
     }
 
     [TestMethod]
-    public async Task DroppedLinkReconnectsAfterOneSecond()
+    public async Task DroppedLinkYieldsUntilAskedToConnect()
     {
+        // The headset closed the link while Windows still has it: another app took control
         _source.Report(Xm6);
         var headset = _created["WF-1000XM6"];
         Assert.IsTrue(await TestWait.UntilAsync(() => _manager.Headsets[0].ConnectionState == HeadsetConnectionState.Connected));
@@ -239,9 +240,14 @@ public sealed class HeadsetManagerTests
         headset.RaiseDisconnected();
 
         Assert.AreEqual(HeadsetConnectionState.Disconnected, _manager.Headsets[0].ConnectionState);
-        await AdvanceAndExpectAttempts(headset, TimeSpan.FromMilliseconds(900), 1);
-        await AdvanceAndExpectAttempts(headset, TimeSpan.FromMilliseconds(100), 2);
+        _time.Advance(TimeSpan.FromMinutes(5));
+        await Task.Delay(50);
+        Assert.AreEqual(1, headset.ConnectAttempts);
+
+        _manager.ApplyAutoConnect("AC:80:0A:00:00:06");
+
         Assert.IsTrue(await TestWait.UntilAsync(() => _manager.Headsets[0].ConnectionState == HeadsetConnectionState.Connected));
+        Assert.AreEqual(2, headset.ConnectAttempts);
     }
 
     [TestMethod]
@@ -252,16 +258,17 @@ public sealed class HeadsetManagerTests
         Assert.IsTrue(await TestWait.UntilAsync(() => _manager.Headsets[0].ConnectionState == HeadsetConnectionState.Connected));
         headset.RaiseDisconnected();
 
-        // The headset accepts the link, then drops it before the connect finishes
+        // Asked back, the headset accepts the link, then drops it before the connect finishes
         var gate = new TaskCompletionSource();
         headset.ConnectGate = gate;
-        await AdvanceAndExpectAttempts(headset, TimeSpan.FromSeconds(1), 2);
+        _manager.ApplyAutoConnect("AC:80:0A:00:00:06");
+        Assert.IsTrue(await TestWait.UntilAsync(() => headset.ConnectAttempts == 2));
         headset.RaiseDisconnected();
         gate.SetException(new COMException("Transport not connected", unchecked((int)0x8007048F)));
 
-        // Next try waits 2 s, not another 1 s
-        await AdvanceAndExpectAttempts(headset, TimeSpan.FromSeconds(1), 2);
-        await AdvanceAndExpectAttempts(headset, TimeSpan.FromSeconds(1), 3);
+        // Next try waits 1 s, not right away
+        await AdvanceAndExpectAttempts(headset, TimeSpan.FromMilliseconds(900), 2);
+        await AdvanceAndExpectAttempts(headset, TimeSpan.FromMilliseconds(100), 3);
     }
 
     [TestMethod]
@@ -274,13 +281,14 @@ public sealed class HeadsetManagerTests
 
         var gate = new TaskCompletionSource();
         headset.ConnectGate = gate;
-        await AdvanceAndExpectAttempts(headset, TimeSpan.FromSeconds(1), 2);
+        _manager.ApplyAutoConnect("AC:80:0A:00:00:06");
+        Assert.IsTrue(await TestWait.UntilAsync(() => headset.ConnectAttempts == 2));
         headset.RaiseDisconnected();
         gate.SetResult();
 
         Assert.IsTrue(await TestWait.UntilAsync(() => _manager.Headsets[0].ConnectionState == HeadsetConnectionState.Disconnected));
-        await AdvanceAndExpectAttempts(headset, TimeSpan.FromSeconds(1), 2);
-        await AdvanceAndExpectAttempts(headset, TimeSpan.FromSeconds(1), 3);
+        await AdvanceAndExpectAttempts(headset, TimeSpan.FromMilliseconds(900), 2);
+        await AdvanceAndExpectAttempts(headset, TimeSpan.FromMilliseconds(100), 3);
         Assert.IsTrue(await TestWait.UntilAsync(() => _manager.Headsets[0].ConnectionState == HeadsetConnectionState.Connected));
     }
 

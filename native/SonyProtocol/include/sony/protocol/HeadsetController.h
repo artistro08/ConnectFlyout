@@ -60,7 +60,8 @@ public:
     void setAdaptiveVolume(bool enabled);
     void setAutoPowerOff(int index);
     // Multipoint: moves playback to the connected device with this address. Throws
-    // InvalidResponse when the headset refuses (on a call, say).
+    // InvalidResponse when the headset refuses (on a call, say). Never retried: a late answer
+    // updates the state as a notification instead.
     void switchPlayback(const std::string& address);
 
     // Called after every confirmed state change. Runs on the calling thread for

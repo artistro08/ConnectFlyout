@@ -40,7 +40,6 @@ void SonyProtocolSession::start() {
         std::lock_guard lock(_sessionMtx);
         _streamBuffer.clear();
         _lastSeenDataSeq.reset();
-        _unmatchedFrames.clear();
         _hasAck = false;
         _pendingRequest.reset();
     }
@@ -60,7 +59,6 @@ void SonyProtocolSession::disconnect() noexcept {
         std::lock_guard lock(_sessionMtx);
         _streamBuffer.clear();
         _lastSeenDataSeq.reset();
-        _unmatchedFrames.clear();
         _pendingRequest.reset();
         _hasAck = false;
         _sequence.store(0);
@@ -287,12 +285,6 @@ void SonyProtocolSession::_handleDecodedFrame(const SonyFrame& frame) {
                     }
                 }
             }
-            if (!matchedRequest) {
-                _unmatchedFrames.push_back(frame);
-                if (_unmatchedFrames.size() > 32) {
-                    _unmatchedFrames.pop_front();
-                }
-            }
         }
 
         if (matchedRequest) {
@@ -419,18 +411,8 @@ SonyFrame SonyProtocolSession::sendAndAwaitResponse(
             .hasAck = false,
             .expectedAckSeq = toSend.sequence
         };
-
-        // Check if matching response was already buffered in _unmatchedFrames
-        for (auto it = _unmatchedFrames.begin(); it != _unmatchedFrames.end(); ++it) {
-            if (it->type == request.type && !it->payload.empty() && it->payload[0] == retOpcode) {
-                if (retSubtype < 0 || (it->payload.size() >= 2 && it->payload[1] == static_cast<uint8_t>(retSubtype))) {
-                    _pendingRequest->response = *it;
-                    _pendingRequest->hasResponse = true;
-                    _unmatchedFrames.erase(it);
-                    break;
-                }
-            }
-        }
+        // No match against frames that arrived earlier: the request is registered before it is
+        // written, so anything already received is an older notification, not this answer
     }
 
     _writeFrame(toSend);

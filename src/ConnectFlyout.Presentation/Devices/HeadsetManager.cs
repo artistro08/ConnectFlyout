@@ -12,9 +12,11 @@ namespace ConnectFlyout.Presentation.Devices;
 /// <remarks>
 /// A headset is listed from the moment it's seen paired until it's unpaired, whether or not
 /// Windows has it connected right now. While Windows has it connected, the control link is
-/// (re)opened on a schedule of 0 s, 1 s, 2 s, 5 s, then every 30 s until it succeeds; a link that
-/// drops restarts that schedule at 1 s, and one that drops mid-connect counts as a failed attempt.
-/// <see cref="Release"/> lets go of a headset and stays off
+/// (re)opened on a schedule of 0 s, 1 s, 2 s, 5 s, then every 30 s until it succeeds, and one that
+/// drops mid-connect counts as a failed attempt. A link the headset closes while Windows still has
+/// it connected went to another app (Sony's phone app; the headset allows one at a time): the
+/// headset is left alone until <see cref="ApplyAutoConnect"/> asks for it again, which the flyout
+/// and the shortcuts do when they're used. <see cref="Release"/> lets go of a headset and stays off
 /// it (remembered across restarts) until <see cref="Reconnect"/>.
 /// </remarks>
 public sealed class HeadsetManager : IDisposable
@@ -129,7 +131,8 @@ public sealed class HeadsetManager : IDisposable
     }
 
     /// <summary>
-    /// Applies a changed auto-connect setting to a listed headset.
+    /// Applies a changed auto-connect setting to a listed headset. Also takes back a link the
+    /// headset closed for another app, when auto-connect is on.
     /// </summary>
     public void ApplyAutoConnect(string id)
     {
@@ -310,12 +313,11 @@ public sealed class HeadsetManager : IDisposable
             }
         }
 
+        // Windows still has the headset, so it closed the link on purpose: another app took
+        // control. Taking it back now would throw that app off, so the link stays down until
+        // ApplyAutoConnect asks for it (flyout opened, shortcut used) or Windows reconnects.
         LogMessages.LinkDropped(_logger, headset.Name);
         SetState(headset, HeadsetConnectionState.Disconnected);
-        if (headset.IsWindowsConnected && _settings.IsAutoConnectEnabled(headset.Id))
-        {
-            StartConnectLoop(headset, 1);
-        }
     }
 
     private void StartConnectLoop(ManagedHeadset headset, int firstDelayIndex, TimeSpan settle = default)
