@@ -4,6 +4,7 @@
 
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <atomic>
 #include <memory>
 #include <mutex>
@@ -406,6 +407,41 @@ TEST_F(Xm6Connection, RefusedSwitchThrowsAndKeepsState) {
 
     EXPECT_EQ(errorCodeOf([&] { controller->switchPlayback(phone); }), SonyErrorCode::InvalidResponse);
     EXPECT_TRUE(controller->state().playbackDevices[0].playing);
+}
+
+TEST_F(Xm6Connection, SwitchPlaybackIgnoresAnEarlierSwitchNotification) {
+    // The phone asked for a switch the headset refused; that answer must not stand in for ours
+    connect();
+    const std::string phone = "AA:BB:CC:DD:EE:02";
+    Payload earlier{0x3d, 0x01, 0x02};
+    earlier.insert(earlier.end(), phone.begin(), phone.end());
+    headset->notifyTable2(earlier);
+    ASSERT_TRUE(waitUntil([&] { return headset->incomingBytesAvailable() == 0; }));
+    std::this_thread::sleep_for(50ms);
+
+    Payload confirmed{0x3d, 0x01, 0x00};
+    confirmed.insert(confirmed.end(), phone.begin(), phone.end());
+    headset->replyTable2({confirmed});
+    controller->switchPlayback(phone);
+
+    EXPECT_TRUE(controller->state().playbackDevices[1].playing);
+}
+
+TEST_F(Xm6Connection, SlowSwitchIsNotResentAndKeepsTheLink) {
+    // While this PC streams, the handover can outlast a command timeout. A second switch
+    // command mid-handover or a reopened link would undo it; a late answer updates the state
+    // as a notification instead. Waits out the full switch timeout.
+    connect();
+    std::atomic<bool> dropped{false};
+    controller->onDisconnected([&] { dropped = true; });
+    const std::string phone = "AA:BB:CC:DD:EE:02";
+
+    headset->ignore();
+    EXPECT_EQ(errorCodeOf([&] { controller->switchPlayback(phone); }), SonyErrorCode::Timeout);
+
+    EXPECT_EQ(std::ranges::count_if(headset->requests(), [](const Payload& request) { return !request.empty() && request[0] == 0x3c; }), 1);
+    EXPECT_FALSE(dropped.load());
+    EXPECT_TRUE(controller->isConnected());
 }
 
 TEST_F(Xm6Connection, PlaybackListNotificationUpdatesState) {

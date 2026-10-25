@@ -122,6 +122,11 @@ public sealed class FlyoutViewModel : ObservableObject, IDisposable
     /// </summary>
     public Task OnOpenedAsync()
     {
+        // Take back a link another app took, now that the flyout is in use
+        if (CurrentHeadset is { ShowReconnect: true, AutoConnect: true } yielded)
+        {
+            _manager.ApplyAutoConnect(yielded.Id);
+        }
         Refresh();
         return CurrentHeadset?.RefreshBatteryAsync() ?? Task.CompletedTask;
     }
@@ -167,14 +172,17 @@ public sealed class FlyoutViewModel : ObservableObject, IDisposable
     }
 
     /// <summary>
-    /// The headphones a shortcut acts on: the ones the flyout shows, or else the first connected.
+    /// The headphones a shortcut acts on: the ones the flyout shows, connected or waiting to take
+    /// their link back from another app, or else the first connected.
     /// </summary>
     public HeadsetViewModel? ShortcutHeadset
     {
         get
         {
             var connected = ConnectedHeadsets;
-            return CurrentHeadset is { IsConnected: true } current ? current : connected.Count > 0 ? connected[0] : null;
+            return CurrentHeadset is ({ IsConnected: true } or { ShowReconnect: true, AutoConnect: true }) and { } current
+                ? current
+                : connected.Count > 0 ? connected[0] : null;
         }
     }
 

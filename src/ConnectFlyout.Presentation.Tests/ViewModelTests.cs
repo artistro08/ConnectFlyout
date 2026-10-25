@@ -279,6 +279,25 @@ public sealed class HeadsetViewModelTests
     }
 
     [TestMethod]
+    public async Task NoiseModeChosenWhileAnotherAppHasTheLinkGoesOutOnceItIsBack()
+    {
+        var reconnects = 0;
+        _viewModel.ReconnectRequested += (_, _) => reconnects++;
+        _viewModel.UpdateConnectionState(HeadsetConnectionState.Disconnected);
+        var before = _headset.Commands.Count(command => command is NoiseControlSetting);
+
+        _viewModel.SelectNoiseMode(NoiseMode.NoiseCancelling);
+
+        Assert.AreEqual(1, reconnects);
+        Assert.AreEqual(before, _headset.Commands.Count(command => command is NoiseControlSetting));
+
+        _viewModel.UpdateConnectionState(HeadsetConnectionState.Connected);
+
+        Assert.IsTrue(await TestWait.UntilAsync(() => _headset.Commands.Count(command => command is NoiseControlSetting) == before + 1));
+        Assert.AreEqual(NoiseMode.NoiseCancelling, ((NoiseControlSetting)_headset.Commands.Last(command => command is NoiseControlSetting)).Mode);
+    }
+
+    [TestMethod]
     public void SoundControlsStayDisabledWhenANonXbHeadsetIsDisconnected()
     {
         _viewModel.UpdateConnectionState(HeadsetConnectionState.Disconnected);

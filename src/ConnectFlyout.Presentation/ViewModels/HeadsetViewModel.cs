@@ -91,6 +91,7 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
     private int _noiseCommandsInFlight;
     private string _customName;
     private string _pendingName;
+    private NoiseControlSetting? _pendingNoise;
 
     public HeadsetViewModel(
         ManagedHeadset managed,
@@ -352,6 +353,10 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
                 return;
             }
             _settings.SetAutoConnectEnabled(Id, value);
+            if (!value)
+            {
+                _pendingNoise = null;
+            }
             RaiseAutoConnectChanged();
             AutoConnectChanged?.Invoke(this, EventArgs.Empty);
         }
@@ -1197,6 +1202,21 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
         // Raised whether or not the state changed: ShowReconnect and friends also follow the
         // Windows connection, which arrives on this same call
         SetProperty(ref _connectionState, state, nameof(ConnectionState));
+
+        // A noise mode chosen while another app had the link goes out now that it's back, and is
+        // forgotten once the headset leaves Windows
+        if (!IsWindowsConnected)
+        {
+            _pendingNoise = null;
+        }
+        if (state == HeadsetConnectionState.Connected && _pendingNoise is { } pending)
+        {
+            _pendingNoise = null;
+            _noiseMode = pending.Mode;
+            RaiseNoiseModeChanged();
+            Interlocked.Increment(ref _noiseCommandsInFlight);
+            _ = RunNoiseCommandAsync(pending);
+        }
         OnPropertyChanged(nameof(ShowReconnect));
         OnPropertyChanged(nameof(ShowDisconnect));
         OnPropertyChanged(nameof(ShowStatus));
@@ -1471,6 +1491,27 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
     private Task SendNoiseControlAsync()
     {
         var setting = new NoiseControlSetting(_noiseMode, (int)_ambientLevel, _focusOnVoice);
+
+        // Another app has the link: take it back and send once it's open. The ambient slider
+        // gets here on the throttler's timer thread, so the hand-off runs on the UI thread.
+        if (!IsConnected && IsWindowsConnected && AutoConnect)
+        {
+            _ui.Post(() =>
+            {
+                if (IsConnected)
+                {
+                    Interlocked.Increment(ref _noiseCommandsInFlight);
+                    _ = RunNoiseCommandAsync(setting);
+                    return;
+                }
+                _pendingNoise = setting;
+                if (_connectionState == HeadsetConnectionState.Disconnected)
+                {
+                    ReconnectRequested?.Invoke(this, EventArgs.Empty);
+                }
+            });
+            return Task.CompletedTask;
+        }
         Interlocked.Increment(ref _noiseCommandsInFlight);
         return RunNoiseCommandAsync(setting);
     }
@@ -1523,6 +1564,14 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
                 ShowError(refusedMessage is not null && ex.HResult == HeadsetErrorMessages.InvalidDataHResult
                     ? refusedMessage
                     : HeadsetErrorMessages.Describe(ex));
+
+                // The headset stopped answering and the link was dropped for it: open a fresh one.
+                // The manager's state is already Disconnected; this view model's follows by post.
+                if (ex.HResult == HeadsetErrorMessages.TimeoutHResult && AutoConnect && IsWindowsConnected
+                    && _managed.ConnectionState == HeadsetConnectionState.Disconnected)
+                {
+                    ReconnectRequested?.Invoke(this, EventArgs.Empty);
+                }
             });
         }
     }

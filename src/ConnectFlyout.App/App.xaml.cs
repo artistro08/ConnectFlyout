@@ -365,7 +365,7 @@ public partial class App : Application, IDisposable
         // sound. Judged by the mode they last reported, so a second press of a new mode while the
         // first is still on its way doesn't also get the sound.
         var mode = ShortcutActions.NoiseModeFor(action);
-        if (headset.ConfirmedNoiseMode == mode)
+        if (headset.IsConnected && headset.ConfirmedNoiseMode == mode)
         {
             _ = PlayModeAlreadyOnAsync(headset.Id);
         }

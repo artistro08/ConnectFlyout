@@ -230,7 +230,9 @@ void HeadsetController::setAutoPowerOff(int index) {
 }
 
 void HeadsetController::switchPlayback(const std::string& address) {
-    command([&] { _protocol->switchPlayback(address); });
+    // Not through command(): a resend mid-handover asks for a second switch, and a slow answer
+    // (the audio moves before the headset replies) is no reason to reopen the link.
+    _protocol->switchPlayback(address);
     updateState([&](DeviceState& state) { markPlaying(state.playbackDevices, address); });
 }
 

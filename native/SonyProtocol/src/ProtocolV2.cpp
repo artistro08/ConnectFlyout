@@ -418,14 +418,14 @@ std::vector<PlaybackDevice> ProtocolV2::getPlaybackDevices() {
 
 void ProtocolV2::switchPlayback(const std::string& address) {
     // T2 SET 3c 01 <address> -> NTFY 3d 01 <result> <address>. The headset hands the audio
-    // over first, so the answer can take a few seconds.
+    // over first, so the answer can take a few seconds, longer while the current device streams.
     std::vector<uint8_t> payload = {0x3c, kPeripheralSourceSwitch};
     payload.insert(payload.end(), address.begin(), address.end());
     auto resp = _session.sendAndAwaitResponse(
         SonyFrame{ .type = DataType::DataMdrNo2, .payload = std::move(payload) },
         0x3d,
         kPeripheralSourceSwitch,
-        std::chrono::milliseconds(5000)
+        std::chrono::milliseconds(10000)
     );
     const auto result = parsePlaybackSwitch(resp.payload);
     if (!result || !result->succeeded) {
