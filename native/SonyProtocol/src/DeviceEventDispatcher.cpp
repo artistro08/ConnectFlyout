@@ -1,4 +1,5 @@
 #include "sony/protocol/DeviceEventDispatcher.h"
+#include "ProtocolHelpers.h"
 #include "sony/protocol/EqualizerPresets.h"
 #include <algorithm>
 
@@ -196,6 +197,17 @@ bool DeviceEventDispatcher::parseNotificationPayload(const std::vector<uint8_t>&
             if (notify) dispatch(DeviceStateChanged{std::make_shared<const DeviceState>(inOutState)});
             return true;
         }
+    }
+
+    // Codec notification (COMMON_NTFY_STATUS, AUDIO_CODEC): 15 02 <codec>. Fires whenever the
+    // active codec changes, including after a multipoint switch settles. A codec this app doesn't
+    // know keeps the one on screen instead of blanking it, like the V1 handler.
+    if (opcode == 0x15 && payload.size() >= 3 && payload[1] == 0x02) {
+        if (!detail::applyCodec(payload[2], inOutState.codec)) {
+            return false;
+        }
+        if (notify) dispatch(DeviceStateChanged{std::make_shared<const DeviceState>(inOutState)});
+        return true;
     }
 
     return false;

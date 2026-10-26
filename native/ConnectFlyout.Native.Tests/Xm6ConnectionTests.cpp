@@ -397,6 +397,59 @@ TEST_F(Xm6Connection, SwitchPlaybackSendsTargetAndUpdatesState) {
     EXPECT_TRUE(devices[1].playing);
 }
 
+// The headset announces a codec change (COMMON_NTFY_STATUS, AUDIO_CODEC) on its own once
+// it settles, whether that follows a switch this app started, one started elsewhere, or
+// plain renegotiation - so nothing here needs to guess when to go ask for it.
+TEST_F(Xm6Connection, CodecNotificationUpdatesStateAndPublishes) {
+    connect();
+    ASSERT_EQ(controller->state().codec, "LDAC");
+    std::mutex mutex;
+    std::vector<DeviceState> published;
+    controller->onStateChanged([&](const DeviceState& state) {
+        std::lock_guard lock(mutex);
+        published.push_back(state);
+    });
+
+    headset->notify({0x15, 0x02, 0x02}); // AAC
+
+    // The state changes before it is published, so wait for the publish itself
+    EXPECT_TRUE(waitUntil([&] {
+        std::lock_guard lock(mutex);
+        return !published.empty();
+    }));
+    std::this_thread::sleep_for(200ms);
+    std::lock_guard lock(mutex);
+    ASSERT_EQ(published.size(), 1u);
+    EXPECT_EQ(published.front().codec, "AAC");
+    EXPECT_EQ(controller->state().codec, "AAC");
+}
+
+// A codec byte this app doesn't know, a notification cut short, or another COMMON_NTFY_STATUS
+// type must leave the codec alone
+TEST_F(Xm6Connection, UnknownShortOrOtherCodecNotificationKeepsTheCodec) {
+    connect();
+    std::mutex mutex;
+    std::vector<DeviceState> published;
+    controller->onStateChanged([&](const DeviceState& state) {
+        std::lock_guard lock(mutex);
+        published.push_back(state);
+    });
+
+    headset->notify({0x15, 0x02, 0x7f}); // unknown codec
+    headset->notify({0x15, 0x02});       // no codec byte
+    headset->notify({0x15, 0x01, 0x02}); // not the codec type; read as a codec it would be AAC
+    headset->notify({0x15, 0x02, 0x01}); // SBC, last, so one publish proves the first three were ignored
+
+    EXPECT_TRUE(waitUntil([&] {
+        std::lock_guard lock(mutex);
+        return !published.empty();
+    }));
+    std::this_thread::sleep_for(200ms);
+    std::lock_guard lock(mutex);
+    ASSERT_EQ(published.size(), 1u);
+    EXPECT_EQ(published.front().codec, "SBC");
+}
+
 TEST_F(Xm6Connection, RefusedSwitchThrowsAndKeepsState) {
     connect();
 

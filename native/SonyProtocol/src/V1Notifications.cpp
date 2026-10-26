@@ -82,15 +82,7 @@ bool applyV1Notification(
                 return false;
             }
 
-            const std::string codec =
-                detail::codecName(payload[2]);
-
-            if (codec.empty()) {
-                return false;
-            }
-
-            state.codec = codec;
-            return true;
+            return detail::applyCodec(payload[2], state.codec);
         }
         default:
             return false;
