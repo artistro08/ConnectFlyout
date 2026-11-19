@@ -188,7 +188,7 @@ public sealed class HeadsetManager : IDisposable
     {
         lock (_gate)
         {
-            return _headsets.Values.FirstOrDefault(headset => headset.Id == id);
+            return _headsets.GetValueOrDefault(id);
         }
     }
 
@@ -219,20 +219,32 @@ public sealed class HeadsetManager : IDisposable
             return;
         }
 
-        // Only act on changes: Windows repeats updates that don't change the connection
+        // Only act on changes: Windows repeats updates that don't change the connection. The
+        // name comes from the connected entry (or the only one), so a stale second entry under an
+        // old name can't keep flipping it
         bool changed;
+        bool connected;
         lock (_gate)
         {
-            changed = headset.IsWindowsConnected != device.IsConnected || headset.Name != device.Name;
-            headset.IsWindowsConnected = device.IsConnected;
-            headset.Name = device.Name;
+            headset.Entries[device.Id] = device.IsConnected;
+            connected = headset.Entries.ContainsValue(true);
+            var name = device.IsConnected || headset.Entries.Count == 1 ? device.Name : headset.Name;
+            changed = headset.IsWindowsConnected != connected || headset.Name != name;
+            headset.IsWindowsConnected = connected;
+            headset.Name = name;
         }
         if (!changed)
         {
             return;
         }
 
-        if (device.IsConnected)
+        OnWindowsConnectionChanged(headset, connected);
+    }
+
+    // Windows connected or dropped the headset: open the control link, or close it
+    private void OnWindowsConnectionChanged(ManagedHeadset headset, bool connected)
+    {
+        if (connected)
         {
             LogMessages.WindowsConnected(_logger, headset.Name);
             ConnectionStateChanged?.Invoke(this, headset);
@@ -254,22 +266,40 @@ public sealed class HeadsetManager : IDisposable
 
     private void OnEnumerationCompleted(object? sender, EventArgs e) => _enumerated.TrySetResult();
 
-    // The listed headset for a device, added (not yet Windows-connected) the first time it's seen
+    // The listed headset for an address, added (not yet Windows-connected) the first time it's
+    // seen. One per address: a second Windows entry for the same headset joins the first, so
+    // the app never opens two control links to one headset.
     private ManagedHeadset? Track(BluetoothDeviceInfo device, string id, string model)
     {
         ManagedHeadset headset;
+        bool joined = false;
         lock (_gate)
         {
             if (_disposed)
             {
                 return null;
             }
-            if (_headsets.TryGetValue(device.Id, out var existing))
+            if (_headsets.TryGetValue(id, out var existing))
             {
-                return existing;
+                headset = existing;
+                if (!existing.Entries.TryAdd(device.Id, false))
+                {
+                    return existing;
+                }
+                joined = true;
             }
-            headset = new ManagedHeadset(device.Id, id, device.Name, _createHeadset(model));
-            _headsets[device.Id] = headset;
+            else
+            {
+                headset = new ManagedHeadset(device.Id, id, device.Name, _createHeadset(model));
+                _headsets[id] = headset;
+            }
+        }
+
+        // A second entry for a headset already listed
+        if (joined)
+        {
+            LogMessages.DuplicateEntry(_logger, headset.Name);
+            return headset;
         }
 
         headset.Headset.Disconnected += (_, _) => OnLinkDropped(headset);
@@ -280,12 +310,38 @@ public sealed class HeadsetManager : IDisposable
     private void Untrack(string deviceId)
     {
         ManagedHeadset? headset;
+        bool wasConnected;
+        bool connected;
+        bool listedElsewhere;
+
+        // Drop this entry; the headset goes only with its last one, and is connected while any
+        // entry left still is
         lock (_gate)
         {
-            if (!_headsets.Remove(deviceId, out headset))
+            headset = _headsets.Values.FirstOrDefault(item => item.Entries.ContainsKey(deviceId));
+            if (headset is null)
             {
                 return;
             }
+            headset.Entries.Remove(deviceId);
+            wasConnected = headset.IsWindowsConnected;
+            connected = headset.Entries.ContainsValue(true);
+            headset.IsWindowsConnected = connected;
+            listedElsewhere = headset.Entries.Count > 0;
+            if (!listedElsewhere)
+            {
+                _headsets.Remove(headset.Id);
+            }
+        }
+
+        // Another Windows entry still lists the headset: only its connection can have changed
+        if (listedElsewhere)
+        {
+            if (wasConnected != connected)
+            {
+                OnWindowsConnectionChanged(headset, connected);
+            }
+            return;
         }
 
         LogMessages.Unpaired(_logger, headset.Name);
@@ -298,7 +354,7 @@ public sealed class HeadsetManager : IDisposable
     {
         lock (_gate)
         {
-            if (!_headsets.ContainsKey(headset.DeviceId))
+            if (!_headsets.ContainsKey(headset.Id))
             {
                 return;
             }

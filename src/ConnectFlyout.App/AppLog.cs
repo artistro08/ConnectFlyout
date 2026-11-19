@@ -10,8 +10,8 @@ internal static partial class AppLog
     [LoggerMessage(EventId = 900, Message = "{Message}")]
     public static partial void Native(ILogger logger, LogLevel level, string message);
 
-    [LoggerMessage(EventId = 901, Level = LogLevel.Information, Message = "ConnectFlyout {Version} started")]
-    public static partial void Started(ILogger logger, string version);
+    [LoggerMessage(EventId = 901, Level = LogLevel.Information, Message = "ConnectFlyout {Version} started on Windows {OsVersion}")]
+    public static partial void Started(ILogger logger, string version, string osVersion);
 
     [LoggerMessage(EventId = 902, Level = LogLevel.Information, Message = "ConnectFlyout quit")]
     public static partial void Quit(ILogger logger);

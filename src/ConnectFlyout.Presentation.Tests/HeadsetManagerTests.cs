@@ -370,6 +370,54 @@ public sealed class HeadsetManagerTests
         Assert.IsTrue(await TestWait.UntilAsync(() => _manager.Headsets[0].ConnectionState == HeadsetConnectionState.Connected));
     }
 
+    [TestMethod]
+    public async Task SecondWindowsEntryForTheSameHeadsetJoinsTheFirst()
+    {
+        // Windows can list one headset twice (seen on a WH-1000XM4): a connected entry and a
+        // stale one with the same address
+        var stale = Xm6 with { Id = "device-xm6-stale", IsConnected = false };
+        _source.Report(Xm6);
+        _source.Report(stale);
+
+        var headset = _manager.Headsets.Single();
+        Assert.IsTrue(headset.IsWindowsConnected);
+        Assert.AreEqual(1, _createdModels.Count);
+        Assert.IsTrue(await TestWait.UntilAsync(() => headset.ConnectionState == HeadsetConnectionState.Connected));
+
+        // Unpairing the stale entry keeps the headset; unpairing the real one then removes it
+        _source.Remove(stale.Id);
+        Assert.AreSame(headset, _manager.Headsets.Single());
+        Assert.AreEqual(HeadsetConnectionState.Connected, headset.ConnectionState);
+
+        _source.Remove(Xm6.Id);
+        Assert.AreEqual(0, _manager.Headsets.Count);
+        Assert.IsTrue(_created["WF-1000XM6"].IsDisposed);
+    }
+
+    [TestMethod]
+    public void RemovingTheConnectedEntryLeavesTheHeadsetDisconnected()
+    {
+        var stale = Xm6 with { Id = "device-xm6-stale", IsConnected = false };
+        _source.Report(stale);
+        _source.Report(Xm6);
+
+        _source.Remove(Xm6.Id);
+
+        var headset = _manager.Headsets.Single();
+        Assert.IsFalse(headset.IsWindowsConnected);
+        Assert.AreEqual(HeadsetConnectionState.Disconnected, headset.ConnectionState);
+    }
+
+    [TestMethod]
+    public void StaleEntryUnderAnOldNameDoesNotRenameTheHeadset()
+    {
+        var stale = Xm6 with { Id = "device-xm6-stale", Name = "Old name", IsConnected = false };
+        _source.Report(Xm6);
+        _source.Report(stale);
+
+        Assert.AreEqual("WF-1000XM6", _manager.Headsets.Single().Name);
+    }
+
     private async Task AdvanceAndExpectAttempts(FakeHeadset headset, TimeSpan by, int expected)
     {
         _time.Advance(by);

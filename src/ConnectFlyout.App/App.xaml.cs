@@ -199,7 +199,7 @@ public partial class App : Application, IDisposable
         _manager.Start();
         WatchForQuitRequests();
         WatchForShowRequests();
-        AppLog.Started(_logger, AppIdentity.Version);
+        AppLog.Started(_logger, AppIdentity.Version, Environment.OSVersion.VersionString);
 
         // Startup itself leaves a lot behind that the idle tray app never needs
         ScheduleMemoryTrim(StartupTrimDelay);

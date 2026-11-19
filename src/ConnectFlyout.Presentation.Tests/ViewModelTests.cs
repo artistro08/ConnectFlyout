@@ -910,6 +910,26 @@ public sealed class HeadsetViewModelTests
     }
 
     [TestMethod]
+    public void DseeOnlyReachesHeadphonesThatHaveIt()
+    {
+        // A loading dropdown writes -1 back
+        _viewModel.DseeIndex = -1;
+
+        // No DSEE (WH-1000XM4: the dropdown is hidden but still bound)
+        using var noDsee = new FakeHeadset("WH-1000XM4", FakeHeadset.Xm4Features);
+        var managed = new ManagedHeadset("device-xm4", "AC:80:0A:00:00:04", "WH-1000XM4", noDsee)
+        {
+            ConnectionState = HeadsetConnectionState.Connected,
+            IsWindowsConnected = true,
+        };
+        using var viewModel = new HeadsetViewModel(managed, _settings, new LowBatteryMonitor(_settings, _notifications), _time, NullLogger.Instance);
+        viewModel.DseeIndex = 1;
+
+        Assert.AreEqual(0, _headset.Commands.Count);
+        Assert.AreEqual(0, noDsee.Commands.Count);
+    }
+
+    [TestMethod]
     public void ConnectionStateChangesStatusText()
     {
         _viewModel.UpdateConnectionState(HeadsetConnectionState.Connecting);

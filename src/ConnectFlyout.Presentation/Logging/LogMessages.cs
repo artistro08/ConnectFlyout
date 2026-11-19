@@ -33,6 +33,9 @@ internal static partial class LogMessages
     [LoggerMessage(EventId = 106, Level = LogLevel.Information, Message = "{Name} was unpaired")]
     public static partial void Unpaired(ILogger logger, string name);
 
+    [LoggerMessage(EventId = 107, Level = LogLevel.Information, Message = "Windows lists {Name} more than once; treating them as one headset")]
+    public static partial void DuplicateEntry(ILogger logger, string name);
+
     // =========================================================================
     // HEADSET CONTROLS (2xx)
     // =========================================================================
