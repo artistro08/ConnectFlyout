@@ -10,16 +10,11 @@ public sealed class ManagedHeadset
 {
     internal ManagedHeadset(string deviceId, string address, string name, IHeadset headset)
     {
-        DeviceId = deviceId;
+        Entries[deviceId] = false;
         Id = address;
         Name = name;
         Headset = headset;
     }
-
-    /// <summary>
-    /// Windows device ID.
-    /// </summary>
-    public string DeviceId { get; }
 
     /// <summary>
     /// Upper-case Bluetooth address. Stable across restarts, so settings are keyed on it.
@@ -40,6 +35,13 @@ public sealed class ManagedHeadset
     public bool IsWindowsConnected { get; internal set; }
 
     public HeadsetConnectionState ConnectionState { get; internal set; }
+
+    /// <summary>
+    /// Every Windows device entry for this address, and whether each is connected. Windows can
+    /// list one headset under more than one entry (like a WH-1000XM4), so the headset counts as
+    /// connected while any of them is.
+    /// </summary>
+    internal Dictionary<string, bool> Entries { get; } = [];
 
     internal CancellationTokenSource? ConnectLoop { get; set; }
 

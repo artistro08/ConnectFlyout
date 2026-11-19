@@ -538,7 +538,12 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
         get => _dseeIndex;
         set
         {
-            if (!_applying && HasConnectionQualityControl && !CanEditHeadsetSound)
+            // A hidden or still-loading dropdown writes back too (often -1): only a real choice
+            // on headphones that have DSEE goes to them
+            if (!_applying &&
+                (!Features.Dsee ||
+                 value is < 0 or > 1 ||
+                 (HasConnectionQualityControl && !CanEditHeadsetSound)))
             {
                 _ui.Defer(() => OnPropertyChanged(nameof(DseeIndex)));
                 return;
